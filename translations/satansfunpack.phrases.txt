@@ -35,4 +35,49 @@
   {
     "en" "sm_tban <Target> <Duration> [Reason]"
   }
+  "SM_TBAN_BadTime"
+  {
+    "#format" "{1:d}"
+    "en" "Ban duration must be between 1 and {1}."
+  }
+  "SM_TBAN_BanMessage"
+  {
+    "#format" "{1:s},{2:d},{3:s}"
+    "en" "Banned Player {1} for {2} minute[s]. Reason: {3}"
+  }
+
+  "SM_ADDCOND_Usage"
+  {
+    "en" "sm_addcond [Target] <Condition> <Duration>"
+  }
+  "SM_ADDCOND_BadCondition"
+  {
+    "en" "Condition must be greater than -1."
+  }
+  "SM_ADDCOND_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Added condition {1} to yourself."
+  }
+  "SM_ADDCOND_Done_Other"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Added Condition {1} to {2}."
+  }
+
+  "SM_REMCOND_Usage"
+  {
+    "en"  "sm_remcond [Target] <Condition>"
+  }
+  "SM_REMCOND_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Removed condition {1} from yourself."
+  }
+  "SM_REMCOND_Done_Other"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Removed Condition {1} from {2}."
+  }
+
 }

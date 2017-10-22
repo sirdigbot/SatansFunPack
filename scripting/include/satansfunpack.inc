@@ -30,3 +30,13 @@ stock void ReplyStandard(int client, const char[] msg, any...)
   ReplyToCommand(client, "\x04[SM]\x01 %s", outStr);
   return;
 }
+
+stock void ReplyActivity(int client, const char[] msg, any ...)
+{
+  int len = strlen(msg) + 255;
+  char[] outStr = new char[len];
+  VFormat(outStr, len, msg, 3);
+
+  ShowActivity2(client, "\x04[SM]\x01 ", msg);
+  return;
+}
