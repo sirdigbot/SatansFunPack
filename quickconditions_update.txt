@@ -1,0 +1,20 @@
+"Updater"
+{
+  "Information"
+  {
+    "Version"
+    {
+      "Latest" "0.0.1"
+      "Previous" "0.0.0"
+    }
+
+    "Notes" "Initial Release"
+  }
+
+  "Files"
+  {
+    "Plugin" "Path_SM/plugins/sfp_quickconditions.smx"
+
+    "Source" "Path_SM/scripting/sfp_quickconditions.sp"
+  }
+}

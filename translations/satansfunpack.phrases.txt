@@ -14,10 +14,16 @@
   {
     "en" "Loaded Satan's Fun Pack - Admin Tools"
   }
+  "SFP_QuickConditionsLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Quick Conditions"
+  }
   "SFP_ConsoleOutput"
   {
     "en" "Output has been printed to your console."
   }
+
+
 
   //=================================
   // AdminTools
@@ -80,4 +86,33 @@
     "en" "Removed Condition {1} from {2}."
   }
 
+
+
+  //=================================
+  // QuickConditions
+  "SM_BOING_Usage"
+  {
+    "en" "sm_boing [Target] <1/0/On/Off>"
+  }
+  "SM_BOING_On"
+  {
+    "en" "Boing Mode Activated"
+  }
+  "SM_BOING_Off"
+  {
+    "en" "Boing Mode Deactivated"
+  }
+
+  "SM_DANCE_Usage"
+  {
+    "en" "sm_dancemonkey <Target> <Duration/0/Stop/End/Off>"
+  }
+  "SM_DANCE_On"
+  {
+    "en" "DANCE MONKEY, DANCE!"
+  }
+  "SM_DANCE_Off"
+  {
+    "en" "Dance Mode Deactivated"
+  }
 }

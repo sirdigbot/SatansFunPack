@@ -27,6 +27,7 @@ public Plugin myinfo =
 };
 
 
+
 /***
  * This core file doesn't do a lot, but is the only file that includes
  * the translation and config files as part of the updater download, and sets the version cvar.
