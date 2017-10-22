@@ -1,0 +1,12 @@
+# Ignore Note File
+/Prototype.txt
+
+# Ignore Compiler Stuff
+/scripting/**
+
+# Keep Only These
+!/scripting/include/
+!/scripting/include/satansfunpack.inc
+!/scripting/satansfunpack.sp
+!/scripting/sfp_admintools.sp
+

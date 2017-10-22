@@ -1,0 +1,23 @@
+"Updater"
+{
+  "Information"
+  {
+    "Version"
+    {
+      "Latest" "0.0.1"
+      "Previous" "0.0.0"
+    }
+
+    "Notes" "Initial Release"
+  }
+
+  "Files"
+  {
+    "Plugin" "Path_SM/plugins/satansfunpack.smx"
+    "Plugin" "Path_SM/translations/satansfunpack.phrases.txt"
+    "Plugin" "Path_SM/configs/satansfunpack.cfg"
+
+    "Source" "Path_SM/scripting/satansfunpack.sp"
+    "Source" "Path_SM/scripting/include/satansfunpack.inc"
+  }
+}

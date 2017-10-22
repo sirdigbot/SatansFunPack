@@ -1,0 +1,38 @@
+﻿"Phrases"
+{
+  //=================================
+  // Main File
+  "SFP_Incompatible"
+  {
+    "en" "Satan's Fun Pack is only compatible with Team Fortress 2."
+  }
+  "SFP_Loaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Main File"
+  }
+  "SFP_AdminToolsLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Admin Tools"
+  }
+  "SFP_ConsoleOutput"
+  {
+    "en" "Output has been printed to your console."
+  }
+
+  //=================================
+  // AdminTools
+  "SM_CCOM_Usage"
+  {
+    "en" "sm_ccom <Target> <Command>"
+  }
+  "SM_CCOM_Done"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Executed Command on {1}: {2}"
+  }
+
+  "SM_TBAN_Usage"
+  {
+    "en" "sm_tban <Target> <Duration> [Reason]"
+  }
+}
