@@ -18,14 +18,14 @@ bool    g_bUpdate;
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/infoutils_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/trails_update.txt"
 
 
 public Plugin myinfo =
 {
-  name =        "[TF2] Satan's Fun Pack - Info Utils",
+  name =        "[TF2] Satan's Fun Pack - Trails",
   author =      "SirDigby",
-  description = "Brought to You by The N.S.A",
+  description = "Yes, Another Trail Plugin!",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -42,7 +42,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  PrintToServer("%T", "SFP_InfoUtilsLoaded", LANG_SERVER);
+  PrintToServer("%T", "SFP_TrailsLoaded", LANG_SERVER);
 }
 
 

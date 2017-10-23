@@ -18,14 +18,14 @@ bool    g_bUpdate;
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/duel_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/targeting_update.txt"
 
 
 public Plugin myinfo =
 {
-  name =        "[TF2] Satan's Fun Pack - Duel",
+  name =        "[TF2] Satan's Fun Pack - Targeting",
   author =      "SirDigby",
-  description = "Murder Each Other in Peace",
+  description = "Useful Targeting Options for All Commands",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -42,7 +42,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  PrintToServer("%T", "SFP_DuelLoaded", LANG_SERVER);
+  PrintToServer("%T", "SFP_TargetingLoaded", LANG_SERVER);
 }
 
 

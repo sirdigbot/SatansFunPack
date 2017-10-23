@@ -23,8 +23,8 @@ int     g_iTempBanMax;
 //=================================
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/admintools_update.txt"
+#define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
+#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
 
 
 

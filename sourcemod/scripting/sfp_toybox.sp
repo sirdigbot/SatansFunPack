@@ -18,14 +18,14 @@ bool    g_bUpdate;
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/groupmanager_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 
 
 public Plugin myinfo =
 {
-  name =        "[TF2] Satan's Fun Pack - Group Manager",
+  name =        "[TF2] Satan's Fun Pack - Toy Box",
   author =      "SirDigby",
-  description = "Quickly Set Player Override Groups",
+  description = "What's a Fun Pack Without Toys?",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -42,7 +42,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  PrintToServer("%T", "SFP_GroupManagerLoaded", LANG_SERVER);
+  PrintToServer("%T", "SFP_ToyBoxLoaded", LANG_SERVER);
 }
 
 

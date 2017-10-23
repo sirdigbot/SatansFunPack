@@ -21,7 +21,7 @@ char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, i
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/main_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
 
 
 public Plugin myinfo =

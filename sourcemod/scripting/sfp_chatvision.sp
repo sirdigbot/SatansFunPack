@@ -17,15 +17,15 @@ bool    g_bUpdate;
 //=================================
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/trails_update.txt"
+#define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
+#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/chatvision_update.txt"
 
 
 public Plugin myinfo =
 {
-  name =        "[TF2] Satan's Fun Pack - Trails",
+  name =        "[TF2] Satan's Fun Pack - Chat Vision",
   author =      "SirDigby",
-  description = "Yes, Another Trail Plugin!",
+  description = "Allow Admins to See Enemy Team Chat",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -42,7 +42,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  PrintToServer("%T", "SFP_TrailsLoaded", LANG_SERVER);
+  PrintToServer("%T", "SFP_ChatVisionLoaded", LANG_SERVER);
 }
 
 

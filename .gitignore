@@ -2,21 +2,21 @@
 /Prototype.txt
 
 # Ignore Compiler Stuff
-/scripting/**
+/sourcemod/scripting/**
 
 # Keep Only These
-!/scripting/include/
-!/scripting/include/satansfunpack.inc
-!/scripting/satansfunpack.sp
-!/scripting/sfp_admintools.sp
-!/scripting/sfp_bans.sp
-!/scripting/sfp_chatvision.sp
-!/scripting/sfp_duel.sp
-!/scripting/sfp_godmode.sp
-!/scripting/sfp_groupmanager.sp
-!/scripting/sfp_infoutils.sp
-!/scripting/sfp_mirror.sp
-!/scripting/sfp_quickconditions.sp
-!/scripting/sfp_targeting.sp
-!/scripting/sfp_toybox.sp
-!/scripting/sfp_trails.sp
+!/sourcemod/scripting/include/
+!/sourcemod/scripting/include/satansfunpack.inc
+!/sourcemod/scripting/satansfunpack.sp
+!/sourcemod/scripting/sfp_admintools.sp
+!/sourcemod/scripting/sfp_bans.sp
+!/sourcemod/scripting/sfp_chatvision.sp
+!/sourcemod/scripting/sfp_duel.sp
+!/sourcemod/scripting/sfp_godmode.sp
+!/sourcemod/scripting/sfp_groupmanager.sp
+!/sourcemod/scripting/sfp_infoutils.sp
+!/sourcemod/scripting/sfp_mirror.sp
+!/sourcemod/scripting/sfp_quickconditions.sp
+!/sourcemod/scripting/sfp_targeting.sp
+!/sourcemod/scripting/sfp_toybox.sp
+!/sourcemod/scripting/sfp_trails.sp
