@@ -26,6 +26,12 @@
 
 
   //=================================
+  // Generics
+
+
+
+
+  //=================================
   // AdminTools
   "SM_CCOM_Usage"
   {
@@ -46,11 +52,17 @@
     "#format" "{1:d}"
     "en" "Ban duration must be between 1 and {1}."
   }
+  "SM_TBAN_Time"
+  {
+    "#format" "{1:d}"
+    "en" "Temporary Ban ({1}m)"
+  }
   "SM_TBAN_BanMessage"
   {
     "#format" "{1:s},{2:d},{3:s}"
     "en" "Banned Player {1} for {2} minute[s]. Reason: {3}"
   }
+
 
   "SM_ADDCOND_Usage"
   {

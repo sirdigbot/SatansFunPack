@@ -154,7 +154,7 @@ public Action CMD_ClientCmd(int client, int args)
 
 /**
  * Ban a player normally, but limit the duration to a cvar value.
- * FIXME Reason output is wrong af
+ *
  * sm_tban <Target> <Duration> [Reason]
  */
 public Action CMD_TempBan(int client, int args)
@@ -169,19 +169,16 @@ public Action CMD_TempBan(int client, int args)
   char arg1[MAX_NAME_LENGTH], arg2[16], argFull[256], dummyArg3[4];
   GetCmdArgString(argFull, sizeof(argFull));
 
-  int arg1Idx = BreakString(argFull, arg1, sizeof(arg1));
-  int buffer = BreakString(argFull[arg1Idx], arg2, sizeof(arg2));
-  arg1Idx += buffer;
+  int argIndex = BreakString(argFull, arg1, sizeof(arg1));
+  int buffer = BreakString(argFull[argIndex], arg2, sizeof(arg2));
+  argIndex += buffer;
 
-  // Check for 3rd arg/reason
-  buffer = BreakString(argFull[arg1Idx], dummyArg3, sizeof(dummyArg3));
+  // Check for 3rd arg/reason, get index if any
+  buffer = BreakString(argFull[argIndex], dummyArg3, sizeof(dummyArg3));
   if(buffer != -1)
-    arg1Idx += buffer;
+    argIndex += buffer;
   else
-  {
-    arg1Idx = 0;
-    argFull[0] = 1; // Not using 0 in case of weird C problems.
-  }
+    argIndex = -1;
 
   // Check Args
   int duration = StringToInt(arg2);
@@ -191,21 +188,38 @@ public Action CMD_TempBan(int client, int args)
     return Plugin_Handled;
   }
 
-  // Prepare output
   int target = FindTarget(client, arg1, true); // Single target, no bots
   if(target == -1)
     return Plugin_Handled;
 
-  char targ_name[MAX_NAME_LENGTH], reason[256];
+  // Prepare output
+  char targ_name[MAX_NAME_LENGTH], reason[256]; // reason > 29 + 192
   GetClientName(target, targ_name, sizeof(targ_name));
 
-  if(argFull[0] == 1)
-    Format(reason, sizeof(reason), "Temporary Ban (%d min)", duration);
+  if(argIndex == -1)
+  {
+    Format(reason, sizeof(reason), "%T",
+      "SM_TBAN_Time",
+      LANG_SERVER,
+      duration);
+  }
   else
-    Format(reason, sizeof(reason), "Temporary Ban (%d min): %s", duration, argFull[arg1Idx]);
+  {
+    Format(reason, sizeof(reason), "%T: %s",
+      "SM_TBAN_Time",
+      LANG_SERVER,
+      duration,
+      argFull[argIndex]);
+  }
 
   // Output
-  ReplyActivity(client, "%T", "SM_TBAN_BanMessage", client, targ_name, duration, reason);
+  ReplyActivity(client, "%T", "SM_TBAN_BanMessage",
+    client,
+    targ_name,
+    duration,
+    (argIndex != -1) ? argFull[argIndex] : reason[0]);
+    // We don't need "Temporary Ban (3m)" here if there's a reason.
+
   BanClient(target, duration, BANFLAG_AUTO, reason, reason, "sm_tban", client);
   return Plugin_Handled;
 }
