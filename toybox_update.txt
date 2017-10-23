@@ -13,8 +13,8 @@
 
   "Files"
   {
-    "Plugin" "Path_SM/plugins/sfp_admintools.smx"
+    "Plugin" "Path_SM/plugins/sfp_toybox.smx"
 
-    "Source" "Path_SM/scripting/sfp_admintools.sp"
+    "Source" "Path_SM/scripting/sfp_toybox.sp"
   }
 }

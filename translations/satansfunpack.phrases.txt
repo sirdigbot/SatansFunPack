@@ -1,33 +1,78 @@
 ﻿"Phrases"
 {
   //=================================
-  // Main File
+  // Main
   "SFP_Incompatible"
   {
     "en" "Satan's Fun Pack is only compatible with Team Fortress 2."
   }
+  "SFP_UpdateCvarFail"
+  {
+    "en" "Cannot find ConVar sm_satansfunpack_update; satansfunpack.smx is not loaded."
+  }
+
   "SFP_Loaded"
   {
-    "en" "Loaded Satan's Fun Pack - Main File"
+    "#format" "{1:d}"
+    "en" "Loaded Satan's Fun Pack - Main File. Found {1} Modules."
   }
   "SFP_AdminToolsLoaded"
   {
     "en" "Loaded Satan's Fun Pack - Admin Tools"
   }
+  "SFP_BansLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Bans"
+  }
+  "SFP_ChatVisionLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Chat Vision"
+  }
+  "SFP_DuelLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Duel"
+  }
+  "SFP_GodModeLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - God Mode"
+  }
+  "SFP_GroupManagerLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Group Manager"
+  }
+  "SFP_InfoUtilsLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Info Utilities"
+  }
+  "SFP_MirrorLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Mirror"
+  }
   "SFP_QuickConditionsLoaded"
   {
     "en" "Loaded Satan's Fun Pack - Quick Conditions"
   }
-  "SFP_ConsoleOutput"
+  "SFP_TargetingLoaded"
   {
-    "en" "Output has been printed to your console."
+    "en" "Loaded Satan's Fun Pack - Targeting"
+  }
+  "SFP_ToyBoxLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Toy Box"
+  }
+  "SFP_TrailsLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Trails"
   }
 
 
 
   //=================================
   // Generics
-
+  "SFP_ConsoleOutput"
+  {
+    "en" "Output has been printed to your console."
+  }
 
 
 

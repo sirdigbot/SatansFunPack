@@ -11,17 +11,24 @@
 
 
 //=================================
+// Global
+Handle  h_bUpdate = null;
+bool    g_bUpdate;
+char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, incl \0.
+
+
+//=================================
 // Constants
-#define PLUGIN_VERSION  "0.0.1"
-#define PLUGIN_URL      "UNDEFINED"
-#define UPDATE_URL      "UNDEFINED"
+#define PLUGIN_VERSION  "1.0.0"
+#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/main_update.txt"
 
 
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack",
   author =      "SirDigby",
-  description = "Megapack of Commands",
+  description = "A Megapack of Commands",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -29,33 +36,103 @@ public Plugin myinfo =
 
 
 /***
- * This core file doesn't do a lot, but is the only file that includes
- * the translation and config files as part of the updater download, and sets the version cvar.
+ * This core file doesn't do a lot, but is the only file that includes:
+ * The translation and config files as part of the updater download.
+ * It also Sets the main version and updater cvars.
+ * Modules must use FindConVar for the updater setting.
  *
  * As such, this is the ONLY required file.
  ***/
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
-  RegAdminCmd("sm_sfpplugincheck", LoadCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
-  PrintToServer("%T", "SFP_Loaded", LANG_SERVER);
+
+  CreateConVar("satansfunpack_version", PLUGIN_VERSION, "Satan's Fun Pack version. Do Not Touch!", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+
+  h_bUpdate = CreateConVar("sm_satansfunpack_update", "1", "Update this Plugin Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bUpdate = GetConVarBool(h_bUpdate);
+  HookConVarChange(h_bUpdate, UpdateCvars);
+
+  RegAdminCmd("sm_sfpplugincheck", InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
+
+  /**
+   * Check what modules are installed and cache list.
+   * Expensive so do only OnPluginStart.
+   **/
+  int count = 0;
+  count += CheckFileAndCache("AdminTools", "plugins/sfp_admintools.smx");
+  count += CheckFileAndCache("Bans", "plugins/sfp_bans.smx");
+  count += CheckFileAndCache("ChatVision", "plugins/sfp_chatvision.smx");
+  count += CheckFileAndCache("Duel", "plugins/sfp_duel.smx");
+  count += CheckFileAndCache("GodMode", "plugins/sfp_godmode.smx");
+  count += CheckFileAndCache("GroupManager", "plugins/sfp_groupmanager.smx");
+  count += CheckFileAndCache("InfoUtils", "plugins/sfp_infoutils.smx");
+  count += CheckFileAndCache("Mirror", "plugins/sfp_mirror.smx");
+  count += CheckFileAndCache("QuickConditions", "plugins/sfp_quickconditions.smx");
+  count += CheckFileAndCache("Targeting", "plugins/sfp_targeting.smx");
+  count += CheckFileAndCache("ToyBox", "plugins/sfp_toybox.smx");
+  count += CheckFileAndCache("Trails", "plugins/sfp_trails.smx");
+
+  PrintToServer("%T", "SFP_Loaded", LANG_SERVER, count);
 }
 
 
-public Action LoadCheck(int client, int args)
+int CheckFileAndCache(const char[] pluginName, const char[] filepath)
 {
-  char path[PLATFORM_MAX_PATH], outStr[128];
+  char path[PLATFORM_MAX_PATH], buffer[32];
   bool result;
 
-  // Check each file
-  BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "plugins/sfp_admintools.smx");
+  BuildPath(Path_SM, path, PLATFORM_MAX_PATH, filepath);
   result = FileExists(path);
-  Format(outStr, sizeof(outStr),
-    "MODULE - STATUS\n----------------\nAdminTools - %s", (result) ? "Loaded\n" : "NOT LOADED\n");
 
-  PrintToConsole(client, outStr);
+  Format(buffer, sizeof(buffer), "%s - %s", pluginName, (result) ? "Y\n" : "N\n");
+  StrCat(g_szList, sizeof(g_szList), buffer);
+  return view_as<int>(result);
+}
+
+
+public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValue)
+{
+  if(cvar == h_bUpdate)
+  {
+    g_bUpdate = view_as<bool>(StringToInt(newValue));
+    (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
+  }
+  return;
+}
+
+
+
+public Action InstallCheck(int client, int args)
+{
+  PrintToConsole(client, g_szList);
   if(client != 0 && GetCmdReplySource() == SM_REPLY_TO_CHAT)
     ReplyStandard(client, "%T", "SFP_ConsoleOutput", client);
 
   return Plugin_Handled;
+}
+
+
+
+//=================================
+// Updater
+public void OnConfigsExecuted()
+{
+  if(LibraryExists("updater") && g_bUpdate)
+    Updater_AddPlugin(UPDATE_URL);
+  return;
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+  if(StrEqual(name, "updater") && g_bUpdate)
+    Updater_AddPlugin(UPDATE_URL);
+  return;
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+  if(StrEqual(name, "updater"))
+    Updater_RemovePlugin();
+  return;
 }

@@ -9,4 +9,14 @@
 !/scripting/include/satansfunpack.inc
 !/scripting/satansfunpack.sp
 !/scripting/sfp_admintools.sp
+!/scripting/sfp_bans.sp
+!/scripting/sfp_chatvision.sp
+!/scripting/sfp_duel.sp
+!/scripting/sfp_godmode.sp
+!/scripting/sfp_groupmanager.sp
+!/scripting/sfp_infoutils.sp
+!/scripting/sfp_mirror.sp
 !/scripting/sfp_quickconditions.sp
+!/scripting/sfp_targeting.sp
+!/scripting/sfp_toybox.sp
+!/scripting/sfp_trails.sp
