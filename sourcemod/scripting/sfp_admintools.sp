@@ -15,7 +15,6 @@
 // Globals
 Handle  h_bUpdate     = null;
 bool    g_bUpdate;
-bool    g_bLateLoad;
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
 bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false}; TODO Why does this fail to compile
@@ -44,18 +43,6 @@ public Plugin myinfo =
 
 //=================================
 // Forwards/Events
-public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
-{
-  g_bLateLoad = late;
-  EngineVersion eng = GetEngineVersion();
-  if(eng != Engine_TF2)
-  {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
-    return APLRes_Failure;
-  }
-  return APLRes_Success;
-}
-
 
 public void OnPluginStart()
 {
@@ -101,11 +88,6 @@ public void OnPluginStart()
    * sm_telelock_target - Can client target others with sm_telelock
    * sm_opentele_target - Can client target others with sm_opentele
    */
-
-
-  /*** Handle Late Loads ***/
-  if(g_bLateLoad)
-    PrintToServer("LateLoad Warning Fix"); // FIXME debug
 
   PrintToServer("%T", "SFP_AdminToolsLoaded", LANG_SERVER);
 }
@@ -484,6 +466,7 @@ public Action CMD_RemCond(int client, int args)
 /**
  * Remove all weapons from a player.
  *
+ * TODO: Add toggle capability + Disarm on weapon pickup.
  * sm_disarm <Target>
  */
 public Action CMD_Disarm(int client, int args)
