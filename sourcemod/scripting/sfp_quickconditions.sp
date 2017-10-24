@@ -8,7 +8,7 @@
 #define REQUIRE_PLUGIN
 #pragma newdecls required // After libraries or you get warnings
 
-#include <satansfunpack>  // Shared function library
+#include <satansfunpack>
 
 
 //=================================
@@ -73,7 +73,7 @@ public Action CMD_Boing(int client, int args)
 {
   if(args < 1)
   {
-    ReplyUsage(client, "%T", "SM_BOING_Usage", client);
+    TagReplyUsage(client, "%T", "SM_BOING_Usage", client);
     return Plugin_Handled;
   }
 
@@ -124,7 +124,7 @@ public Action CMD_Boing(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_AddCondition(targ_list[i], TFCond_HalloweenSpeedBoost, TFCondDuration_Infinite, 0);
-      ReplyStandard(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
+      TagReply(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
     }
   }
   else
@@ -132,7 +132,7 @@ public Action CMD_Boing(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_RemoveCondition(targ_list[i], TFCond_HalloweenSpeedBoost);
-      ReplyStandard(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
+      TagReply(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
     }
   }
 
@@ -150,7 +150,7 @@ public Action CMD_Dance(int client, int args)
 {
   if(args < 2)
   {
-    ReplyUsage(client, "%T", "SM_DANCE_Usage", client);
+    TagReplyUsage(client, "%T", "SM_DANCE_Usage", client);
     return Plugin_Handled;
   }
 
@@ -196,7 +196,7 @@ public Action CMD_Dance(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_AddCondition(targ_list[i], TFCond_HalloweenThriller, view_as<float>(iArg2), 0);
-      ReplyStandard(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
+      TagReply(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
     }
   }
   else if (iArg2 < 0)
@@ -204,11 +204,11 @@ public Action CMD_Dance(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_RemoveCondition(targ_list[i], TFCond_HalloweenThriller);
-      ReplyStandard(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
+      TagReply(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
     }
   }
   else // if iArg2 = 0; if It's not "stop" and not an int above 0
-    ReplyUsage(client, "%T", "SM_DANCE_Usage", client);
+    TagReplyUsage(client, "%T", "SM_DANCE_Usage", client);
 
   return Plugin_Handled;
 }

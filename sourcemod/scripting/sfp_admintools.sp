@@ -8,16 +8,18 @@
 #define REQUIRE_PLUGIN
 #pragma newdecls required // After libraries or you get warnings
 
-#include <satansfunpack>  // Shared function library
+#include <satansfunpack>
 
 
 //=================================
 // Globals
-Handle  h_bUpdate = null;
+Handle  h_bUpdate     = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
+bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false};
+bool    g_bOutline[MAXPLAYERS + 1];   //= {..., false};
 
 
 //=================================
@@ -67,10 +69,11 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_iTempBanMax = CreateConVar("sm_maxlengthban", "180", "Max Length Of Temporary Ban\n(Default: 180)", FCVAR_NONE, true, 0.0, false);
+  h_iTempBanMax = CreateConVar("sm_maxtempban", "180", "Max Length Of Temporary Ban\n(Default: 180)", FCVAR_NONE, true, 0.0, false);
   g_iTempBanMax = GetConVarInt(h_iTempBanMax);
   HookConVarChange(h_iTempBanMax, UpdateCvars);
 
+  HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Post);
 
   RegAdminCmd("sm_ccom",        CMD_ClientCmd, ADMFLAG_ROOT, "Force Player to Use a Command");
   RegAdminCmd("sm_tban",        CMD_TempBan, ADMFLAG_BAN, "Ban Players. Temporarily");
@@ -78,9 +81,10 @@ public void OnPluginStart()
   RegAdminCmd("sm_remcond",     CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_removecond",  CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_disarm",      CMD_Disarm, ADMFLAG_BAN, "Strip Weapons from a Player");
-  RegAdminCmd("sm_forceteam",   CMD_ForceTeam, ADMFLAG_BAN, "Force Player onto a Team");
+  RegAdminCmd("sm_forceteam",   CMD_SwitchTeam, ADMFLAG_BAN, "Force Player to switch Teams");
   RegAdminCmd("sm_forcespec",   CMD_ForceSpec, ADMFLAG_BAN, "Force Player into Spectator");
   RegAdminCmd("sm_fsay",        CMD_FakeSay, ADMFLAG_BAN, "I didn't say that, I swear!");
+  RegAdminCmd("sm_fsayteam",    CMD_FakeSayTeam, ADMFLAG_BAN, "I didn't say that, I swear!");
   RegAdminCmd("sm_namelock",    CMD_NameLock, ADMFLAG_BAN, "Prevent a Player from Changing Names");
   RegAdminCmd("sm_notarget",    CMD_NoTarget, ADMFLAG_BAN, "Disable Sentry Targeting on a Player");
   RegAdminCmd("sm_outline",     CMD_Outline, ADMFLAG_BAN, "Set Outline Effect on a Player");
@@ -107,8 +111,39 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
 }
 
 
+public Action OnPlayerSpawn(Handle event, char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(GetEventInt(event, "userid", 0));
+  if(client >= 1)
+  {
+    if(g_bOutline[client])
+    {
+      SetOutline(client, true);
+      TagPrintChat(client, "%T", "SM_OUTLINE_SpawnMsg", client);
+    }
+    if(g_bNoTarget[client])
+    {
+      SetNoTarget(client, true);
+      TagPrintChat(client, "%T", "SM_NOTARGET_SpawnMsg", client);
+    }
+  }
+  return Plugin_Continue;
+}
 
 
+public void OnClientDisconnect_Post(int client)
+{
+  g_bOutline[client] = false;
+  g_bNoTarget[client] = false;
+  return;
+}
+
+
+
+
+
+//=================================
+// Commands
 
 /**
  * Force a client to run a console command.
@@ -119,7 +154,7 @@ public Action CMD_ClientCmd(int client, int args)
 {
   if(args < 2)
   {
-    ReplyUsage(client, "%T", "SM_CCOM_Usage", client);
+    TagReplyUsage(client, "%T", "SM_CCOM_Usage", client);
     return Plugin_Handled;
   }
 
@@ -130,7 +165,7 @@ public Action CMD_ClientCmd(int client, int args)
   int arg2Idx = BreakString(argFull, arg1, sizeof(arg1));
   if(arg2Idx == -1)
   {
-    ReplyUsage(client, "%T", "SM_CCOM_Usage", client);
+    TagReplyUsage(client, "%T", "SM_CCOM_Usage", client);
     return Plugin_Handled;
   }
 
@@ -160,7 +195,7 @@ public Action CMD_ClientCmd(int client, int args)
       FakeClientCommandEx(targ_list[i], argFull[arg2Idx]);
   }
 
-  ReplyStandard(client, "%T", "SM_CCOM_Done", client, targ_name, argFull[arg2Idx]);
+  TagReply(client, "%T", "SM_CCOM_Done", client, targ_name, argFull[arg2Idx]);
   return Plugin_Handled;
 }
 
@@ -175,7 +210,7 @@ public Action CMD_TempBan(int client, int args)
 {
   if(args < 2)
   {
-    ReplyUsage(client, "%T", "SM_TBAN_Usage", client);
+    TagReplyUsage(client, "%T", "SM_TBAN_Usage", client);
     return Plugin_Handled;
   }
 
@@ -198,7 +233,7 @@ public Action CMD_TempBan(int client, int args)
   int duration = StringToInt(arg2);
   if (duration < 1 || duration > g_iTempBanMax)
   {
-    ReplyStandard(client, "%T", "SM_TBAN_BadTime", client, g_iTempBanMax);
+    TagReply(client, "%T", "SM_TBAN_BadTime", client, g_iTempBanMax);
     return Plugin_Handled;
   }
 
@@ -227,8 +262,8 @@ public Action CMD_TempBan(int client, int args)
   }
 
   // Output
-  ReplyActivity(client, "%T", "SM_TBAN_BanMessage",
-    client,
+  TagActivity(client, "%T", "SM_TBAN_BanMessage",
+    LANG_SERVER,
     targ_name,
     duration,
     (argIndex != -1) ? argFull[argIndex] : reason[0]);
@@ -237,6 +272,7 @@ public Action CMD_TempBan(int client, int args)
   BanClient(target, duration, BANFLAG_AUTO, reason, reason, "sm_tban", client);
   return Plugin_Handled;
 }
+
 
 
 /**
@@ -248,7 +284,7 @@ public Action CMD_AddCond(int client, int args)
 {
   if(args < 2)
   {
-    ReplyUsage(client, "%T", "SM_ADDCOND_Usage", client);
+    TagReplyUsage(client, "%T", "SM_ADDCOND_Usage", client);
     return Plugin_Handled;
   }
 
@@ -262,16 +298,22 @@ public Action CMD_AddCond(int client, int args)
   // Process args on self
   if(args == 2)
   {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
     // Check arg1, arg2/duration can be negative.
     if(iArg1 < 0)
     {
-      ReplyStandard(client, "%T", "SM_ADDCOND_BadCondition", client);
+      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
       return Plugin_Handled;
     }
 
     // Output
     TF2_AddCondition(client, view_as<TFCond>(iArg1), view_as<float>(iArg2), 0);
-    ReplyStandard(client, "%T", "SM_ADDCOND_Done", client, iArg1);
+    TagReply(client, "%T", "SM_ADDCOND_Done", client, iArg1);
   }
 
   // Process args on target player
@@ -284,7 +326,7 @@ public Action CMD_AddCond(int client, int args)
     // Check arg2
     if(iArg2 < 0)
     {
-      ReplyStandard(client, "%T", "SM_ADDCOND_BadCondition", client);
+      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
       return Plugin_Handled;
     }
 
@@ -298,7 +340,7 @@ public Action CMD_AddCond(int client, int args)
       client,
       targ_list,
       MAXPLAYERS,
-      COMMAND_FILTER_NO_BOTS,
+      COMMAND_FILTER_ALIVE,
       targ_name,
       sizeof(targ_name),
       tn_is_ml)) <= 0)
@@ -310,11 +352,12 @@ public Action CMD_AddCond(int client, int args)
     // Output
     for(int i = 0; i < targ_count; ++i)
       TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), view_as<float>(iArg3), 0);
-    ReplyActivity(client, "%T", "SM_ADDCOND_Done_Other", client, iArg2, targ_name);
+    TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   }
 
   return Plugin_Handled;
 }
+
 
 
 /**
@@ -326,7 +369,7 @@ public Action CMD_RemCond(int client, int args)
 {
   if(args < 1)
   {
-    ReplyUsage(client, "%T", "SM_REMCOND_Usage", client);
+    TagReplyUsage(client, "%T", "SM_REMCOND_Usage", client);
     return Plugin_Handled;
   }
 
@@ -336,17 +379,23 @@ public Action CMD_RemCond(int client, int args)
 
   if(args == 1)
   {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
     int iArg1 = StringToInt(arg1);
 
     // Check arg
     if(iArg1 < 0)
     {
-      ReplyStandard(client, "%T", "SM_ADDCOND_BadCondition", client);
+      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
       return Plugin_Handled;
     }
 
     TF2_RemoveCondition(client, view_as<TFCond>(iArg1));
-    ReplyStandard(client, "%T", "SM_REMCOND_Done", client, iArg1);
+    TagReply(client, "%T", "SM_REMCOND_Done", client, iArg1);
   }
   else if(args > 1)
   {
@@ -364,7 +413,7 @@ public Action CMD_RemCond(int client, int args)
       client,
       targ_list,
       MAXPLAYERS,
-      COMMAND_FILTER_NO_BOTS,
+      COMMAND_FILTER_ALIVE,
       targ_name,
       sizeof(targ_name),
       tn_is_ml)) <= 0)
@@ -375,59 +424,542 @@ public Action CMD_RemCond(int client, int args)
 
     for(int i = 0; i < targ_count; ++i)
       TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
-    ReplyActivity(client, "%T", "SM_REMCOND_Done_Other", client, iArg2, targ_name);
+    TagActivity(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   }
   return Plugin_Handled;
 }
 
 
 
+/**
+ * Remove all weapons from a player.
+ *
+ * sm_disarm <Target>
+ */
 public Action CMD_Disarm(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_DISARM_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Target List
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i], true, true))
+    {
+      TF2_RemoveAllWeapons(targ_list[i]);
+      TagReply(targ_list[i], "%T", "SM_DISARM_Done", targ_list[i]);
+    }
+  }
+
+  TagActivity(client, "%T", "SM_DISARM_Done_Server", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
 
 
-public Action CMD_ForceTeam(int client, int args)
+/**
+ * Force client to switch teams, or to a specified too.
+ *
+ * sm_switchteam <Target> [Team Red/Blu/Spec]
+ */
+public Action CMD_SwitchTeam(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_SWITCHTEAM_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Check arg2, if any
+  TFTeam team = TFTeam_Unassigned;
+  if(args > 1)
+  {
+    char arg2[8];
+    GetCmdArg(2, arg2, sizeof(arg2));
+
+    if(StrEqual(arg2, "red", false))
+      team = TFTeam_Red;
+    else if(StrEqual(arg2, "blu", false)
+    || StrEqual(arg2, "blue", false))
+    {
+      team = TFTeam_Blue;
+    }
+    else if(StrEqual(arg2, "spec", false)
+    || StrEqual(arg2, "spectator", false)
+    || StrEqual(arg2, "spectate", false))
+    {
+      team = TFTeam_Spectator;
+    }
+  }
+
+  // Get Target List
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(team == TFTeam_Unassigned)
+      TF2_ChangeClientTeam(targ_list[i], GetClientOtherTeam(targ_list[i]));
+    else
+      TF2_ChangeClientTeam(targ_list[i], team);
+  }
+
+  TagActivity(client, "%T", "SM_SWITCHTEAM_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
+}
+
+TFTeam GetClientOtherTeam(int client)
+{
+  TFTeam team = TF2_GetClientTeam(client);
+  if(team == TFTeam_Red)
+    return TFTeam_Blue;
+  return TFTeam_Red;
 }
 
 
 
+/**
+ * Force a player into spectator mode.
+ *
+ * sm_forcespec <Target>
+ */
 public Action CMD_ForceSpec(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_FORCESPEC_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Target List
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+    TF2_ChangeClientTeam(targ_list[i], TFTeam_Spectator);
+
+  TagActivity(client, "%T", "SM_FORCESPEC_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
 
 
+/**
+ * Force player to say something in chat
+ *
+ * sm_fsay <Target> <Message>
+ */
 public Action CMD_FakeSay(int client, int args)
 {
+  if(args < 2)
+  {
+    TagReplyUsage(client, "%T", "SM_FAKESAY_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Args
+  char argFull[256], arg1[MAX_NAME_LENGTH];
+  GetCmdArgString(argFull, sizeof(argFull));
+  int msgIndex = BreakString(argFull, arg1, sizeof(arg1));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_NO_BOTS,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+    FakeClientCommandEx(targ_list[i], "say %s", argFull[msgIndex]);
+
+  // Don't output success since the player will just say the message.
   return Plugin_Handled;
 }
 
 
 
+/**
+ * Force player to say something in teamchat
+ *
+ * sm_fsayteam <Target> <Message>
+ */
+public Action CMD_FakeSayTeam(int client, int args)
+{
+  if(args < 2)
+  {
+    TagReplyUsage(client, "%T", "SM_FAKESAYTEAM_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Args
+  char argFull[256], arg1[MAX_NAME_LENGTH];
+  GetCmdArgString(argFull, sizeof(argFull));
+  int msgIndex = BreakString(argFull, arg1, sizeof(arg1));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_NO_BOTS,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+    FakeClientCommandEx(targ_list[i], "say_team %s", argFull[msgIndex]);
+
+  // Don't output success since the player will just say the message.
+  return Plugin_Handled;
+}
+
+
+
+/**
+ * Prevent a player from changing their name.
+ *
+ * sm_namelock <Target> <1/0>
+ */
 public Action CMD_NameLock(int client, int args)
 {
+  if(args < 2)
+  {
+    TagReplyUsage(client, "%T", "SM_NAMELOCK_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH], arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_NO_BOTS,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  int state = GetStringBool(arg2, false, true, true, true);
+  if(state == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_NAMELOCK_Usage", client);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    int userid = GetClientUserId(targ_list[i]);  // TODO: Do you need to verify IDs
+    ServerCommand("namelockid %i %i", userid, (state == 1) ? 1 : 0);
+  }
+
+  if(state)
+    TagActivity(client, "%T", "SM_NAMELOCK_Lock", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_NAMELOCK_Unlock", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
 
 
+/**
+ * Prevent a player from changing their name.
+ *
+ * sm_notarget [Target] <1/0>
+ */
 public Action CMD_NoTarget(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_NOTARGET_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Self target
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_NOTARGET_Usage", client);
+      return Plugin_Handled;
+    }
+
+    // Apply
+    g_bNoTarget[client] = (state == 1) ? true : false;
+    if(IsPlayerAlive(client))
+      SetNoTarget(client, (state == 1) ? true : false);
+
+    if(state == 1)
+      TagReply(client, "%T", "SM_NOTARGET_Enable_Self", client);
+    else
+      TagReply(client, "%T", "SM_NOTARGET_Disable_Self", client);
+    return Plugin_Handled;
+  }
+
+  // Other target, args is > 1 here.
+  char arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0, // Don't filter alive here, we need to set global.
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Check arg2
+  int iState = GetStringBool(arg2, false, true, true, true);
+  if(iState == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_NOTARGET_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  bool bState = (iState == 1) ? true : false;
+  for(int i = 0; i < targ_count; ++i)
+  {
+    g_bNoTarget[targ_list[i]] = bState;
+    if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
+      SetNoTarget(targ_list[i], bState);
+  }
+
+  if(bState)
+    TagActivity(client, "%T", "SM_NOTARGET_Enable", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_NOTARGET_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
+}
+
+// Assumes valid client index
+void SetNoTarget(int client, bool state)
+{
+  int flags = GetEntityFlags(client);
+  (state) ? (flags |= FL_NOTARGET) : (flags &= ~FL_NOTARGET);
+  SetEntityFlags(client, flags);
+  return;
 }
 
 
 
+/**
+ * Adds a glowing outline effect to a player.
+ *
+ * sm_outline [Target] <1/0>
+ */
 public Action CMD_Outline(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_OUTLINE_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Self target
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_OUTLINE_Usage", client);
+      return Plugin_Handled;
+    }
+
+    // Apply
+    g_bOutline[client] = (state == 1) ? true : false;
+    if(IsPlayerAlive(client))
+      SetOutline(client, (state == 1) ? true : false);
+
+    if(state == 1)
+      TagReply(client, "%T", "SM_OUTLINE_Enable_Self", client);
+    else
+      TagReply(client, "%T", "SM_OUTLINE_Disable_Self", client);
+    return Plugin_Handled;
+  }
+
+  // Other target, args is > 1 here.
+  char arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0, // Don't filter alive here, we need to set global.
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Check arg2
+  int iState = GetStringBool(arg2, false, true, true, true);
+  if(iState == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_OUTLINE_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  bool bState = (iState == 1) ? true : false;
+  for(int i = 0; i < targ_count; ++i)
+  {
+    g_bOutline[targ_list[i]] = bState;
+    if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
+      SetOutline(targ_list[i], bState);
+  }
+
+  if(bState)
+    TagActivity(client, "%T", "SM_OUTLINE_Enable", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_OUTLINE_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
+
+// Assumes valid client index
+void SetOutline(int client, bool state)
+{
+  SetEntProp(client, Prop_Send, "m_bGlowEnabled", state);
+  return;
+}
+
 
 
 

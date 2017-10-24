@@ -7,7 +7,7 @@
 #define REQUIRE_PLUGIN
 #pragma newdecls required // After libraries or you get warnings
 
-#include <satansfunpack>  // Shared function library
+#include <satansfunpack>
 
 
 //=================================
@@ -107,7 +107,7 @@ public Action InstallCheck(int client, int args)
 {
   PrintToConsole(client, g_szList);
   if(client != 0 && GetCmdReplySource() == SM_REPLY_TO_CHAT)
-    ReplyStandard(client, "%T", "SFP_ConsoleOutput", client);
+    TagReply(client, "%T", "SFP_ConsoleOutput", client);
 
   return Plugin_Handled;
 }
