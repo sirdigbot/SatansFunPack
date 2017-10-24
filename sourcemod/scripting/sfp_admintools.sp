@@ -18,9 +18,10 @@ bool    g_bUpdate;
 bool    g_bLateLoad;
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
-bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false};
+bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false}; TODO Why does this fail to compile
 bool    g_bOutline[MAXPLAYERS + 1];   //= {..., false};
-
+bool    g_bTeleLock[MAXPLAYERS + 1];
+bool    g_bOpenTele[MAXPLAYERS + 1];
 
 //=================================
 // Constants
@@ -88,6 +89,18 @@ public void OnPluginStart()
   RegAdminCmd("sm_namelock",    CMD_NameLock, ADMFLAG_BAN, "Prevent a Player from Changing Names");
   RegAdminCmd("sm_notarget",    CMD_NoTarget, ADMFLAG_BAN, "Disable Sentry Targeting on a Player");
   RegAdminCmd("sm_outline",     CMD_Outline, ADMFLAG_BAN, "Set Outline Effect on a Player");
+  RegAdminCmd("sm_telelock",    CMD_TeleLock, ADMFLAG_BAN, "Lock teleporters from other Players");
+  RegAdminCmd("sm_opentele",    CMD_OpenTele, ADMFLAG_BAN, "Allow Enemies Through Your Teleporter");
+
+  /**
+   * Overrides
+   * sm_addcond_target  - Can client target others with sm_addcond
+   * sm_remcond_target  - Can client target others with sm_remcond
+   * sm_notarget_target - Can client target others with sm_notarget
+   * sm_outline_target  - Can client target others wtih sm_outline
+   * sm_telelock_target - Can client target others with sm_telelock
+   * sm_opentele_target - Can client target others with sm_opentele
+   */
 
 
   /*** Handle Late Loads ***/
@@ -135,9 +148,37 @@ public void OnClientDisconnect_Post(int client)
 {
   g_bOutline[client] = false;
   g_bNoTarget[client] = false;
+  g_bTeleLock[client] = false;
+  g_bOpenTele[client] = false;
   return;
 }
 
+
+public Action TF2_OnPlayerTeleport(int client, int teleporter, bool &result)
+{
+  int iOwner = GetEntPropEnt(teleporter, Prop_Data, "m_hBuilder");
+
+  if(iOwner < 1 || iOwner > MaxClients) // TODO: Does this work against RTD?
+    return Plugin_Continue;
+
+  // Tele-Lock. Takes precedence so you can still lock open-teles
+  if(g_bTeleLock[iOwner])
+  {
+    if(client != iOwner)
+    {
+      result = false;
+      return Plugin_Changed;
+    }
+  }
+
+  // Open-Tele - Always allow teleports.
+  if(g_bOpenTele[iOwner])
+  {
+    result = true;
+    return Plugin_Changed;
+  }
+  return Plugin_Continue;
+}
 
 
 
@@ -316,45 +357,48 @@ public Action CMD_AddCond(int client, int args)
     TagReply(client, "%T", "SM_ADDCOND_Done", client, iArg1);
   }
 
-  // Process args on target player
-  else if(args > 2)
+  // Process args on target player, args is > 2
+  if(!CheckCommandAccess(client, "sm_addcond_target", ADMFLAG_BAN, true))
   {
-    char arg3[16];
-    GetCmdArg(3, arg3, sizeof(arg3));
-    int iArg3 = StringToInt(arg3);
-
-    // Check arg2
-    if(iArg2 < 0)
-    {
-      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
-      return Plugin_Handled;
-    }
-
-    // Get Target List
-    char targ_name[MAX_TARGET_LENGTH];
-    int targ_list[MAXPLAYERS], targ_count;
-    bool tn_is_ml;
-
-    if ((targ_count = ProcessTargetString(
-      arg1,
-      client,
-      targ_list,
-      MAXPLAYERS,
-      COMMAND_FILTER_ALIVE,
-      targ_name,
-      sizeof(targ_name),
-      tn_is_ml)) <= 0)
-    {
-      ReplyToTargetError(client, targ_count);
-      return Plugin_Handled;
-    }
-
-    // Output
-    for(int i = 0; i < targ_count; ++i)
-      TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), view_as<float>(iArg3), 0);
-    TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
   }
 
+  char arg3[16];
+  GetCmdArg(3, arg3, sizeof(arg3));
+  int iArg3 = StringToInt(arg3);
+
+  // Check arg2
+  if(iArg2 < 0)
+  {
+    TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
+    return Plugin_Handled;
+  }
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Output
+  for(int i = 0; i < targ_count; ++i)
+    TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), view_as<float>(iArg3), 0);
+
+  TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
 }
 
@@ -397,35 +441,41 @@ public Action CMD_RemCond(int client, int args)
     TF2_RemoveCondition(client, view_as<TFCond>(iArg1));
     TagReply(client, "%T", "SM_REMCOND_Done", client, iArg1);
   }
-  else if(args > 1)
+
+  // Other target, args is > 1
+  if(!CheckCommandAccess(client, "sm_remcond_target", ADMFLAG_BAN, true))
   {
-    char arg2[16];
-    GetCmdArg(2, arg2, sizeof(arg2));
-    int iArg2 = StringToInt(arg2);
-
-    // Get Target List
-    char targ_name[MAX_TARGET_LENGTH];
-    int targ_list[MAXPLAYERS], targ_count;
-    bool tn_is_ml;
-
-    if ((targ_count = ProcessTargetString(
-      arg1,
-      client,
-      targ_list,
-      MAXPLAYERS,
-      COMMAND_FILTER_ALIVE,
-      targ_name,
-      sizeof(targ_name),
-      tn_is_ml)) <= 0)
-    {
-      ReplyToTargetError(client, targ_count);
-      return Plugin_Handled;
-    }
-
-    for(int i = 0; i < targ_count; ++i)
-      TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
-    TagActivity(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
   }
+
+  char arg2[16];
+  GetCmdArg(2, arg2, sizeof(arg2));
+  int iArg2 = StringToInt(arg2);
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+    TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
+
+  TagActivity(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
 }
 
@@ -805,6 +855,12 @@ public Action CMD_NoTarget(int client, int args)
   }
 
   // Other target, args is > 1 here.
+  if(!CheckCommandAccess(client, "sm_notarget_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
   char arg2[MAX_BOOLSTRING_LENGTH];
   GetCmdArg(2, arg2, sizeof(arg2));
 
@@ -907,6 +963,12 @@ public Action CMD_Outline(int client, int args)
   }
 
   // Other target, args is > 1 here.
+  if(!CheckCommandAccess(client, "sm_outline_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
   char arg2[MAX_BOOLSTRING_LENGTH];
   GetCmdArg(2, arg2, sizeof(arg2));
 
@@ -958,6 +1020,200 @@ void SetOutline(int client, bool state)
 {
   SetEntProp(client, Prop_Send, "m_bGlowEnabled", state);
   return;
+}
+
+
+
+/**
+ * Prevents anyone except the owner from using their teleporter.
+ *
+ * sm_telelock [Target] <1/0>
+ */
+public Action CMD_TeleLock(int client, int args)
+{
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_TELELOCK_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Self Target
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int iState = GetStringBool(arg1, false, true, true, true);
+    if(iState == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_TELELOCK_Usage", client);
+      return Plugin_Handled;
+    }
+
+    // Apply
+    if(iState == 1)
+    {
+      g_bTeleLock[client] = true;
+      TagReply(client, "%T", "SM_TELELOCK_Enable_Self", client);
+    }
+    else
+    {
+      g_bTeleLock[client] = false;
+      TagReply(client, "%T", "SM_TELELOCK_Disable_Self", client);
+    }
+    return Plugin_Handled;
+  }
+
+  // Other target, args is > 1
+  if(!CheckCommandAccess(client, "sm_telelock_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Check arg2
+  int iState = GetStringBool(arg2, false, true, true, true);
+  if(iState == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_TELELOCK_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  bool bState = (iState == 1) ? true : false;
+  for(int i = 0; i < targ_count; ++i)
+    g_bTeleLock[targ_list[i]] = bState;
+
+  if(bState)
+    TagActivity(client, "%T", "SM_TELELOCK_Enable", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_TELELOCK_Disable", LANG_SERVER, targ_name);
+  return Plugin_Handled;
+}
+
+
+
+/**
+ * Allows enemy players to use the teleporter.
+ *
+ * sm_opentele [Target] <1/0>
+ */
+public Action CMD_OpenTele(int client, int args)
+{
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_OPENTELE_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Self Target
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int iState = GetStringBool(arg1, false, true, true, true);
+    if(iState == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_OPENTELE_Usage", client);
+      return Plugin_Handled;
+    }
+
+    // Apply
+    if(iState == 1)
+    {
+      g_bOpenTele[client] = true;
+      TagReply(client, "%T", "SM_OPENTELE_Enable_Self", client);
+    }
+    else
+    {
+      g_bOpenTele[client] = false;
+      TagReply(client, "%T", "SM_OPENTELE_Disable_Self", client);
+    }
+    return Plugin_Handled;
+  }
+
+  // Other target, args is > 1
+  if(!CheckCommandAccess(client, "sm_opentele_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Check arg2
+  int iState = GetStringBool(arg2, false, true, true, true);
+  if(iState == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_OPENTELE_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  bool bState = (iState == 1) ? true : false;
+  for(int i = 0; i < targ_count; ++i)
+    g_bOpenTele[targ_list[i]] = bState;
+
+  if(bState)
+    TagActivity(client, "%T", "SM_OPENTELE_Enable", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_OPENTELE_Disable", LANG_SERVER, targ_name);
+  return Plugin_Handled;
 }
 
 

@@ -77,6 +77,10 @@
   {
     "en" "Output has been printed to your console."
   }
+  "SFP_NoTargeting"
+  {
+    "en" "You do not have access to targeting with this command."
+  }
 
 
 
@@ -232,8 +236,6 @@
     "en" "You have spawned with No-Target on."
   }
 
-
-
   "SM_OUTLINE_Usage"
   {
     "en" "sm_outline [Target] <1/0>"
@@ -261,6 +263,51 @@
     "en" "You have spawned with Outline on."
   }
 
+  "SM_TELELOCK_Usage"
+  {
+    "en" "sm_telelock [Target] <1/0>"
+  }
+  "SM_TELELOCK_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Tele-Lock for {1}."
+  }
+  "SM_TELELOCK_Enable_Self"
+  {
+    "en" "Enabled Tele-Lock."
+  }
+  "SM_TELELOCK_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Tele-Lock for {1}."
+  }
+  "SM_TELELOCK_Disable_Self"
+  {
+    "en" "Disabled Tele-Lock."
+  }
+
+  "SM_OPENTELE_Usage"
+  {
+    "en" "sm_opentele [Target] <1/0>"
+  }
+  "SM_OPENTELE_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Open-Tele for {1}."
+  }
+  "SM_OPENTELE_Enable_Self"
+  {
+    "en" "Enabled Open-Tele."
+  }
+  "SM_OPENTELE_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Open-Tele for {1}."
+  }
+  "SM_OPENTELE_Disable_Self"
+  {
+    "en" "Disabled Open-Tele."
+  }
 
   //=================================
   // QuickConditions
