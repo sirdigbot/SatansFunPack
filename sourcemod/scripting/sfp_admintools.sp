@@ -44,6 +44,18 @@ public Plugin myinfo =
 //=================================
 // Forwards/Events
 
+public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
+{
+	EngineVersion engine = GetEngineVersion();
+	if(engine != Engine_TF2)
+	{
+		Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+		return APLRes_Failure;
+	}
+	return APLRes_Success;
+}
+
+
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");

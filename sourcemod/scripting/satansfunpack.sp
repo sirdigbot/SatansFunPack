@@ -34,6 +34,18 @@ public Plugin myinfo =
 };
 
 
+public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
+{
+	EngineVersion engine = GetEngineVersion();
+	if(engine != Engine_TF2)
+	{
+		Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+		return APLRes_Failure;
+	}
+	return APLRes_Success;
+}
+
+
 
 /***
  * This core file doesn't do a lot, but is the only file that includes:

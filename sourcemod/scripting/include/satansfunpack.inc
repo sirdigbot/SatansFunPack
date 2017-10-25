@@ -3,8 +3,26 @@
 #endif
 #define _sfp_shared_included
 
-#define MAX_BOOLSTRING_LENGTH 7
+#define MAX_BOOLSTRING_LENGTH 8     // "disable" + \0
 #define STANDARD_TAG "\x04[SM]\x01"
+#define MAX_SLOTSTRING_LENGTH 10    // "secondary" + \0
+
+#include <tf2_stocks>
+
+enum TF_Slot_Index // Because tf2_stocks has no invalid option.
+{
+	TF_Slot_Invalid    = -1,
+	TF_Slot_Primary    = TFWeaponSlot_Primary,
+	TF_Slot_Secondary  = TFWeaponSlot_Secondary,
+	TF_Slot_Melee      = TFWeaponSlot_Melee,
+	TF_Slot_Grenade    = TFWeaponSlot_Grenade,
+	TF_Slot_Building   = TFWeaponSlot_Building,
+	TF_Slot_PDA        = TFWeaponSlot_PDA,
+	TF_Slot_Item1      = TFWeaponSlot_Item1,
+	TF_Slot_Item2      = TFWeaponSlot_Item2,
+	TF_Slot_AllWeapons // SPECIFICALLY MEANS Primary + Secondary + Melee
+}
+
 
 /**
  * Wraps ReplyToCommand with a coloured tag for command syntax.
@@ -147,4 +165,69 @@ stock int GetStringBool(const char[] str,
       return 0;
   }
   return -1;
+}
+
+
+/**
+ * Convert 6-digit Hex Number into RGB.
+ *
+ * @param hexStr      Hex string to check.
+ * @param RedOut      Integer to store Red value in.
+ * @param GreenOut    Integer to store Green value in.
+ * @param BlueOut     Integer to store Blue value in.
+ * @return bool       Returns true if successful, false if not.
+ */
+stock bool HexToRGB(const char[] hexStr, int &RedOut, int &GreenOut, int &BlueOut)
+{
+  if(strlen(hexStr) != 6)
+    return false;
+
+  char redStr[3], greenStr[3], blueStr[3];
+
+  strcopy(redStr,   sizeof(redStr),   hexStr);
+  strcopy(greenStr, sizeof(greenStr), hexStr[2]);
+  strcopy(blueStr,  sizeof(blueStr),  hexStr[4]);
+
+  RedOut    = StringToInt(redStr, 16);
+  GreenOut  = StringToInt(greenStr, 16);
+  BlueOut   = StringToInt(blueStr, 16);
+  return true;
+}
+
+
+/**
+ * Check if integer is between 0 and 255.
+ *
+ * @param hexStr      Int value to check
+ * @return bool       Returns true if successful, false if not.
+ */
+stock bool IsColourRGB(const int red, const int green, const int blue)
+{
+  if(red < 0 || red > 255)
+    return false;
+  if(green < 0 || green > 255)
+    return false;
+  if(blue < 0 || blue > 255)
+    return false;
+  return true;
+}
+
+
+/**
+ * Get a weapon slot index. Specifically for weapons.
+ *
+ * @param str             String to check.
+ * @return TF_Slot_Index  Returns weapon slot index or TF_Slot_Invalid
+ */
+stock TF_Slot_Index GetWeaponSlotIndex(const char[] str)
+{
+  if(StrEqual(str, "1", true) || StrEqual(str, "primary", false))
+    return TF_Slot_Primary;
+  else if(StrEqual(str, "2", true) || StrEqual(str, "secondary", false))
+    return TF_Slot_Secondary;
+  else if(StrEqual(str, "3", true) || StrEqual(str, "melee", false))
+    return TF_Slot_Melee;
+  else if(StrEqual(str, "all", false))
+    return TF_Slot_AllWeapons; // All 3 of the above.
+  return TF_Slot_Invalid;
 }
