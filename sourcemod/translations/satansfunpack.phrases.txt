@@ -355,7 +355,7 @@
   // ToyBox
   "SM_COLWEAPON_Usage"
   {
-    "en" "sm_colourweapon [Target] <Slot 1/2/3/All> <Hex Colour/RGB Colour>"
+    "en" "sm_colourweapon [Target] <Slot (1/2/3/All)> <Hex Colour/RGB Colour>"
   }
   "SM_COLWEAPON_Done"
   {
@@ -366,5 +366,26 @@
   {
     "#format" "{1:s},{2:d},{3:d},{4:d}"
     "en" "Set Colour of {1} Weapon[s] to: {2} {3} {4}"
+  }
+
+  "SM_SIZEWEAPON_Usage"
+  {
+    "en" "sm_resizeweapon [Target] <Slot (1/2/3/All)> <Scale>"
+  }
+  "SM_SIZEWEAPON_Scale"
+  {
+    "#format" "{1:f},{2:f}"
+    "en" "Scale is out of bounds. Use a value between {1} and {2}."
+    // TODO do these floats display right?
+  }
+  "SM_SIZEWEAPON_Done"
+  {
+    "#format" "{1:f}"
+    "en" "Set Size of Weapon[s] to {1}x"
+  }
+  "SM_SIZEWEAPON_Done_Server" // TODO: Improve the wording of this.
+  {
+    "#format" "{1:s},{2:f}"
+    "en" "Set Size of {1} Weapon[s] to {2}x"
   }
 }

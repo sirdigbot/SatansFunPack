@@ -15,6 +15,10 @@
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
+Handle  h_flResizeUpper;
+float   g_flResizeUpper;
+Handle  h_flResizeLower;
+float   g_flResizeLower;
 
 
 //=================================
@@ -61,6 +65,15 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
+  h_flResizeUpper = CreateConVar("sm_resizeweapon_upper", "3.0", "Upper Limits of Weapon Resize\n(Default: 3.0)", FCVAR_NONE);
+  g_flResizeUpper = GetConVarFloat(h_flResizeUpper);
+  HookConVarChange(h_flResizeUpper, UpdateCvars);
+
+  h_flResizeLower = CreateConVar("sm_resizeweapon_lower", "-3.0", "Lower Limits of Weapon Resize\n(Default: -3.0)", FCVAR_NONE);
+  g_flResizeLower = GetConVarFloat(h_flResizeLower);
+  HookConVarChange(h_flResizeLower, UpdateCvars);
+
+
   RegAdminCmd("sm_colourweapon",    CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
   RegAdminCmd("sm_colorweapon",     CMD_ColourWeapon, ADMFLAG_GENERIC, "Color Your Guns");
   RegAdminCmd("sm_cw",              CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
@@ -85,6 +98,7 @@ public void OnPluginStart()
    * Overrides
    * sm_colourweapon_target
    * sm_resizeweapon_target
+   * sm_resizeweapon_nolimit
    * sm_fov_target
    * sm_scream_target
    * sm_pitch_target
@@ -107,6 +121,10 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bUpdate = GetConVarBool(h_bUpdate);
     (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
+  else if(cvar == h_flResizeUpper)
+    g_flResizeUpper = StringToFloat(newValue);
+  else if(cvar == h_flResizeLower)
+    g_flResizeLower = StringToFloat(newValue);
   return;
 }
 
@@ -148,6 +166,12 @@ public Action CMD_ColourWeapon(int client, int args)
 
   if(args == 3 || args == 5) // Either Hex or RGB, but with target specified
   {
+    if(!CheckCommandAccess(client, "sm_colourweapon_target", ADMFLAG_BAN, true))
+    {
+      TagReply(client, "%T", "SFP_NoTargeting", client);
+      return Plugin_Handled;
+    }
+
     if ((targ_count = ProcessTargetString(
       arg1,
       client,
@@ -284,11 +308,135 @@ public Action CMD_ColourWeapon(int client, int args)
 
 /**
  * Resize a player's weapon
- * TODO Force scale limit with cvar
- * sm_resizeweapon [Target] [Slot] <Scale>
+ *
+ * sm_resizeweapon [Target] <Slot> <Scale>
+ * Slot is required so self-targeting to change a specific slot isn't.
  */
 public Action CMD_ResizeWeapon(int client, int args)
 {
+  if(args < 2)
+  {
+    TagReplyUsage(client, "%T", "SM_SIZEWEAPON_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Required Args
+  char arg1[MAX_NAME_LENGTH], arg2[8];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+
+  // Get Scale
+  float flScale;
+  if(args == 2)
+    flScale = StringToFloat(arg2);
+  else
+  {
+    char arg3[8];
+    GetCmdArg(3, arg3, sizeof(arg3));
+    flScale = StringToFloat(arg3);
+  }
+  if((FloatCompare(flScale, g_flResizeLower) == -1
+  || FloatCompare(flScale, g_flResizeUpper) == 1)
+  && !CheckCommandAccess(client, "sm_resizeweapon_nolimit", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SM_SIZEWEAPON_Scale", client, g_flResizeLower, g_flResizeUpper);
+    return Plugin_Handled;
+  }
+
+
+  // Get Slot
+  TF_Slot_Index slotIndex = TF_Slot_Invalid;
+  if(args == 2)
+    slotIndex = GetWeaponSlotIndex(arg1);
+  else // if(args == 3)
+    slotIndex = GetWeaponSlotIndex(arg2);
+  if(slotIndex == TF_Slot_Invalid)
+  {
+    TagReplyUsage(client, "%T", "SFP_BadWeaponSlot", client);
+    return Plugin_Handled;
+  }
+
+
+  // Get Target. Default to client.
+  bool bSelfTarget = false;
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+
+  if(args == 2) // No target, set to client.
+  {
+    if(!IsClientPlaying(client)) // TODO: Does this need to be applied to targeted cmds?
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    targ_count = 1;
+    targ_list[0] = client;
+    GetClientName(client, targ_name, sizeof(targ_name));
+    bSelfTarget = true;
+  }
+  else // if args == 3
+  {
+    if(!CheckCommandAccess(client, "sm_resizeweapon_target", ADMFLAG_BAN, true))
+    {
+      TagReply(client, "%T", "SFP_NoTargeting", client);
+      return Plugin_Handled;
+    }
+
+    if ((targ_count = ProcessTargetString(
+      arg1,
+      client,
+      targ_list,
+      MAXPLAYERS,
+      COMMAND_FILTER_ALIVE,
+      targ_name,
+      sizeof(targ_name),
+      tn_is_ml)) <= 0)
+    {
+      ReplyToTargetError(client, targ_count);
+      return Plugin_Handled;
+    }
+  }
+
+
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    int weapon;
+    switch(slotIndex)
+    {
+      case TF_Slot_AllWeapons:
+      {
+        weapon = GetPlayerWeaponSlot(targ_list[i], view_as<int>(TF_Slot_Primary));
+        if(weapon != -1)
+          SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", flScale);
+
+        weapon = GetPlayerWeaponSlot(targ_list[i], view_as<int>(TF_Slot_Secondary));
+        if(weapon != -1)
+          SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", flScale);
+
+        weapon = GetPlayerWeaponSlot(targ_list[i], view_as<int>(TF_Slot_Melee));
+        if(weapon != -1)
+          SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", flScale);
+      }
+
+      default: // Assuming index is only primary, secondary, melee or All.
+      {
+        weapon = GetPlayerWeaponSlot(targ_list[i], view_as<int>(slotIndex));
+        if(weapon != -1)
+          SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", flScale);
+      }
+    }
+  }
+
+  if(bSelfTarget)
+    TagReply(client, "%T", "SM_SIZEWEAPON_Done", client, flScale);
+  else
+    TagActivity(client, "%T", "SM_SIZEWEAPON_Done_Server", LANG_SERVER, targ_name, flScale);
   return Plugin_Handled;
 }
 
