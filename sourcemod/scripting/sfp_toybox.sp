@@ -15,10 +15,15 @@
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
-Handle  h_flResizeUpper;
+Handle  h_flResizeUpper = null;
 float   g_flResizeUpper;
-Handle  h_flResizeLower;
+Handle  h_flResizeLower = null;
 float   g_flResizeLower;
+Handle  h_iFOVUpper = null;
+int     g_iFOVUpper;
+Handle  h_iFOVLower = null;
+int     g_iFOVLower;
+int     g_iFOVDesired[MAXPLAYERS + 1]; // Don't reset on disconnect, set OnClientPutInServer.
 
 
 //=================================
@@ -59,6 +64,7 @@ public void OnPluginStart()
   LoadTranslations("common.phrases");
   LoadTranslations("core.phrases.txt");
 
+  // Cvars
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
     SetFailState("%T", "SFP_UpdateCvarFail", LANG_SERVER);
@@ -74,6 +80,15 @@ public void OnPluginStart()
   HookConVarChange(h_flResizeLower, UpdateCvars);
 
 
+  h_iFOVUpper = CreateConVar("sm_fov_upper", "160", "Upper Limits of FOV\n(Default: 160)", FCVAR_NONE, true, 1.0, true, 179.0);
+  g_iFOVUpper = GetConVarInt(h_iFOVUpper);
+  HookConVarChange(h_iFOVUpper, UpdateCvars);
+
+  h_iFOVLower = CreateConVar("sm_fov_lower", "30", "Lower Limits of FOV\n(Default: 30)", FCVAR_NONE, true, 1.0, true, 179.0);
+  g_iFOVLower = GetConVarInt(h_iFOVLower);
+  HookConVarChange(h_iFOVLower, UpdateCvars);
+
+
   RegAdminCmd("sm_colourweapon",    CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
   RegAdminCmd("sm_colorweapon",     CMD_ColourWeapon, ADMFLAG_GENERIC, "Color Your Guns");
   RegAdminCmd("sm_cw",              CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
@@ -81,7 +96,7 @@ public void OnPluginStart()
   RegAdminCmd("sm_resizeweapon",    CMD_ResizeWeapon, ADMFLAG_GENERIC, "Resize Your Weapons");
   RegAdminCmd("sm_rw",              CMD_ResizeWeapon, ADMFLAG_GENERIC, "Resize Your Weapons");
 
-  RegAdminCmd("sm_fov",             CMD_Fov, ADMFLAG_GENERIC, "Set your Field of View");
+  RegAdminCmd("sm_fov",             CMD_FieldOfView, ADMFLAG_GENERIC, "Set your Field of View");
   RegAdminCmd("sm_scream",          CMD_Scream, ADMFLAG_GENERIC, "Do it for the ice cream");
   RegAdminCmd("sm_screamtoggle",    CMD_ScreamToggle, ADMFLAG_GENERIC, "Toggle the sm_scream Command");
   RegAdminCmd("sm_pitch",           CMD_Pitch, ADMFLAG_GENERIC, "Make the Big Burly Men Sound Like Mice");
@@ -100,6 +115,7 @@ public void OnPluginStart()
    * sm_resizeweapon_target
    * sm_resizeweapon_nolimit
    * sm_fov_target
+   * sm_fov_nolimit
    * sm_scream_target
    * sm_pitch_target
    * sm_colour_target
@@ -108,7 +124,13 @@ public void OnPluginStart()
 
   /*** Handle Late Loads ***/
   if(g_bLateLoad)
-    PrintToServer("Lateload Warning temp fix.");
+  {
+    for(int i = 1; i <= MaxClients; i++)
+    {
+      if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
+        QueryClientConVar(i, "fov_desired", OnGetDesiredFOV);
+    }
+  }
 
   PrintToServer("%T", "SFP_ToyBoxLoaded", LANG_SERVER);
 }
@@ -125,9 +147,21 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_flResizeUpper = StringToFloat(newValue);
   else if(cvar == h_flResizeLower)
     g_flResizeLower = StringToFloat(newValue);
+  else if(cvar == h_iFOVUpper)
+    g_iFOVUpper = StringToInt(newValue);
+  else if(cvar == h_iFOVLower)
+    g_iFOVLower = StringToInt(newValue);
   return;
 }
 
+
+public void OnClientPutInServer(int client)
+{
+  if(!IsClientReplay(client) && !IsClientSourceTV(client))
+  {
+    QueryClientConVar(client, "fov_desired", OnGetDesiredFOV);
+  }
+}
 
 
 
@@ -444,12 +478,122 @@ public Action CMD_ResizeWeapon(int client, int args)
 
 /**
  * Set a player's Field of View
- * TODO Correct range. Use CVar.
- * sm_fov [Target] <0 to 180>
+ *
+ * sm_fov [Target] <1 to 179 or Reset/Default>
+ * Range is default 30-160
  */
-public Action CMD_Fov(int client, int args)
+public Action CMD_FieldOfView(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_FOV_Usage", client, g_iFOVLower, g_iFOVUpper);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  int val = 0;
+
+  if(args == 1)
+  {
+    if(StrEqual(arg1, "reset", false) || StrEqual(arg1, "default", false))
+    {
+      SetFOV(client, 0, true);
+      TagReply(client, "%T", "SM_FOV_Done_Default", client);
+      return Plugin_Handled;
+    }
+
+    val = StringToInt(arg1);
+    if((val < g_iFOVLower || val > g_iFOVUpper)
+    && !CheckCommandAccess(client, "sm_fov_nolimit", ADMFLAG_BAN, true))
+    {
+      TagReplyUsage(client, "%T", "SM_FOV_Usage", client, g_iFOVLower, g_iFOVUpper);
+      return Plugin_Handled;
+    }
+
+    SetFOV(client, val, false);
+    TagReply(client, "%T", "SM_FOV_Done", client, val);
+    return Plugin_Handled;
+  }
+
+
+  // Get Target
+  if(!CheckCommandAccess(client, "sm_fov_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_NO_BOTS,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Get Value
+  char arg2[16];
+  bool isDefault = false;
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  if(StrEqual(arg2, "reset", false) || StrEqual(arg2, "default", false))
+    isDefault = true;
+  else
+  {
+    val = StringToInt(arg2);
+    if((val < g_iFOVLower || val > g_iFOVUpper)
+    && !CheckCommandAccess(client, "sm_fov_nolimit", ADMFLAG_BAN, true))
+    {
+      TagReplyUsage(client, "%T", "SM_FOV_Usage", client, g_iFOVLower, g_iFOVUpper);
+      return Plugin_Handled;
+    }
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+    SetFOV(targ_list[i], val, isDefault);
+
+  if(isDefault)
+    TagActivity(client, "%T", "SM_FOV_Done_Server_Default", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_FOV_Done_Server", LANG_SERVER, targ_name, val);
   return Plugin_Handled;
+}
+
+// TODO Is there a better way to do this?
+void SetFOV(int iClient, int iVal, bool bDefault)
+{
+  if(bDefault)
+  {
+    // Safe to use value immediately, it's set OnClientPutInServer
+    SetEntProp(iClient, Prop_Send, "m_iFOV", g_iFOVDesired[iClient]);
+    SetEntProp(iClient, Prop_Send, "m_iDefaultFOV", g_iFOVDesired[iClient]);
+  }
+  else
+  {
+    QueryClientConVar(iClient, "fov_desired", OnGetDesiredFOV);
+    SetEntProp(iClient, Prop_Send, "m_iFOV", iVal);
+    SetEntProp(iClient, Prop_Send, "m_iDefaultFOV", iVal);
+    // TODO What is defaultfov for? Is it used when spawning?
+  }
+  return;
+}
+
+public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue)
+{
+  g_iFOVDesired[client] = StringToInt(cvarValue);
+  return;
 }
 
 

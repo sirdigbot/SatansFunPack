@@ -375,7 +375,7 @@
   "SM_SIZEWEAPON_Scale"
   {
     "#format" "{1:f},{2:f}"
-    "en" "Scale is out of bounds. Use a value between {1} and {2}."
+    "en" "Scale is out of range. Use a number between {1} and {2}."
     // TODO do these floats display right?
   }
   "SM_SIZEWEAPON_Done"
@@ -387,5 +387,35 @@
   {
     "#format" "{1:s},{2:f}"
     "en" "Set Size of {1} Weapon[s] to {2}x"
+  }
+
+  "SM_FOV_Usage"
+  {
+    "#format" "{1:d},{2:d}"
+    "en" "sm_fov [Target] <{1} to {2} or Reset/Default>"
+  }
+  "SM_FOV_Range"
+  {
+    "#format" "{1:d},{2:d}"
+    "en" "FOV is out of range. Use a number between {1} and {2}."
+  }
+  "SM_FOV_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Set FOV to {1}."
+  }
+  "SM_FOV_Done_Default"
+  {
+  "en" "Reset FOV to default."
+  }
+  "SM_FOV_Done_Server"
+  {
+    "#format" "{1:s},{2:d}"
+    "en" "Set {1} FOV to {2}."
+  }
+  "SM_FOV_Done_Server_Default"
+  {
+    "#format" "{1:s}"
+    "en" "Reset {1} FOV to default."
   }
 }
