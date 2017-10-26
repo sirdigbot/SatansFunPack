@@ -11,17 +11,17 @@
 
 
 //=================================
-// Global
-Handle  h_bUpdate = null;
-bool    g_bUpdate;
-char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, incl \0.
-
-
-//=================================
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
+
+
+//=================================
+// Global
+Handle  h_bUpdate = null;
+bool    g_bUpdate;
+char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, incl \0.
 
 
 public Plugin myinfo =

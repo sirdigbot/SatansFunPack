@@ -101,18 +101,24 @@ stock void TagActivity(int client, const char[] msg, any ...)
  * Check if a client is actually in the game playing.
  *
  * @param client    Client who issued command
- * @param bReplay	  Optional. Check if client is Replay bot
- * @param bSourceTV Optional. Check if client is SourceTV bot
+ * @param bObserver Optional. Allow client if they are Observer/Spectator
+ * @param bReplay	  Optional. Allow client if they are Replay bot
+ * @param bSourceTV Optional. Allow client if they are SourceTV bot
  */
-stock bool IsClientPlaying(int iClient, bool bReplay=false, bool bSourceTV=false)
+stock bool IsClientPlaying(int iClient,
+  bool bAllowObserver=false,
+  bool bAllowReplay=false,
+  bool bAllowSourceTV=false)
 {
-  if(iClient <= 0) // TODO: Can we check MaxClients out of a plugin?
+  if(iClient <= 0) // TODO: Can we check MaxClients outside of a plugin?
     return false;
   if(!IsClientInGame(iClient))
     return false;
-  if(bReplay && !IsClientReplay(iClient))
+  if(!bAllowObserver && IsClientObserver(iClient))
     return false;
-  if(bSourceTV && !IsClientSourceTV(iClient))
+  if(!bAllowReplay && IsClientReplay(iClient))
+    return false;
+  if(!bAllowSourceTV && IsClientSourceTV(iClient))
     return false;
   return true;
 }

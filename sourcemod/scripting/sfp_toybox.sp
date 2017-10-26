@@ -11,26 +11,40 @@
 
 
 //=================================
+// Constants
+#define PLUGIN_VERSION  "1.0.0"
+#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
+#define PITCH_DEFAULT   100
+
+
+//=================================
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
+
 Handle  h_flResizeUpper = null;
 float   g_flResizeUpper;
 Handle  h_flResizeLower = null;
 float   g_flResizeLower;
+
 Handle  h_iFOVUpper = null;
 int     g_iFOVUpper;
 Handle  h_iFOVLower = null;
 int     g_iFOVLower;
 int     g_iFOVDesired[MAXPLAYERS + 1]; // Don't reset on disconnect, set OnClientPutInServer.
 
+Handle  h_bScreamDefault = null; // Default state for g_bScreamEnabled
+bool    g_bScreamEnabled;
 
-//=================================
-// Constants
-#define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
+Handle  h_bPitchDefault = null;  // Default state for g_bPitchEnabled
+bool    g_bPitchEnabled;
+Handle  h_iPitchUpper = null;
+int     g_iPitchUpper;
+Handle  h_iPitchLower = null;
+int     g_iPitchLower;
+int     g_iPitch[MAXPLAYERS + 1] = {PITCH_DEFAULT, ...}; // Value is a percentage, 100 default
 
 
 public Plugin myinfo =
@@ -71,6 +85,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
+
   h_flResizeUpper = CreateConVar("sm_resizeweapon_upper", "3.0", "Upper Limits of Weapon Resize\n(Default: 3.0)", FCVAR_NONE);
   g_flResizeUpper = GetConVarFloat(h_flResizeUpper);
   HookConVarChange(h_flResizeUpper, UpdateCvars);
@@ -87,6 +102,24 @@ public void OnPluginStart()
   h_iFOVLower = CreateConVar("sm_fov_lower", "30", "Lower Limits of FOV\n(Default: 30)", FCVAR_NONE, true, 1.0, true, 179.0);
   g_iFOVLower = GetConVarInt(h_iFOVLower);
   HookConVarChange(h_iFOVLower, UpdateCvars);
+
+
+  h_bScreamDefault = CreateConVar("sm_scream_enable_default", "1", "Is sm_scream Enabled by Default (1/0)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bScreamEnabled = GetConVarBool(h_bScreamDefault);
+  HookConVarChange(h_bScreamDefault, UpdateCvars);
+
+  h_bPitchDefault = CreateConVar("sm_pitch_enable_default", "1", "Is sm_pitch Enabled by Default (1/0)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bPitchEnabled = GetConVarBool(h_bPitchDefault);
+  HookConVarChange(h_bPitchDefault, UpdateCvars);
+
+  h_iPitchUpper = CreateConVar("sm_pitch_upper", "200", "Upper Limits of Voice Pitch\n(Default: 200)", FCVAR_NONE, true, 1.0, true, 255.0);
+  g_iPitchUpper = GetConVarInt(h_iPitchUpper);
+  HookConVarChange(h_iPitchUpper, UpdateCvars);
+
+  h_iPitchLower = CreateConVar("sm_pitch_lower", "50", "Lower Limits of Voice Pitch\n(Default: 50)", FCVAR_NONE, true, 1.0, true, 255.0);
+  g_iPitchLower = GetConVarInt(h_iPitchLower);
+  HookConVarChange(h_iPitchLower, UpdateCvars);
+
 
 
   RegAdminCmd("sm_colourweapon",    CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
@@ -117,10 +150,15 @@ public void OnPluginStart()
    * sm_fov_target
    * sm_fov_nolimit
    * sm_scream_target
+   * sm_scream_nolock   - Player ignores sm_scream being disabled
    * sm_pitch_target
+   * sm_pitch_nolock    - Player ignores sm_pitch being disabled
+   * sm_pitch_nolimit
    * sm_colour_target
    * sm_friendlysentry_target
    */
+
+  AddNormalSoundHook(view_as<NormalSHook>(Hook_NormalSound)); // Sourcemod, why?
 
   /*** Handle Late Loads ***/
   if(g_bLateLoad)
@@ -151,6 +189,14 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_iFOVUpper = StringToInt(newValue);
   else if(cvar == h_iFOVLower)
     g_iFOVLower = StringToInt(newValue);
+  else if(cvar == h_bScreamDefault)
+    g_bScreamEnabled = GetConVarBool(h_bScreamDefault);
+  else if(cvar == h_bPitchDefault)
+    g_bPitchEnabled = GetConVarBool(h_bPitchDefault);
+  else if(cvar == h_iPitchUpper)
+    g_iPitchUpper = StringToInt(newValue);
+  else if(cvar == h_iPitchLower)
+    g_iPitchLower = StringToInt(newValue);
   return;
 }
 
@@ -161,6 +207,39 @@ public void OnClientPutInServer(int client)
   {
     QueryClientConVar(client, "fov_desired", OnGetDesiredFOV);
   }
+  return;
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+  // Do not put g_iFOVDesired here.
+  g_iPitch[client] = PITCH_DEFAULT;
+  return;
+}
+
+
+public Action Hook_NormalSound(
+  int clients[MAXPLAYERS],
+  int &numClients,
+  char sample[PLATFORM_MAX_PATH],
+  int &entity,
+  int &channel,
+  float &volume,
+  int &level,
+  int &pitch,
+  int &flags)
+{
+  // entity = client
+  if(channel == SNDCHAN_VOICE && entity >= 1 && entity <= MaxClients)
+  {
+    if(g_iPitch[entity] != PITCH_DEFAULT)
+    {
+      pitch = g_iPitch[entity];
+      flags |= SND_CHANGEPITCH;
+      return Plugin_Changed;
+    }
+  }
+  return Plugin_Continue;
 }
 
 
@@ -496,6 +575,12 @@ public Action CMD_FieldOfView(int client, int args)
 
   if(args == 1)
   {
+    if(!IsClientPlaying(client, true)) // Allow Spectators to use on self.
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
     if(StrEqual(arg1, "reset", false) || StrEqual(arg1, "default", false))
     {
       SetFOV(client, 0, true);
@@ -562,7 +647,10 @@ public Action CMD_FieldOfView(int client, int args)
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
-    SetFOV(targ_list[i], val, isDefault);
+  {
+    if(IsClientPlaying(targ_list[i], true)) // Allow Spectator, Not Replay/SourceTV
+      SetFOV(targ_list[i], val, isDefault);
+  }
 
   if(isDefault)
     TagActivity(client, "%T", "SM_FOV_Done_Server_Default", LANG_SERVER, targ_name);
@@ -605,18 +693,86 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
  */
 public Action CMD_Scream(int client, int args)
 {
+  if(!g_bScreamEnabled && !CheckCommandAccess(client, "sm_scream_nolock", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SM_SCREAM_Disabled", client);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+  {
+    if(IsClientPlaying(client))
+      PlayerScream(client);
+    return Plugin_Handled;
+  }
+
+  //Get Target
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+      PlayerScream(targ_list[i]);
+  }
+
   return Plugin_Handled;
+}
+
+void PlayerScream(int client)
+{
+  SetVariantString("HalloweenLongFall");
+  AcceptEntityInput(client, "SpeakResponseConcept", -1, -1, 0);
 }
 
 
 
 /**
  * Toggle Server-wide Access to sm_scream.
- * TODO Use CVar to set default state.
- * sm_screamtogle <1/0>
+ *
+ * sm_screamtoggle [1/0]
  */
 public Action CMD_ScreamToggle(int client, int args)
 {
+  if(args < 1)
+    g_bScreamEnabled = !g_bScreamEnabled;
+  else
+  {
+    char arg1[MAX_BOOLSTRING_LENGTH];
+    GetCmdArg(1, arg1, sizeof(arg1));
+
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_SCREAMTOGGLE_Usage", client);
+      return Plugin_Handled;
+    }
+    g_bScreamEnabled = view_as<bool>(state);
+  }
+
+  if(g_bScreamEnabled)
+    TagActivity(client, "%T", "SM_SCREAMTOGGLE_Enable", LANG_SERVER);
+  else
+    TagActivity(client, "%T", "SM_SCREAMTOGGLE_Disable", LANG_SERVER);
+
   return Plugin_Handled;
 }
 
@@ -624,11 +780,124 @@ public Action CMD_ScreamToggle(int client, int args)
 
 /**
  * Change the pitch of a player's voicelines
- * TODO Use cvar to set range.
- * sm_pitch [Target] <1-255 or 0/default/off/reset>
+ *
+ * sm_pitch [Target] <1-255 or 100/default/reset>
  */
 public Action CMD_Pitch(int client, int args)
 {
+  if(!g_bPitchEnabled && !CheckCommandAccess(client, "sm_pitch_nolock", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SM_PITCH_Disabled", client);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_PITCH_Usage", client, g_iPitchLower, g_iPitchUpper);
+    return Plugin_Handled;
+  }
+
+  int val;
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    if(StrEqual(arg1, "reset", false)
+    || StrEqual(arg1, "default", false)
+    || StrEqual(arg1, "100", true))
+    {
+      g_iPitch[client] = PITCH_DEFAULT;
+      TagReply(client, "%T", "SM_PITCH_Done_Default", client);
+      return Plugin_Handled;
+    }
+
+    val = StringToInt(arg1);
+    if((val < g_iPitchLower || val > g_iPitchUpper)
+    && !CheckCommandAccess(client, "sm_pitch_nolimit", ADMFLAG_BAN, true))
+    {
+      TagReplyUsage(client, "%T", "SM_PITCH_Usage", client, g_iPitchLower, g_iPitchUpper);
+      return Plugin_Handled;
+    }
+
+    if(val < 1 || val > 255)
+    {
+      TagReply(client, "%T", "SM_PITCH_Limit", client);
+      return Plugin_Handled;
+    }
+
+    g_iPitch[client] = val;
+    TagReply(client, "%T", "SM_PITCH_Done", client, val);
+    return Plugin_Handled;
+  }
+
+  // Get Value
+  bool isDefault = false;
+  char arg2[5];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  if(StrEqual(arg2, "reset", false)
+  || StrEqual(arg2, "default", false)
+  || StrEqual(arg2, "100", true))
+  {
+    val = PITCH_DEFAULT;
+    isDefault = true;
+  }
+  else
+  {
+    val = StringToInt(arg2);
+    if((val < g_iPitchLower || val > g_iPitchUpper)
+    && !CheckCommandAccess(client, "sm_pitch_nolimit", ADMFLAG_BAN, true))
+    {
+      TagReplyUsage(client, "%T", "SM_PITCH_Usage", client, g_iPitchLower, g_iPitchUpper);
+      return Plugin_Handled;
+    }
+
+    if(val < 1 || val > 255)
+    {
+      TagReply(client, "%T", "SM_PITCH_Limit", client);
+      return Plugin_Handled;
+    }
+  }
+
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Target and Val ready, Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+      g_iPitch[targ_list[i]] = val;
+  }
+
+  if(isDefault)
+    TagActivity(client, "%T", "SM_PITCH_Done_Server", LANG_SERVER);
+  else
+    TagActivity(client, "%T", "SM_PITCH_Done_Server_Default", LANG_SERVER);
+
   return Plugin_Handled;
 }
 
@@ -636,11 +905,32 @@ public Action CMD_Pitch(int client, int args)
 
 /**
  * Toggle Server-wide Access to sm_pitch
- * TODO Use CVar to set default state.
- * sm_pitchtoggle <1/0>
+ *
+ * sm_pitchtoggle [1/0]
  */
 public Action CMD_PitchToggle(int client, int args)
 {
+  if(args < 1)
+    g_bPitchEnabled = !g_bPitchEnabled;
+  else
+  {
+    char arg1[MAX_BOOLSTRING_LENGTH];
+    GetCmdArg(1, arg1, sizeof(arg1));
+
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_PITCHTOGGLE_Usage", client);
+      return Plugin_Handled;
+    }
+    g_bPitchEnabled = view_as<bool>(state);
+  }
+
+  if(g_bPitchEnabled)
+    TagActivity(client, "%T", "SM_PITCHTOGGLE_Enable", LANG_SERVER);
+  else
+    TagActivity(client, "%T", "SM_PITCHTOGGLE_Disable", LANG_SERVER);
+
   return Plugin_Handled;
 }
 

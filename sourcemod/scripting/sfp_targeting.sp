@@ -12,14 +12,6 @@
 
 
 //=================================
-// Global
-Handle  h_bUpdate = null;
-bool    g_bUpdate;
-Handle  h_iRandomBias = null;
-int     g_iRandomBias;
-
-
-//=================================
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
@@ -28,6 +20,13 @@ int     g_iRandomBias;
 // Comment out to stop the excessive random filters from compiling.
 #define _TARGET_RANDOM_VARIATION
 
+
+//=================================
+// Global
+Handle  h_bUpdate = null;
+bool    g_bUpdate;
+Handle  h_iRandomBias = null;
+int     g_iRandomBias;
 
 
 public Plugin myinfo =
@@ -177,7 +176,7 @@ public bool Filter_Admins(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(CheckCommandAccess(i, "sm_targetgroup_admin", ADMFLAG_BAN, true))
       {
@@ -194,7 +193,7 @@ public bool Filter_NotAdmins(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(!CheckCommandAccess(i, "sm_targetgroup_admin", ADMFLAG_BAN, true))
       {
@@ -213,7 +212,7 @@ public bool Filter_Mods(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(CheckCommandAccess(i, "sm_targetgroup_mod", ADMFLAG_KICK, true))
       {
@@ -230,7 +229,7 @@ public bool Filter_NotMods(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(!CheckCommandAccess(i, "sm_targetgroup_mod", ADMFLAG_KICK, true))
       {
@@ -249,7 +248,7 @@ public bool Filter_Staff(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       bool isMod = CheckCommandAccess(i, "sm_targetgroup_mod", ADMFLAG_KICK, true);
       bool isAdmin = CheckCommandAccess(i, "sm_targetgroup_admin", ADMFLAG_BAN, true);
@@ -268,7 +267,7 @@ public bool Filter_NotStaff(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       bool isMod = CheckCommandAccess(i, "sm_targetgroup_mod", ADMFLAG_KICK, true);
       bool isAdmin = CheckCommandAccess(i, "sm_targetgroup_admin", ADMFLAG_BAN, true);
@@ -292,7 +291,7 @@ public bool Filter_Random(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(GetRandomInt(0, 255) > g_iRandomBias)
       {
@@ -320,7 +319,7 @@ public bool Filter_RandomMulti(char[] pattern, Handle clients)
   int indexes[MAXPLAYERS + 1];
   for(int i = 0; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
       indexes[i] = i;
     else
       indexes[i] = 0;
@@ -360,7 +359,7 @@ public bool Filter_Scout(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Scout)
       {
@@ -377,7 +376,7 @@ public bool Filter_NotScout(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Scout)
       {
@@ -398,7 +397,7 @@ public bool Filter_Soldier(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Soldier)
       {
@@ -415,7 +414,7 @@ public bool Filter_NotSoldier(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Soldier)
       {
@@ -436,7 +435,7 @@ public bool Filter_Pyro(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Pyro)
       {
@@ -453,7 +452,7 @@ public bool Filter_NotPyro(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Pyro)
       {
@@ -474,7 +473,7 @@ public bool Filter_Demo(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_DemoMan)
       {
@@ -491,7 +490,7 @@ public bool Filter_NotDemo(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_DemoMan)
       {
@@ -512,7 +511,7 @@ public bool Filter_Heavy(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Heavy)
       {
@@ -529,7 +528,7 @@ public bool Filter_NotHeavy(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Heavy)
       {
@@ -550,7 +549,7 @@ public bool Filter_Engie(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Engineer)
       {
@@ -567,7 +566,7 @@ public bool Filter_NotEngie(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Engineer)
       {
@@ -588,7 +587,7 @@ public bool Filter_Medic(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Medic)
       {
@@ -605,7 +604,7 @@ public bool Filter_NotMedic(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Medic)
       {
@@ -626,7 +625,7 @@ public bool Filter_Sniper(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Sniper)
       {
@@ -643,7 +642,7 @@ public bool Filter_NotSniper(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Sniper)
       {
@@ -664,7 +663,7 @@ public bool Filter_Spy(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) == TFClass_Spy)
       {
@@ -681,7 +680,7 @@ public bool Filter_NotSpy(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true, true))
+    if(IsClientPlaying(i, true))
     {
       if(TF2_GetPlayerClass(i) != TFClass_Spy)
       {

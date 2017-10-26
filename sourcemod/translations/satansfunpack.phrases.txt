@@ -418,4 +418,65 @@
     "#format" "{1:s}"
     "en" "Reset {1} FOV to default."
   }
+
+  "SM_SCREAM_Disabled"
+  {
+    "en" "sm_scream is currently disabled."
+  }
+  "SM_SCREAMTOGGLE_Usage"
+  {
+    "en" "sm_screamtoggle [1/0]"
+  }
+  "SM_SCREAMTOGGLE_Enable"
+  {
+    "en" "sm_scream has been Enabled."
+  }
+  "SM_SCREAMTOGGLE_Disable"
+  {
+    "en" "sm_scream has been Disabled."
+  }
+
+  "SM_PITCH_Usage"
+  {
+    "en" "sm_pitch [Target] <{1} to {2} or Reset/Default>"
+  }
+  "SM_PITCH_Disabled"
+  {
+    "en" "sm_pitch is currently disabled."
+  }
+  "SM_PITCH_Limit"
+  {
+    "en" "Pitch must be between 1 and 255."
+  }
+  "SM_PITCH_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Set Pitch to {1}%."
+  }
+  "SM_PITCH_Done_Default"
+  {
+  "en" "Reset Pitch to default."
+  }
+  "SM_PITCH_Done_Server"
+  {
+    "#format" "{1:s},{2:d}"
+    "en" "Set {1} Pitch to {2}%."
+  }
+  "SM_PITCH_Done_Server_Default"
+  {
+    "#format" "{1:s}"
+    "en" "Reset {1} Pitch to default."
+  }
+  "SM_PITCHTOGGLE_Usage"
+  {
+    "en" "sm_pitchtoggle [1/0]"
+  }
+  "SM_PITCHTOGGLE_Enable"
+  {
+    "en" "sm_pitch has been Enabled."
+  }
+  "SM_PITCHTOGGLE_Disable"
+  {
+    "en" "sm_pitch has been Disabled."
+  }
 }

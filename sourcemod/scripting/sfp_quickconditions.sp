@@ -12,16 +12,16 @@
 
 
 //=================================
-// Global
-Handle  h_bUpdate = null;
-bool    g_bUpdate;
-
-
-//=================================
 // Constants
 #define PLUGIN_VERSION  "1.0.0"
 #define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/quickcond_update.txt"
+
+
+//=================================
+// Global
+Handle  h_bUpdate = null;
+bool    g_bUpdate;
 
 
 public Plugin myinfo =

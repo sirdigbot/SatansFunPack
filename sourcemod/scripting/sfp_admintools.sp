@@ -12,6 +12,13 @@
 
 
 //=================================
+// Constants
+#define PLUGIN_VERSION  "1.0.0"
+#define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
+#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
+
+
+//=================================
 // Globals
 Handle  h_bUpdate     = null;
 bool    g_bUpdate;
@@ -21,13 +28,6 @@ bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false}; TODO Why does this fail
 bool    g_bOutline[MAXPLAYERS + 1];   //= {..., false};
 bool    g_bTeleLock[MAXPLAYERS + 1];
 bool    g_bOpenTele[MAXPLAYERS + 1];
-
-//=================================
-// Constants
-#define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
-#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
-
 
 
 public Plugin myinfo =
@@ -514,7 +514,7 @@ public Action CMD_Disarm(int client, int args)
   // Apply
   for(int i = 0; i < targ_count; ++i)
   {
-    if(IsClientPlaying(targ_list[i], true, true))
+    if(IsClientPlaying(targ_list[i]))
     {
       TF2_RemoveAllWeapons(targ_list[i]);
       TagReply(targ_list[i], "%T", "SM_DISARM_Done", targ_list[i]);
