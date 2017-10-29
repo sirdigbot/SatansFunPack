@@ -6,9 +6,23 @@
   {
     "en" "Satan's Fun Pack is only compatible with Team Fortress 2."
   }
-  "SFP_UpdateCvarFail"
+  "SFP_MainCvarFail"
   {
-    "en" "Cannot find ConVar sm_satansfunpack_update; satansfunpack.smx is not loaded."
+    "#format" "{1:s}"
+    "en" "Cannot find ConVar {1}; satansfunpack.smx is not loaded."
+  }
+  "SFP_NoConfig"
+  {
+    "#format" "{1:s}"
+    "en" "Config file does not exist: {1}"
+  }
+  "SFP_BadConfig"
+  {
+    "en" "Config KeyValues structure is broken."
+  }
+  "SFP_BadConfigSubKey"
+  {
+    "en" "Config KeyValues structure is broken: Could not find any subkeys."
   }
 
   "SFP_Loaded"
@@ -478,5 +492,40 @@
   "SM_PITCHTOGGLE_Disable"
   {
     "en" "sm_pitch has been Disabled."
+  }
+
+  "SM_TAUNTMENU_NoGameData"
+  {
+    "en" "Unable to load gamedata/tf2.satansfunpack.txt."
+  }
+  "SM_TAUNTMENU_BadGameData"
+  {
+    "en" "Unable to initialize call to CTFPlayer::PlayTauntSceneFromItem."
+  }
+  "SM_TAUNTMENU_Title"
+  {
+    "en" "Taunt Menu"
+  }
+  "SM_TAUNTMENU_EntFail"
+  {
+    "en" "Failed to create taunt entity."
+  }
+  "SM_TAUNTMENU_AddressFail"
+  {
+    "en" "Couldn't find CEconItemView for taunt."
+  }
+
+  "SM_TAUNTRELOAD_Success"
+  {
+    "en" "Successfully loaded Taunt Config"
+  }
+  "SM_TAUNTRELOAD_Fail"
+  {
+    "en" "Failed to load Taunt Config. Plugin has been stopped!"
+  }
+
+  "SM_SPLAY_Usage"
+  {
+    "en" "sm_splay <Target> <Filename>"
   }
 }

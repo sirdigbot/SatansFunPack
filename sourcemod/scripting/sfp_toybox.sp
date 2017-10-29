@@ -4,6 +4,7 @@
 #include <sourcemod>
 #undef REQUIRE_PLUGIN
 #tryinclude <updater>
+#tryinclude <tf2items>
 #define REQUIRE_PLUGIN
 #pragma newdecls required // After libraries or you get warnings
 
@@ -16,6 +17,20 @@
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 #define PITCH_DEFAULT   100
+#define MAX_TAUNTS      64
+
+
+// Set Which Commands to Compile
+#define _INCLUDE_COLOURWEP
+#define _INCLUDE_RESIZEWEP
+#define _INCLUDE_FOV
+#define _INCLUDE_SCREAM
+#define _INCLUDE_PITCH
+#define _INCLUDE_TAUNTS
+#define _INCLUDE_SPLAY
+#define _INCLUDE_COLOUR
+#define _INCLUDE_FRIENDLYSENTRY
+#define _INCLUDE_CUSTOMSLAP
 
 
 //=================================
@@ -24,20 +39,27 @@ Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
 
+#if defined _INCLUDE_RESIZEWEP
 Handle  h_flResizeUpper = null;
 float   g_flResizeUpper;
 Handle  h_flResizeLower = null;
 float   g_flResizeLower;
+#endif
 
+#if defined _INCLUDE_FOV
 Handle  h_iFOVUpper = null;
 int     g_iFOVUpper;
 Handle  h_iFOVLower = null;
 int     g_iFOVLower;
 int     g_iFOVDesired[MAXPLAYERS + 1]; // Don't reset on disconnect, set OnClientPutInServer.
+#endif
 
+#if defined _INCLUDE_SCREAM
 Handle  h_bScreamDefault = null; // Default state for g_bScreamEnabled
 bool    g_bScreamEnabled;
+#endif
 
+#if defined _INCLUDE_PITCH
 Handle  h_bPitchDefault = null;  // Default state for g_bPitchEnabled
 bool    g_bPitchEnabled;
 Handle  h_iPitchUpper = null;
@@ -45,6 +67,31 @@ int     g_iPitchUpper;
 Handle  h_iPitchLower = null;
 int     g_iPitchLower;
 int     g_iPitch[MAXPLAYERS + 1] = {PITCH_DEFAULT, ...}; // Value is a percentage, 100 default
+#endif
+
+#if defined _INCLUDE_TAUNTS
+Handle  h_PlayTauntScene = null;
+Handle  h_szConfig = null;
+char    g_szConfig[CONFIG_SIZE];
+char    g_szTauntName[MAX_TAUNTS][32];
+char    g_szTauntId[MAX_TAUNTS][7];
+enum TFClasses // Need an addittional All-Class option so dont use TFClassType
+{
+  TFInvalid = TFClass_Unknown,
+  TFScout = TFClass_Scout,
+  TFSniper = TFClass_Sniper,
+  TFSoldier = TFClass_Soldier,
+  TFDemoman = TFClass_DemoMan,
+  TFMedic = TFClass_Medic,
+  TFHeavy = TFClass_Heavy,
+  TFPyro = TFClass_Pyro,
+  TFSpy = TFClass_Spy,
+  TFEngie = TFClass_Engineer,
+  TFAllClass
+};
+TFClasses g_TauntClass[MAX_TAUNTS];
+int     g_iTauntCount;
+#endif
 
 
 public Plugin myinfo =
@@ -78,14 +125,40 @@ public void OnPluginStart()
   LoadTranslations("common.phrases");
   LoadTranslations("core.phrases.txt");
 
+
+  // SDKTools Hooks
+  // Thank you to FlaminSarge for the sdktools code.
+  #if defined _INCLUDE_TAUNTS
+  Handle tauntemFile = LoadGameConfigFile("tf2.satansfunpack.txt");
+  if (tauntemFile == INVALID_HANDLE)
+  {
+    SetFailState("%T", "SM_TAUNTMENU_NoGameData", LANG_SERVER);
+    return;
+  }
+  StartPrepSDKCall(SDKCall_Player);
+  PrepSDKCall_SetFromConf(tauntemFile, SDKConf_Signature, "CTFPlayer::PlayTauntSceneFromItem");
+  PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+  PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+  h_PlayTauntScene = EndPrepSDKCall();
+  if (h_PlayTauntScene == INVALID_HANDLE)
+  {
+    SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
+    CloseHandle(tauntemFile);
+    return;
+  }
+  CloseHandle(tauntemFile);
+  #endif
+
+
   // Cvars
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
-    SetFailState("%T", "SFP_UpdateCvarFail", LANG_SERVER);
+    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_update");
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
 
+  #if defined _INCLUDE_RESIZEWEP
   h_flResizeUpper = CreateConVar("sm_resizeweapon_upper", "3.0", "Upper Limits of Weapon Resize\n(Default: 3.0)", FCVAR_NONE);
   g_flResizeUpper = GetConVarFloat(h_flResizeUpper);
   HookConVarChange(h_flResizeUpper, UpdateCvars);
@@ -93,8 +166,9 @@ public void OnPluginStart()
   h_flResizeLower = CreateConVar("sm_resizeweapon_lower", "-3.0", "Lower Limits of Weapon Resize\n(Default: -3.0)", FCVAR_NONE);
   g_flResizeLower = GetConVarFloat(h_flResizeLower);
   HookConVarChange(h_flResizeLower, UpdateCvars);
+  #endif
 
-
+  #if defined _INCLUDE_FOV
   h_iFOVUpper = CreateConVar("sm_fov_upper", "160", "Upper Limits of FOV\n(Default: 160)", FCVAR_NONE, true, 1.0, true, 179.0);
   g_iFOVUpper = GetConVarInt(h_iFOVUpper);
   HookConVarChange(h_iFOVUpper, UpdateCvars);
@@ -102,12 +176,15 @@ public void OnPluginStart()
   h_iFOVLower = CreateConVar("sm_fov_lower", "30", "Lower Limits of FOV\n(Default: 30)", FCVAR_NONE, true, 1.0, true, 179.0);
   g_iFOVLower = GetConVarInt(h_iFOVLower);
   HookConVarChange(h_iFOVLower, UpdateCvars);
+  #endif
 
-
+  #if defined _INCLUDE_SCREAM
   h_bScreamDefault = CreateConVar("sm_scream_enable_default", "1", "Is sm_scream Enabled by Default (1/0)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bScreamEnabled = GetConVarBool(h_bScreamDefault);
   HookConVarChange(h_bScreamDefault, UpdateCvars);
+  #endif
 
+  #if defined _INCLUDE_PITCH
   h_bPitchDefault = CreateConVar("sm_pitch_enable_default", "1", "Is sm_pitch Enabled by Default (1/0)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bPitchEnabled = GetConVarBool(h_bPitchDefault);
   HookConVarChange(h_bPitchDefault, UpdateCvars);
@@ -119,28 +196,60 @@ public void OnPluginStart()
   h_iPitchLower = CreateConVar("sm_pitch_lower", "50", "Lower Limits of Voice Pitch\n(Default: 50)", FCVAR_NONE, true, 1.0, true, 255.0);
   g_iPitchLower = GetConVarInt(h_iPitchLower);
   HookConVarChange(h_iPitchLower, UpdateCvars);
+  #endif
+
+  #if defined _INCLUDE_TAUNTS
+  h_szConfig = FindConVar("sm_satansfunpack_config");
+  if(h_szConfig == null)
+    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_config");
+
+  char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
+  GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
+  Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", cvarBuffer);
+  BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+  HookConVarChange(h_szConfig, UpdateCvars);
+  #endif
 
 
-
+  #if defined _INCLUDE_COLOURWEP
   RegAdminCmd("sm_colourweapon",    CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
   RegAdminCmd("sm_colorweapon",     CMD_ColourWeapon, ADMFLAG_GENERIC, "Color Your Guns");
   RegAdminCmd("sm_cw",              CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
-
+  #endif
+  #if defined _INCLUDE_RESIZEWEP
   RegAdminCmd("sm_resizeweapon",    CMD_ResizeWeapon, ADMFLAG_GENERIC, "Resize Your Weapons");
   RegAdminCmd("sm_rw",              CMD_ResizeWeapon, ADMFLAG_GENERIC, "Resize Your Weapons");
-
+  #endif
+  #if defined _INCLUDE_FOV
   RegAdminCmd("sm_fov",             CMD_FieldOfView, ADMFLAG_GENERIC, "Set your Field of View");
+  #endif
+  #if defined _INCLUDE_SCREAM
   RegAdminCmd("sm_scream",          CMD_Scream, ADMFLAG_GENERIC, "Do it for the ice cream");
   RegAdminCmd("sm_screamtoggle",    CMD_ScreamToggle, ADMFLAG_GENERIC, "Toggle the sm_scream Command");
+  #endif
+  #if defined _INCLUDE_PITCH
   RegAdminCmd("sm_pitch",           CMD_Pitch, ADMFLAG_GENERIC, "Make the Big Burly Men Sound Like Mice");
   RegAdminCmd("sm_pitchtoggle",     CMD_PitchToggle, ADMFLAG_GENERIC, "Toggle the sm_pitch Command");
-  RegAdminCmd("sm_taunt",           CMD_TauntMenu, ADMFLAG_GENERIC, "Perform Any Taunt");
-  RegAdminCmd("sm_taunts",          CMD_TauntMenu, ADMFLAG_GENERIC, "Perform Any Taunt");
+  #endif
+  #if defined _INCLUDE_TAUNTS
+  // To Appease Lord GabeN
+  RegConsoleCmd("sm_taunt",         CMD_TauntMenu, "Perform Any Taunt");
+  RegConsoleCmd("sm_taunts",        CMD_TauntMenu, "Perform Any Taunt");
+  RegAdminCmd("sm_tauntreload",     CMD_TauntReload, ADMFLAG_ROOT, "Manually Reload Taunt List");
+  #endif
+  #if defined _INCLUDE_SPLAY
   RegAdminCmd("sm_splay",           CMD_StealthPlay, ADMFLAG_GENERIC, "Play Sounds Stealthily");
+  #endif
+  #if defined _INCLUDE_COLOUR
   RegAdminCmd("sm_colour",          CMD_ColourPlayer, ADMFLAG_GENERIC, "Slap on Some Cheap Paint");
   RegAdminCmd("sm_color",           CMD_ColourPlayer, ADMFLAG_GENERIC, "Slap on Some Cheap, Patriotic Paint");
+  #endif
+  #if defined _INCLUDE_FRIENDLYSENTRY
   RegAdminCmd("sm_friendlysentry",  CMD_FriendlySentry, ADMFLAG_GENERIC, "Load Your Sentry Full of Friendliness Pellets");
-  RegAdminCmd("sm_lslap",           CMD_ListenSlap, ADMFLAG_GENERIC, "Navi's Sick of Your Crap");
+  #endif
+  #if defined _INCLUDE_CUSTOMSLAP
+  RegAdminCmd("sm_cslap",           CMD_CustomSlap, ADMFLAG_GENERIC, "A Customiseable Slap");
+  #endif
 
   /**
    * Overrides
@@ -166,7 +275,11 @@ public void OnPluginStart()
     for(int i = 1; i <= MaxClients; i++)
     {
       if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
+      {
+        #if defined _INCLUDE_FOV
         QueryClientConVar(i, "fov_desired", OnGetDesiredFOV);
+        #endif
+      }
     }
   }
 
@@ -181,22 +294,43 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bUpdate = GetConVarBool(h_bUpdate);
     (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
+  #if defined _INCLUDE_RESIZEWEP
   else if(cvar == h_flResizeUpper)
     g_flResizeUpper = StringToFloat(newValue);
   else if(cvar == h_flResizeLower)
     g_flResizeLower = StringToFloat(newValue);
+  #endif
+
+  #if defined _INCLUDE_FOV
   else if(cvar == h_iFOVUpper)
     g_iFOVUpper = StringToInt(newValue);
   else if(cvar == h_iFOVLower)
     g_iFOVLower = StringToInt(newValue);
+  #endif
+
+  #if defined _INCLUDE_SCREAM
   else if(cvar == h_bScreamDefault)
     g_bScreamEnabled = GetConVarBool(h_bScreamDefault);
+  #endif
+
+  #if defined _INCLUDE_PITCH
   else if(cvar == h_bPitchDefault)
     g_bPitchEnabled = GetConVarBool(h_bPitchDefault);
   else if(cvar == h_iPitchUpper)
     g_iPitchUpper = StringToInt(newValue);
   else if(cvar == h_iPitchLower)
     g_iPitchLower = StringToInt(newValue);
+  #endif
+
+  #if defined _INCLUDE_TAUNTS
+  else if(cvar == h_szConfig)
+  {
+    char pathBuffer[CONFIG_SIZE];
+    Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", newValue);
+    BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+    LoadTauntConfig();
+  }
+  #endif
   return;
 }
 
@@ -205,7 +339,9 @@ public void OnClientPutInServer(int client)
 {
   if(!IsClientReplay(client) && !IsClientSourceTV(client))
   {
+    #if defined _INCLUDE_FOV
     QueryClientConVar(client, "fov_desired", OnGetDesiredFOV);
+    #endif
   }
   return;
 }
@@ -213,7 +349,9 @@ public void OnClientPutInServer(int client)
 public void OnClientDisconnect_Post(int client)
 {
   // Do not put g_iFOVDesired here.
+  #if defined _INCLUDE_PITCH
   g_iPitch[client] = PITCH_DEFAULT;
+  #endif
   return;
 }
 
@@ -232,12 +370,14 @@ public Action Hook_NormalSound(
   // entity = client
   if(channel == SNDCHAN_VOICE && entity >= 1 && entity <= MaxClients)
   {
+    #if defined _INCLUDE_PITCH
     if(g_iPitch[entity] != PITCH_DEFAULT)
     {
       pitch = g_iPitch[entity];
       flags |= SND_CHANGEPITCH;
       return Plugin_Changed;
     }
+    #endif
   }
   return Plugin_Continue;
 }
@@ -257,6 +397,7 @@ public Action Hook_NormalSound(
  * [Target]+[Slot]+<Hex> vs <R>+<G>+<B>
  * TODO Add alpha support.
  */
+#if defined _INCLUDE_COLOURWEP
 public Action CMD_ColourWeapon(int client, int args)
 {
   if(args < 2 && args > 5)
@@ -416,7 +557,7 @@ public Action CMD_ColourWeapon(int client, int args)
     TagActivity(client, "%T", "SM_COLWEAPON_Done_Server", LANG_SERVER, targ_name, iRed, iGreen, iBlue);
   return Plugin_Handled;
 }
-
+#endif
 
 
 /**
@@ -425,6 +566,7 @@ public Action CMD_ColourWeapon(int client, int args)
  * sm_resizeweapon [Target] <Slot> <Scale>
  * Slot is required so self-targeting to change a specific slot isn't.
  */
+#if defined _INCLUDE_RESIZEWEP
 public Action CMD_ResizeWeapon(int client, int args)
 {
   if(args < 2)
@@ -552,6 +694,7 @@ public Action CMD_ResizeWeapon(int client, int args)
     TagActivity(client, "%T", "SM_SIZEWEAPON_Done_Server", LANG_SERVER, targ_name, flScale);
   return Plugin_Handled;
 }
+#endif
 
 
 
@@ -561,6 +704,7 @@ public Action CMD_ResizeWeapon(int client, int args)
  * sm_fov [Target] <1 to 179 or Reset/Default>
  * Range is default 30-160
  */
+#if defined _INCLUDE_FOV
 public Action CMD_FieldOfView(int client, int args)
 {
   if(args < 1)
@@ -660,7 +804,7 @@ public Action CMD_FieldOfView(int client, int args)
 }
 
 // TODO Is there a better way to do this?
-void SetFOV(int iClient, int iVal, bool bDefault)
+stock void SetFOV(int iClient, int iVal, bool bDefault)
 {
   if(bDefault)
   {
@@ -683,6 +827,7 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
   g_iFOVDesired[client] = StringToInt(cvarValue);
   return;
 }
+#endif
 
 
 
@@ -691,6 +836,7 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
  *
  * sm_scream [Target]
  */
+#if defined _INCLUDE_SCREAM
 public Action CMD_Scream(int client, int args)
 {
   if(!g_bScreamEnabled && !CheckCommandAccess(client, "sm_scream_nolock", ADMFLAG_BAN, true))
@@ -737,7 +883,7 @@ public Action CMD_Scream(int client, int args)
   return Plugin_Handled;
 }
 
-void PlayerScream(int client)
+stock void PlayerScream(int client)
 {
   SetVariantString("HalloweenLongFall");
   AcceptEntityInput(client, "SpeakResponseConcept", -1, -1, 0);
@@ -775,6 +921,7 @@ public Action CMD_ScreamToggle(int client, int args)
 
   return Plugin_Handled;
 }
+#endif // _INCLUDE_SCREAM
 
 
 
@@ -783,6 +930,7 @@ public Action CMD_ScreamToggle(int client, int args)
  *
  * sm_pitch [Target] <1-255 or 100/default/reset>
  */
+#if defined _INCLUDE_PITCH
 public Action CMD_Pitch(int client, int args)
 {
   if(!g_bPitchEnabled && !CheckCommandAccess(client, "sm_pitch_nolock", ADMFLAG_BAN, true))
@@ -800,7 +948,7 @@ public Action CMD_Pitch(int client, int args)
   int val;
   char arg1[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
-  
+
   if(args == 1)
   {
     if(!IsClientPlaying(client))
@@ -933,18 +1081,269 @@ public Action CMD_PitchToggle(int client, int args)
 
   return Plugin_Handled;
 }
-
+#endif
 
 
 /**
  * Open a menu with a list of taunts, select to use.
  *
  * sm_taunt or sm_taunts
+ * Requires satansfunpack.cfg
  */
+#if defined _INCLUDE_TAUNTS
 public Action CMD_TauntMenu(int client, int args)
 {
+  Menu menu = new Menu(TauntMenuHandler, MENU_ACTIONS_ALL);
+  SetMenuTitle(menu, "%T", "SM_TAUNTMENU_Title", LANG_SERVER); // Menus are server-wide.
+
+  for(int i = 0; i < g_iTauntCount; ++i)
+  {
+    char buffer[4];
+    IntToString(i, buffer, sizeof(buffer));
+    AddMenuItem(menu, buffer, g_szTauntName[i]);
+  }
+
+  DisplayMenu(menu, client, MENU_TIME_FOREVER);
   return Plugin_Handled;
 }
+
+public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int param2)
+{
+  switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+
+		case MenuAction_Display:
+		{
+      // Client Translation: p1 = client, p2 = menu
+			char buffer[64];
+			Format(buffer, sizeof(buffer), "%T", "SM_TAUNTMENU_Title", param1);
+
+			Handle panel = view_as<Handle>(param2);
+			SetPanelTitle(panel, buffer);
+		}
+
+    case MenuAction_DrawItem:
+    {
+      // Disable Incompatible Taunts: p1 = client, p2 = menuitem
+      int style;
+      char info[4];
+      GetMenuItem(menu, param2, info, sizeof(info), style);
+      int index = StringToInt(info); // This should never fail since it's set by loop.
+
+      if(g_TauntClass[index] == TFAllClass)
+        return style;
+
+      switch(TF2_GetPlayerClass(param1))
+      {
+        case TFClass_Scout:
+        {
+          if(g_TauntClass[index] != TFScout)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Sniper:
+        {
+          if(g_TauntClass[index] != TFSniper)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Soldier:
+        {
+          if(g_TauntClass[index] != TFSoldier)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_DemoMan:
+        {
+          if(g_TauntClass[index] != TFDemoman)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Medic:
+        {
+          if(g_TauntClass[index] != TFMedic)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Heavy:
+        {
+          if(g_TauntClass[index] != TFHeavy)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Pyro:
+        {
+          if(g_TauntClass[index] != TFPyro)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Spy:
+        {
+          if(g_TauntClass[index] != TFSpy)
+            return ITEMDRAW_DISABLED;
+        }
+        case TFClass_Engineer:
+        {
+          if(g_TauntClass[index] != TFEngie)
+            return ITEMDRAW_DISABLED;
+        }
+        default:
+        {
+          return ITEMDRAW_DISABLED; // Should never run.
+        }
+      }
+    }
+
+		case MenuAction_Select:
+		{
+      // Selection Events: p1 = client, p2 = menuitem
+      char info[4];
+      GetMenuItem(menu, param2, info, sizeof(info));
+      int index = StringToInt(info); // Shouldn't ever fail
+
+      switch(ExecuteTaunt(param1, index))
+      {
+        case -1: TagPrintChat(param1, "%T", "SM_TAUNTMENU_EntFail", param1);
+        case -2: TagPrintChat(param1, "%T", "SM_TAUNTMENU_AddressFail", param1);
+        // Don't say anything if it succeeds.
+      }
+		}
+	}
+  return 0;
+}
+
+/**
+ * Execute Taunt on Client by giving them...some item.
+ * Returns -1 on invalid item, -2 on invalid address.
+ */
+stock int ExecuteTaunt(int client, int tauntIndex)
+{
+  static Handle hItem;
+  hItem = TF2Items_CreateItem(OVERRIDE_ALL|PRESERVE_ATTRIBUTES|FORCE_GENERATION);
+
+  TF2Items_SetClassname(hItem, "tf_wearable_vm");
+  TF2Items_SetQuality(hItem, 6);
+  TF2Items_SetLevel(hItem, 1);
+  TF2Items_SetNumAttributes(hItem, 0);
+  TF2Items_SetItemIndex(hItem, tauntIndex);
+
+  int ent = TF2Items_GiveNamedItem(client, hItem);
+  if(!IsValidEntity(ent))
+  	return -1;
+
+  Address pEconItemView = GetEntityAddress(ent)
+  + view_as<Address>(FindSendPropInfo("CTFWearable", "m_Item"));
+  if(!IsValidAddress(pEconItemView))
+    return -2;
+
+  SDKCall(h_PlayTauntScene, client, pEconItemView);
+  AcceptEntityInput(ent, "Kill");
+  return 0;
+}
+
+stock bool IsValidAddress(Address pAddress)
+{
+  if (pAddress == Address_Null)
+    return false;
+  return true;
+}
+
+/**
+ * Runs LoadTauntConfig manually.
+ *
+ * sm_tauntreload
+ */
+public Action CMD_TauntReload(int client, int args)
+{
+  bool result = LoadTauntConfig();
+  if(result)
+    TagReply(client, "%T", "SM_TAUNTRELOAD_Success", client);
+  else
+    TagReply(client, "%T", "SM_TAUNTRELOAD_Fail", client);
+  return Plugin_Handled;
+}
+
+stock bool LoadTauntConfig()
+{
+  if(!FileExists(g_szConfig))
+  {
+    SetFailState("%T", "SFP_NoConfig", LANG_SERVER, g_szConfig);
+    return false;
+  }
+
+  // Create and check KeyValues
+  KeyValues hKeys = CreateKeyValues("Taunts"); // Manual Delete
+  if(!FileToKeyValues(hKeys, g_szConfig))
+  {
+    SetFailState("%T", "SFP_BadConfig", LANG_SERVER);
+    delete hKeys;
+    return false;
+  }
+
+  if(!hKeys.GotoFirstSubKey())
+  {
+    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER);
+    delete hKeys;
+    return false;
+  }
+
+  // Zero out Globals
+  for(int i = 0; i < MAX_TAUNTS; i++)
+  {
+    g_szTauntName[i] = "";
+    g_szTauntId[i] = "";
+    g_TauntClass[i] = TFInvalid;
+  }
+  g_iTauntCount = -1; // Increment is at start to allow skipping, so start at -1
+
+  int skipCount = 0;
+  do
+  {
+    ++g_iTauntCount;
+
+    // Get Class, check it's valid. If not, skip taunt.
+    char className[8];
+    TFClasses tfClass;
+    hKeys.GetString("class", className, sizeof(className));
+    if(StrEqual(className, "ANY", true))
+      tfClass = TFAllClass;
+    else if(StrEqual(className, "SCOUT", true))
+      tfClass = TFScout;
+    else if(StrEqual(className, "SOLDIER", true))
+      tfClass = TFSoldier;
+    else if(StrEqual(className, "PYRO", true))
+      tfClass = TFPyro;
+    else if(StrEqual(className, "DEMO", true))
+      tfClass = TFDemoman;
+    else if(StrEqual(className, "HEAVY", true))
+      tfClass = TFHeavy;
+    else if(StrEqual(className, "ENGIE", true))
+      tfClass = TFEngie;
+    else if(StrEqual(className, "MEDIC", true))
+      tfClass = TFMedic;
+    else if(StrEqual(className, "SNIPER", true))
+      tfClass = TFSniper;
+    else if(StrEqual(className, "SPY", true))
+      tfClass = TFSpy;
+    else
+    {
+      skipCount++;
+      continue;
+    }
+
+    // Class Valid, add taunt
+    char nameBuff[32];
+    hKeys.GetSectionName(nameBuff, sizeof(nameBuff));
+    Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, nameBuff);
+
+    hKeys.GetString("id", g_szTauntId[g_iTauntCount], sizeof(g_szTauntId[]));
+    g_TauntClass[g_iTauntCount] = tfClass;
+  }
+  while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
+
+  PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount, skipCount);
+
+  delete hKeys;
+  return true;
+}
+#endif
 
 
 
@@ -952,11 +1351,68 @@ public Action CMD_TauntMenu(int client, int args)
  * Play sounds identically to sm_play, but do not indicate to players.
  *
  * sm_splay <Target> <File Path>
+ * Code Ripped from Sourcemod's sounds.sp
  */
+#if defined _INCLUDE_SPLAY
 public Action CMD_StealthPlay(int client, int args)
 {
+  if (args < 2)
+  {
+    TagReplyUsage(client, "%T", "SM_SPLAY_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char Arguments[PLATFORM_MAX_PATH + 65];
+  GetCmdArgString(Arguments, sizeof(Arguments));
+
+  char Arg[65];
+  int len = BreakString(Arguments, Arg, sizeof(Arg));
+
+  /* Make sure it does not go out of bound by doing "sm_play user  "*/
+  if (len == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_SPLAY_Usage", client);
+    return Plugin_Handled;
+  }
+
+  /* Incase they put quotes and white spaces after the quotes */
+  if (Arguments[len] == '"')
+  {
+    len++;
+    int FileLen = TrimString(Arguments[len]) + len;
+
+    if (Arguments[FileLen - 1] == '"')
+    {
+      Arguments[FileLen - 1] = '\0';
+    }
+  }
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+      Arg,
+      client,
+      targ_list,
+      MAXPLAYERS,
+      COMMAND_FILTER_NO_BOTS,
+      targ_name,
+      sizeof(targ_name),
+      tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+    ClientCommand(targ_list[i], "playgamesound \"%s\"", Arguments[len]);
+
+  LogAction(client, -1, "\"%L\" played stealth-sound on \"%s\" (file \"%s\")", client, targ_name, Arguments[len]);
+
   return Plugin_Handled;
 }
+#endif
 
 
 
@@ -968,10 +1424,12 @@ public Action CMD_StealthPlay(int client, int args)
  * You can either have 1/2, or 3/4 args.
  * Both 1 & 3 self target.
  */
+#if defined _INCLUDE_COLOUR
 public Action CMD_ColourPlayer(int client, int args)
 {
   return Plugin_Handled;
 }
+#endif
 
 
 
@@ -982,10 +1440,12 @@ public Action CMD_ColourPlayer(int client, int args)
  * TODO Add damage hook to players, check if source is sentry and owner has friendlysentry.
  * sm_friendlysentry [Target] <1/0>
  */
+#if defined _INCLUDE_FRIENDLYSENTRY
 public Action CMD_FriendlySentry(int client, int args)
 {
   return Plugin_Handled;
 }
+#endif
 
 
 
@@ -994,10 +1454,12 @@ public Action CMD_FriendlySentry(int client, int args)
  *
  * sm_lslap <Target>
  */
-public Action CMD_ListenSlap(int client, int args)
+#if defined _INCLUDE_CUSTOMSLAP
+public Action CMD_CustomSlap(int client, int args)
 {
   return Plugin_Handled;
 }
+#endif
 
 
 

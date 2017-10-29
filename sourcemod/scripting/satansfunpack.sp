@@ -22,6 +22,7 @@
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, incl \0.
+Handle  h_szConfig = null;
 
 
 public Plugin myinfo =
@@ -50,8 +51,8 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 /***
  * This core file doesn't do a lot, but is the only file that includes:
  * The translation and config files as part of the updater download.
- * It also Sets the main version and updater cvars.
- * Modules must use FindConVar for the updater setting.
+ * It also Sets the main version, config and updater cvars.
+ * Modules must use FindConVar for the updater and cvar setting.
  *
  * As such, this is the ONLY required file.
  ***/
@@ -64,6 +65,10 @@ public void OnPluginStart()
   h_bUpdate = CreateConVar("sm_satansfunpack_update", "1", "Update this Plugin Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
+
+  h_szConfig = CreateConVar("sm_satansfunpack_config", "satansfunpack.cfg", "Config File used for Satan'sFunPack (Relative to Sourcemod/Configs)\n(Default: satansfunpack.cfg)", FCVAR_NONE);
+  if(!h_szConfig)
+    SetFailState("Config CVar somehow failed to be created."); // To stop compile warnings.
 
   RegAdminCmd("sm_sfpplugincheck", InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
 

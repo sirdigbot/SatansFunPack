@@ -61,7 +61,7 @@ public void OnPluginStart()
 
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
-    SetFailState("%T", "SFP_UpdateCvarFail", LANG_SERVER);
+    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_update");
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 

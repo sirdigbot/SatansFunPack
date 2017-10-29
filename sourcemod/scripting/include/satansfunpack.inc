@@ -3,9 +3,10 @@
 #endif
 #define _sfp_shared_included
 
-#define MAX_BOOLSTRING_LENGTH 8     // "disable" + \0
+#define MAX_BOOLSTRING_LENGTH 8           // "disable" + \0
 #define STANDARD_TAG "\x04[SM]\x01"
-#define MAX_SLOTSTRING_LENGTH 10    // "secondary" + \0
+#define MAX_SLOTSTRING_LENGTH 10          // "secondary" + \0
+#define CONFIG_SIZE PLATFORM_MAX_PATH+13  // 13 = "configs/" + ".cfg" + \0
 
 #include <tf2_stocks>
 
