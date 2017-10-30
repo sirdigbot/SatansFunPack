@@ -24,6 +24,10 @@
   {
     "en" "Config KeyValues structure is broken: Could not find any subkeys."
   }
+  "SFP_NoGameData"
+  {
+    "en" "Unable to load gamedata/tf2.satansfunpack.txt."
+  }
 
   "SFP_Loaded"
   {
@@ -494,10 +498,6 @@
     "en" "sm_pitch has been Disabled."
   }
 
-  "SM_TAUNTMENU_NoGameData"
-  {
-    "en" "Unable to load gamedata/tf2.satansfunpack.txt."
-  }
   "SM_TAUNTMENU_BadGameData"
   {
     "en" "Unable to initialize call to CTFPlayer::PlayTauntSceneFromItem."

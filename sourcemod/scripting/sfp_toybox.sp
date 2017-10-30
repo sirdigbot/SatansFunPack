@@ -18,6 +18,7 @@
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 #define PITCH_DEFAULT   100
 #define MAX_TAUNTS      64
+#define MAX_TAUNTID_INT 10000000 // Arbitrary cap
 
 
 // Set Which Commands to Compile
@@ -74,7 +75,7 @@ Handle  h_PlayTauntScene = null;
 Handle  h_szConfig = null;
 char    g_szConfig[CONFIG_SIZE];
 char    g_szTauntName[MAX_TAUNTS][32];
-char    g_szTauntId[MAX_TAUNTS][7];
+int     g_iTauntId[MAX_TAUNTS];
 enum TFClasses // Need an addittional All-Class option so dont use TFClassType
 {
   TFInvalid = TFClass_Unknown,
@@ -108,14 +109,14 @@ public Plugin myinfo =
 // Forwards/Events
 public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 {
-	g_bLateLoad = late;
-	EngineVersion engine = GetEngineVersion();
-	if(engine != Engine_TF2)
-	{
-		Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
-		return APLRes_Failure;
-	}
-	return APLRes_Success;
+  g_bLateLoad = late;
+  EngineVersion engine = GetEngineVersion();
+  if(engine != Engine_TF2)
+  {
+    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    return APLRes_Failure;
+  }
+  return APLRes_Success;
 }
 
 
@@ -129,24 +130,24 @@ public void OnPluginStart()
   // SDKTools Hooks
   // Thank you to FlaminSarge for the sdktools code.
   #if defined _INCLUDE_TAUNTS
-  Handle tauntemFile = LoadGameConfigFile("tf2.satansfunpack.txt");
-  if (tauntemFile == INVALID_HANDLE)
+  Handle gameData = LoadGameConfigFile("tf2.satansfunpack.txt");
+  if (gameData == INVALID_HANDLE)
   {
-    SetFailState("%T", "SM_TAUNTMENU_NoGameData", LANG_SERVER);
+    SetFailState("%T", "SFP_NoGameData", LANG_SERVER);
     return;
   }
   StartPrepSDKCall(SDKCall_Player);
-  PrepSDKCall_SetFromConf(tauntemFile, SDKConf_Signature, "CTFPlayer::PlayTauntSceneFromItem");
+  PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::PlayTauntSceneFromItem");
   PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
   PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
   h_PlayTauntScene = EndPrepSDKCall();
   if (h_PlayTauntScene == INVALID_HANDLE)
   {
     SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
-    CloseHandle(tauntemFile);
+    CloseHandle(gameData);
     return;
   }
-  CloseHandle(tauntemFile);
+  CloseHandle(gameData);
   #endif
 
 
@@ -272,7 +273,7 @@ public void OnPluginStart()
   /*** Handle Late Loads ***/
   if(g_bLateLoad)
   {
-    for(int i = 1; i <= MaxClients; i++)
+    for(int i = 1; i <= MaxClients; ++i)
     {
       if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
       {
@@ -348,7 +349,7 @@ public void OnClientPutInServer(int client)
 
 public void OnClientDisconnect_Post(int client)
 {
-  // Do not put g_iFOVDesired here.
+  // Do not put g_iFOVDesired here, set on connect
   #if defined _INCLUDE_PITCH
   g_iPitch[client] = PITCH_DEFAULT;
   #endif
@@ -1110,21 +1111,21 @@ public Action CMD_TauntMenu(int client, int args)
 public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int param2)
 {
   switch(action)
-	{
-		case MenuAction_End:
-		{
-			delete menu;
-		}
+  {
+    case MenuAction_End:
+    {
+      delete menu;
+    }
 
-		case MenuAction_Display:
-		{
+    case MenuAction_Display:
+    {
       // Client Translation: p1 = client, p2 = menu
-			char buffer[64];
-			Format(buffer, sizeof(buffer), "%T", "SM_TAUNTMENU_Title", param1);
+      char buffer[64];
+      Format(buffer, sizeof(buffer), "%T", "SM_TAUNTMENU_Title", param1);
 
-			Handle panel = view_as<Handle>(param2);
-			SetPanelTitle(panel, buffer);
-		}
+      Handle panel = view_as<Handle>(param2);
+      SetPanelTitle(panel, buffer);
+    }
 
     case MenuAction_DrawItem:
     {
@@ -1191,21 +1192,21 @@ public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int para
       }
     }
 
-		case MenuAction_Select:
-		{
+    case MenuAction_Select:
+    {
       // Selection Events: p1 = client, p2 = menuitem
       char info[4];
       GetMenuItem(menu, param2, info, sizeof(info));
       int index = StringToInt(info); // Shouldn't ever fail
 
-      switch(ExecuteTaunt(param1, index))
+      switch(ExecuteTaunt(param1, g_iTauntId[index]))
       {
         case -1: TagPrintChat(param1, "%T", "SM_TAUNTMENU_EntFail", param1);
         case -2: TagPrintChat(param1, "%T", "SM_TAUNTMENU_AddressFail", param1);
         // Don't say anything if it succeeds.
       }
-		}
-	}
+    }
+  }
   return 0;
 }
 
@@ -1228,21 +1229,15 @@ stock int ExecuteTaunt(int client, int tauntIndex)
   if(!IsValidEntity(ent))
   	return -1;
 
+  // Get EconItemView of the taunt. Whatever that is.
   Address pEconItemView = GetEntityAddress(ent)
   + view_as<Address>(FindSendPropInfo("CTFWearable", "m_Item"));
-  if(!IsValidAddress(pEconItemView))
+  if(pEconItemView == Address_Null)
     return -2;
 
   SDKCall(h_PlayTauntScene, client, pEconItemView);
   AcceptEntityInput(ent, "Kill");
   return 0;
-}
-
-stock bool IsValidAddress(Address pAddress)
-{
-  if (pAddress == Address_Null)
-    return false;
-  return true;
 }
 
 /**
@@ -1285,13 +1280,13 @@ stock bool LoadTauntConfig()
   }
 
   // Zero out Globals
-  for(int i = 0; i < MAX_TAUNTS; i++)
+  for(int i = 0; i < MAX_TAUNTS; ++i)
   {
-    g_szTauntName[i] = "";
-    g_szTauntId[i] = "";
-    g_TauntClass[i] = TFInvalid;
+    g_szTauntName[i]  = "";
+    g_iTauntId[i]     = 0;
+    g_TauntClass[i]   = TFInvalid;
   }
-  g_iTauntCount = -1; // Increment is at start to allow skipping, so start at -1
+  g_iTauntCount = -1; // Increment is at start to allow skipping taunts, so start at -1
 
   int skipCount = 0;
   do
@@ -1324,21 +1319,32 @@ stock bool LoadTauntConfig()
       tfClass = TFSpy;
     else
     {
-      skipCount++;
+      ++skipCount;
       continue;
     }
 
-    // Class Valid, add taunt
-    char nameBuff[32];
-    hKeys.GetSectionName(nameBuff, sizeof(nameBuff));
-    Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, nameBuff);
 
-    hKeys.GetString("id", g_szTauntId[g_iTauntCount], sizeof(g_szTauntId[]));
+    // Check ID
+    char buff[32];
+    hKeys.GetString("id", buff, sizeof(buff));
+    int idBuff = StringToInt(buff);
+    if(idBuff < 1 || idBuff > MAX_TAUNTID_INT)
+    {
+      ++skipCount;
+      continue;
+    }
+
+    // Class and ID are Valid, Add taunt
+    g_iTauntId[g_iTauntCount]   = idBuff;
     g_TauntClass[g_iTauntCount] = tfClass;
+
+    // Menu-Ready name string: "(ANY) Some Taunt"
+    hKeys.GetSectionName(buff, sizeof(buff));
+    Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, buff);
   }
   while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
 
-  PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount, skipCount);
+  PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount+1, skipCount);
 
   delete hKeys;
   return true;
@@ -1378,7 +1384,7 @@ public Action CMD_StealthPlay(int client, int args)
   /* Incase they put quotes and white spaces after the quotes */
   if (Arguments[len] == '"')
   {
-    len++;
+    ++len;
     int FileLen = TrimString(Arguments[len]) + len;
 
     if (Arguments[FileLen - 1] == '"')
