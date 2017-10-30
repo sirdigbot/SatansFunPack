@@ -34,12 +34,32 @@
 #define _INCLUDE_FRIENDLYSENTRY
 #define _INCLUDE_CUSTOMSLAP
 
+// List of commands that can be disabled.
+enum CMDNames {
+  CmdCOLOURWEAPON = 0,
+  CmdRESIZEWEAPON,
+  CmdFOV,
+  CmdSCREAM,
+  CmdSCREAMTOGGLE,
+  CmdPITCH,
+  CmdPITCHTOGGLE,
+  CmdTAUNT,
+  CmdSPLAY,
+  CmdCOLOUR,
+  CmdFRIENDLYSENTRY,
+  CmdCSLAP,
+  CmdTOTAL
+};
+
 
 //=================================
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
+Handle  h_bDisabledCmds = null;
+bool    g_bDisabledCmds[CmdTOTAL];
+
 
 #if defined _INCLUDE_RESIZEWEP
 Handle  h_flResizeUpper = null;
@@ -64,9 +84,9 @@ bool    g_bScreamEnabled;
 #if defined _INCLUDE_PITCH
 Handle  h_bPitchDefault = null;  // Default state for g_bPitchEnabled
 bool    g_bPitchEnabled;
-Handle  h_iPitchUpper = null;
+Handle  h_iPitchUpper   = null;
 int     g_iPitchUpper;
-Handle  h_iPitchLower = null;
+Handle  h_iPitchLower   = null;
 int     g_iPitchLower;
 int     g_iPitch[MAXPLAYERS + 1] = {PITCH_DEFAULT, ...}; // Value is a percentage, 100 default
 #endif
@@ -170,6 +190,21 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
+  h_szConfig = FindConVar("sm_satansfunpack_config");
+  if(h_szConfig == null)
+    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_config");
+
+  char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
+  GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
+  Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", cvarBuffer);
+  BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+  HookConVarChange(h_szConfig, UpdateCvars);
+
+  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- colourweapon\n- resizeweapon\n- fov\n- scream\n- screamtoggle\n- pitch\n- pitchtoggle\n- taunt\n- splay\n- colour\n- friendlysentry\n- cslap", FCVAR_SPONLY);
+  ProcessDisabledCmds();
+  HookConVarChange(h_bDisabledCmds, UpdateCvars);
+
+
 
   #if defined _INCLUDE_RESIZEWEP
   h_flResizeUpper = CreateConVar("sm_resizeweapon_upper", "3.0", "Upper Limits of Weapon Resize\n(Default: 3.0)", FCVAR_NONE);
@@ -209,18 +244,6 @@ public void OnPluginStart()
   h_iPitchLower = CreateConVar("sm_pitch_lower", "50", "Lower Limits of Voice Pitch\n(Default: 50)", FCVAR_NONE, true, 1.0, true, 255.0);
   g_iPitchLower = GetConVarInt(h_iPitchLower);
   HookConVarChange(h_iPitchLower, UpdateCvars);
-  #endif
-
-  #if defined _INCLUDE_TAUNTS
-  h_szConfig = FindConVar("sm_satansfunpack_config");
-  if(h_szConfig == null)
-    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_config");
-
-  char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
-  GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
-  Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", cvarBuffer);
-  BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
-  HookConVarChange(h_szConfig, UpdateCvars);
   #endif
 
 
@@ -315,6 +338,8 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
     LoadConfig();
   }
+  else if(cvar == h_bDisabledCmds)
+    ProcessDisabledCmds();
   #if defined _INCLUDE_RESIZEWEP
   else if(cvar == h_flResizeUpper)
     g_flResizeUpper = StringToFloat(newValue);
@@ -342,6 +367,54 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
   else if(cvar == h_iPitchLower)
     g_iPitchLower = StringToInt(newValue);
   #endif
+  return;
+}
+
+/**
+ * Set Enable/Disable state for every command from CVar
+ */
+void ProcessDisabledCmds()
+{
+  for(int i = 0; i < view_as<int>(CmdTOTAL); ++i)
+    g_bDisabledCmds[i] = false;
+
+  char buffer[256];
+  GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
+  if(StrContains(buffer, "colourweapon", true) != -1)
+    g_bDisabledCmds[CmdCOLOURWEAPON] = true;
+
+  if(StrContains(buffer, "resizeweapon", true) != -1)
+    g_bDisabledCmds[CmdRESIZEWEAPON] = true;
+
+  if(StrContains(buffer, "fov", true) != -1)
+    g_bDisabledCmds[CmdFOV] = true;
+
+  if(StrContains(buffer, "scream", true) != -1)
+    g_bDisabledCmds[CmdSCREAM] = true;
+
+  if(StrContains(buffer, "screamtoggle", true) != -1)
+    g_bDisabledCmds[CmdSCREAMTOGGLE] = true;
+
+  if(StrContains(buffer, "pitch", true) != -1)
+    g_bDisabledCmds[CmdPITCH] = true;
+
+  if(StrContains(buffer, "pitchtoggle", true) != -1)
+    g_bDisabledCmds[CmdPITCHTOGGLE] = true;
+
+  if(StrContains(buffer, "taunt", true) != -1)
+    g_bDisabledCmds[CmdTAUNT] = true;
+
+  if(StrContains(buffer, "splay", true) != -1)
+    g_bDisabledCmds[CmdSPLAY] = true;
+
+  if(StrContains(buffer, "colour", true) != -1)
+    g_bDisabledCmds[CmdCOLOUR] = true;
+
+  if(StrContains(buffer, "friendlysentry", true) != -1)
+    g_bDisabledCmds[CmdFRIENDLYSENTRY] = true;
+
+  if(StrContains(buffer, "cslap", true) != -1)
+    g_bDisabledCmds[CmdCSLAP] = true;
   return;
 }
 
@@ -445,6 +518,14 @@ public Action OnTakeDamage(
 #if defined _INCLUDE_COLOURWEP
 public Action CMD_ColourWeapon(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdCOLOURWEAPON])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2 || args > 5)
   {
     TagReplyUsage(client, "%T", "SM_COLWEAPON_Usage", client);
@@ -614,6 +695,14 @@ public Action CMD_ColourWeapon(int client, int args)
 #if defined _INCLUDE_RESIZEWEP
 public Action CMD_ResizeWeapon(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdRESIZEWEAPON])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_SIZEWEAPON_Usage", client);
@@ -752,6 +841,14 @@ public Action CMD_ResizeWeapon(int client, int args)
 #if defined _INCLUDE_FOV
 public Action CMD_FieldOfView(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdFOV])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_FOV_Usage", client, g_iFOVLower, g_iFOVUpper);
@@ -884,6 +981,14 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
 #if defined _INCLUDE_SCREAM
 public Action CMD_Scream(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdSCREAM])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(!g_bScreamEnabled && !CheckCommandAccess(client, "sm_scream_nolock", ADMFLAG_BAN, true))
   {
     TagReply(client, "%T", "SM_SCREAM_Disabled", client);
@@ -943,6 +1048,14 @@ stock void PlayerScream(int client)
  */
 public Action CMD_ScreamToggle(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdSCREAMTOGGLE])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
     g_bScreamEnabled = !g_bScreamEnabled;
   else
@@ -978,6 +1091,14 @@ public Action CMD_ScreamToggle(int client, int args)
 #if defined _INCLUDE_PITCH
 public Action CMD_Pitch(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdPITCH])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(!g_bPitchEnabled && !CheckCommandAccess(client, "sm_pitch_nolock", ADMFLAG_BAN, true))
   {
     TagReply(client, "%T", "SM_PITCH_Disabled", client);
@@ -1103,6 +1224,14 @@ public Action CMD_Pitch(int client, int args)
  */
 public Action CMD_PitchToggle(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdPITCHTOGGLE])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
     g_bPitchEnabled = !g_bPitchEnabled;
   else
@@ -1138,6 +1267,14 @@ public Action CMD_PitchToggle(int client, int args)
 #if defined _INCLUDE_TAUNTS
 public Action CMD_TauntMenu(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdTAUNT])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   Menu menu = new Menu(TauntMenuHandler, MENU_ACTIONS_ALL);
   SetMenuTitle(menu, "%T", "SM_TAUNTMENU_Title", LANG_SERVER); // Menus are server-wide.
 
@@ -1296,6 +1433,14 @@ stock int ExecuteTaunt(int client, int tauntIndex)
 #if defined _INCLUDE_SPLAY
 public Action CMD_StealthPlay(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdSPLAY])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if (args < 2)
   {
     TagReplyUsage(client, "%T", "SM_SPLAY_Usage", client);
@@ -1369,6 +1514,14 @@ public Action CMD_StealthPlay(int client, int args)
 #if defined _INCLUDE_COLOUR
 public Action CMD_ColourPlayer(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdCOLOUR])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1 || args > 5 || args == 3)
   {
     TagReplyUsage(client, "%T", "SM_COLOURSELF_Usage", client);
@@ -1510,6 +1663,14 @@ public Action CMD_ColourPlayer(int client, int args)
 #if defined _INCLUDE_FRIENDLYSENTRY
 public Action CMD_FriendlySentry(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdFRIENDLYSENTRY])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_FRIENDSENTRY_Usage", client);
@@ -1602,6 +1763,14 @@ public Action CMD_FriendlySentry(int client, int args)
 #if defined _INCLUDE_CUSTOMSLAP
 public Action CMD_CustomSlap(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdCSLAP])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_CSLAP_Usage", client);

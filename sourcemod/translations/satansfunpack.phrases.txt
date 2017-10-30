@@ -97,6 +97,11 @@
     "#format" "{1:s}"
     "en" "Failed to load Config. {1} has been stopped!"
   }
+  "SFP_CmdDisabled"
+  {
+    "#format" "{1:s}"
+    "en" "{1} is Disabled."
+  }
 
 
   //=================================

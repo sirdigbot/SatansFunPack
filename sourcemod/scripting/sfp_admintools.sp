@@ -17,11 +17,33 @@
 #define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
 
+// List of commands that can be disabled.
+enum CMDNames {
+  CmdCCOM,
+  CmdTBAN,
+  CmdADDCOND,
+  CmdREMCOND,
+  CmdDISARM,
+  CmdSWITCHTEAM,
+  CmdFORCESPEC,
+  CmdFSAY,
+  CmdFSAYTEAM,
+  CmdNAMELOCK,
+  CmdNOTARGET,
+  CmdOUTLINE,
+  CmdTELELOCK,
+  CmdOPENTELE,
+  CmdTOTAL
+};
+
 
 //=================================
 // Globals
 Handle  h_bUpdate     = null;
 bool    g_bUpdate;
+Handle  h_bDisabledCmds = null;
+bool    g_bDisabledCmds[CmdTOTAL];
+
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
 bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false}; TODO Why does this fail to compile
@@ -69,6 +91,10 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
+  h_bDisabledCmds = CreateConVar("sm_admintools_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ccom\n- tban\n- addcond\n- remcond\n- disarm\n- switchteam\n- forcespec\n- fsay\n- fsayteam\n- namelock\n- notarget\n- outline\n- telelock\n- opentele", FCVAR_SPONLY);
+  ProcessDisabledCmds();
+  HookConVarChange(h_bDisabledCmds, UpdateCvars);
+
   h_iTempBanMax = CreateConVar("sm_maxtempban", "180", "Max Length Of Temporary Ban\n(Default: 180)", FCVAR_NONE, true, 0.0, false);
   g_iTempBanMax = GetConVarInt(h_iTempBanMax);
   HookConVarChange(h_iTempBanMax, UpdateCvars);
@@ -81,7 +107,7 @@ public void OnPluginStart()
   RegAdminCmd("sm_remcond",     CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_removecond",  CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_disarm",      CMD_Disarm, ADMFLAG_BAN, "Strip Weapons from a Player");
-  RegAdminCmd("sm_forceteam",   CMD_SwitchTeam, ADMFLAG_BAN, "Force Player to switch Teams");
+  RegAdminCmd("sm_switchteam",   CMD_SwitchTeam, ADMFLAG_BAN, "Force Player to switch Teams");
   RegAdminCmd("sm_forcespec",   CMD_ForceSpec, ADMFLAG_BAN, "Force Player into Spectator");
   RegAdminCmd("sm_fsay",        CMD_FakeSay, ADMFLAG_BAN, "I didn't say that, I swear!");
   RegAdminCmd("sm_fsayteam",    CMD_FakeSayTeam, ADMFLAG_BAN, "I didn't say that, I swear!");
@@ -114,9 +140,65 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bUpdate = GetConVarBool(h_bUpdate);
     (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
+  else if(cvar == h_bDisabledCmds)
+    ProcessDisabledCmds();
   return;
 }
 
+
+/**
+ * Set Enable/Disable state for every command from CVar
+ */
+void ProcessDisabledCmds()
+{
+  for(int i = 0; i < view_as<int>(CmdTOTAL); ++i)
+    g_bDisabledCmds[i] = false;
+
+  char buffer[300]; // TODO get proper size
+  GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
+  if(StrContains(buffer, "ccom", true) != -1)
+    g_bDisabledCmds[CmdCCOM] = true;
+
+  if(StrContains(buffer, "tban", true) != -1)
+    g_bDisabledCmds[CmdTBAN] = true;
+
+  if(StrContains(buffer, "addcond", true) != -1)
+    g_bDisabledCmds[CmdADDCOND] = true;
+
+  if(StrContains(buffer, "remcond", true) != -1)
+    g_bDisabledCmds[CmdREMCOND] = true;
+
+  if(StrContains(buffer, "disarm", true) != -1)
+    g_bDisabledCmds[CmdDISARM] = true;
+
+  if(StrContains(buffer, "switchteam", true) != -1)
+    g_bDisabledCmds[CmdSWITCHTEAM] = true;
+
+  if(StrContains(buffer, "forcespec", true) != -1)
+    g_bDisabledCmds[CmdFORCESPEC] = true;
+
+  if(StrContains(buffer, "fsay", true) != -1)
+    g_bDisabledCmds[CmdFSAY] = true;
+
+  if(StrContains(buffer, "fsayteam", true) != -1)
+    g_bDisabledCmds[CmdFSAYTEAM] = true;
+
+  if(StrContains(buffer, "namelock", true) != -1)
+    g_bDisabledCmds[CmdNAMELOCK] = true;
+
+  if(StrContains(buffer, "notarget", true) != -1)
+    g_bDisabledCmds[CmdNOTARGET] = true;
+
+  if(StrContains(buffer, "outline", true) != -1)
+    g_bDisabledCmds[CmdOUTLINE] = true;
+
+  if(StrContains(buffer, "telelock", true) != -1)
+    g_bDisabledCmds[CmdTELELOCK] = true;
+
+  if(StrContains(buffer, "opentele", true) != -1)
+    g_bDisabledCmds[CmdOPENTELE] = true;
+  return;
+}
 
 public Action OnPlayerSpawn(Handle event, char[] name, bool dontBroadcast)
 {
@@ -187,6 +269,14 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool &result)
  */
 public Action CMD_ClientCmd(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdCCOM])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_CCOM_Usage", client);
@@ -243,6 +333,14 @@ public Action CMD_ClientCmd(int client, int args)
  */
 public Action CMD_TempBan(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdTBAN])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_TBAN_Usage", client);
@@ -317,6 +415,14 @@ public Action CMD_TempBan(int client, int args)
  */
 public Action CMD_AddCond(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdADDCOND])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_ADDCOND_Usage", client);
@@ -405,6 +511,14 @@ public Action CMD_AddCond(int client, int args)
  */
 public Action CMD_RemCond(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdREMCOND])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_REMCOND_Usage", client);
@@ -483,6 +597,14 @@ public Action CMD_RemCond(int client, int args)
  */
 public Action CMD_Disarm(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdDISARM])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_DISARM_Usage", client);
@@ -534,6 +656,14 @@ public Action CMD_Disarm(int client, int args)
  */
 public Action CMD_SwitchTeam(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdSWITCHTEAM])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_SWITCHTEAM_Usage", client);
@@ -614,6 +744,14 @@ TFTeam GetClientOtherTeam(int client)
  */
 public Action CMD_ForceSpec(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdFORCESPEC])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_FORCESPEC_Usage", client);
@@ -659,6 +797,14 @@ public Action CMD_ForceSpec(int client, int args)
  */
 public Action CMD_FakeSay(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdFSAY])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_FAKESAY_Usage", client);
@@ -706,6 +852,14 @@ public Action CMD_FakeSay(int client, int args)
  */
 public Action CMD_FakeSayTeam(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdFSAYTEAM])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_FAKESAYTEAM_Usage", client);
@@ -753,6 +907,14 @@ public Action CMD_FakeSayTeam(int client, int args)
  */
 public Action CMD_NameLock(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdNAMELOCK])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 2)
   {
     TagReplyUsage(client, "%T", "SM_NAMELOCK_Usage", client);
@@ -812,6 +974,14 @@ public Action CMD_NameLock(int client, int args)
  */
 public Action CMD_NoTarget(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdNOTARGET])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_NOTARGET_Usage", client);
@@ -920,6 +1090,14 @@ void SetNoTarget(int client, bool state)
  */
 public Action CMD_Outline(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdOUTLINE])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_OUTLINE_Usage", client);
@@ -1026,6 +1204,14 @@ void SetOutline(int client, bool state)
  */
 public Action CMD_TeleLock(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdTELELOCK])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_TELELOCK_Usage", client);
@@ -1123,6 +1309,14 @@ public Action CMD_TeleLock(int client, int args)
  */
 public Action CMD_OpenTele(int client, int args)
 {
+  if(!g_bDisabledCmds[CmdOPENTELE])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
   if(args < 1)
   {
     TagReplyUsage(client, "%T", "SM_OPENTELE_Usage", client);

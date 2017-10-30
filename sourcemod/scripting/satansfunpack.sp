@@ -66,7 +66,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_szConfig = CreateConVar("sm_satansfunpack_config", "satansfunpack.cfg", "Config File used for Satan'sFunPack (Relative to Sourcemod/Configs)\n(Default: satansfunpack.cfg)", FCVAR_NONE);
+  h_szConfig = CreateConVar("sm_satansfunpack_config", "satansfunpack.cfg", "Config File used for Satan'sFunPack (Relative to Sourcemod/Configs)\n(Default: satansfunpack.cfg)", FCVAR_SPONLY);
   if(!h_szConfig)
     SetFailState("Config CVar somehow failed to be created."); // To stop compile warnings.
 
