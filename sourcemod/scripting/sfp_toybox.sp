@@ -2,6 +2,7 @@
 //=================================
 // Libraries/Modules
 #include <sourcemod>
+#include <sdktools>
 #undef REQUIRE_PLUGIN
 #tryinclude <updater>
 #tryinclude <tf2items>
@@ -96,6 +97,13 @@ int     g_iTauntCount;
 
 #if defined _INCLUDE_FRIENDLYSENTRY
 bool    g_bFriendlySentry[MAXPLAYERS + 1];
+#endif
+
+#if defined _INCLUDE_CUSTOMSLAP
+bool    g_bSlapUseSound;
+bool    g_bSlapUseMsg;
+char    g_szSlapSound[256]; // PLATFORM_MAX_PATH = 256, use fixed for easier config load.
+char    g_szSlapMsg[256];
 #endif
 
 
@@ -216,6 +224,8 @@ public void OnPluginStart()
   #endif
 
 
+  RegAdminCmd("sm_toybox_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Toybox");
+
   #if defined _INCLUDE_COLOURWEP
   RegAdminCmd("sm_colourweapon",    CMD_ColourWeapon, ADMFLAG_GENERIC, "Colour Your Weapons");
   RegAdminCmd("sm_colorweapon",     CMD_ColourWeapon, ADMFLAG_GENERIC, "Color Your Guns");
@@ -240,7 +250,6 @@ public void OnPluginStart()
   // To Appease Lord GabeN
   RegConsoleCmd("sm_taunt",         CMD_TauntMenu, "Perform Any Taunt");
   RegConsoleCmd("sm_taunts",        CMD_TauntMenu, "Perform Any Taunt");
-  RegAdminCmd("sm_tauntreload",     CMD_TauntReload, ADMFLAG_ROOT, "Manually Reload Taunt List");
   #endif
   #if defined _INCLUDE_SPLAY
   RegAdminCmd("sm_splay",           CMD_StealthPlay, ADMFLAG_GENERIC, "Play Sounds Stealthily");
@@ -299,6 +308,13 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bUpdate = GetConVarBool(h_bUpdate);
     (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
+  else if(cvar == h_szConfig)
+  {
+    char pathBuffer[CONFIG_SIZE];
+    Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", newValue);
+    BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+    LoadConfig();
+  }
   #if defined _INCLUDE_RESIZEWEP
   else if(cvar == h_flResizeUpper)
     g_flResizeUpper = StringToFloat(newValue);
@@ -325,16 +341,6 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_iPitchUpper = StringToInt(newValue);
   else if(cvar == h_iPitchLower)
     g_iPitchLower = StringToInt(newValue);
-  #endif
-
-  #if defined _INCLUDE_TAUNTS
-  else if(cvar == h_szConfig)
-  {
-    char pathBuffer[CONFIG_SIZE];
-    Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", newValue);
-    BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
-    LoadTauntConfig();
-  }
   #endif
   return;
 }
@@ -1277,116 +1283,6 @@ stock int ExecuteTaunt(int client, int tauntIndex)
   AcceptEntityInput(ent, "Kill");
   return 0;
 }
-
-/**
- * Runs LoadTauntConfig manually.
- *
- * sm_tauntreload
- */
-public Action CMD_TauntReload(int client, int args)
-{
-  bool result = LoadTauntConfig();
-  if(result)
-    TagReply(client, "%T", "SM_TAUNTRELOAD_Success", client);
-  else
-    TagReply(client, "%T", "SM_TAUNTRELOAD_Fail", client);
-  return Plugin_Handled;
-}
-
-stock bool LoadTauntConfig()
-{
-  if(!FileExists(g_szConfig))
-  {
-    SetFailState("%T", "SFP_NoConfig", LANG_SERVER, g_szConfig);
-    return false;
-  }
-
-  // Create and check KeyValues
-  KeyValues hKeys = CreateKeyValues("Taunts"); // Manual Delete
-  if(!FileToKeyValues(hKeys, g_szConfig))
-  {
-    SetFailState("%T", "SFP_BadConfig", LANG_SERVER);
-    delete hKeys;
-    return false;
-  }
-
-  if(!hKeys.GotoFirstSubKey())
-  {
-    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER);
-    delete hKeys;
-    return false;
-  }
-
-  // Zero out Globals
-  for(int i = 0; i < MAX_TAUNTS; ++i)
-  {
-    g_szTauntName[i]  = "";
-    g_iTauntId[i]     = 0;
-    g_TauntClass[i]   = TFInvalid;
-  }
-  g_iTauntCount = -1; // Increment is at start to allow skipping taunts, so start at -1
-
-  int skipCount = 0;
-  do
-  {
-    ++g_iTauntCount;
-
-    // Get Class, check it's valid. If not, skip taunt.
-    char className[8];
-    TFClasses tfClass;
-    hKeys.GetString("class", className, sizeof(className));
-    if(StrEqual(className, "ANY", true))
-      tfClass = TFAllClass;
-    else if(StrEqual(className, "SCOUT", true))
-      tfClass = TFScout;
-    else if(StrEqual(className, "SOLDIER", true))
-      tfClass = TFSoldier;
-    else if(StrEqual(className, "PYRO", true))
-      tfClass = TFPyro;
-    else if(StrEqual(className, "DEMO", true))
-      tfClass = TFDemoman;
-    else if(StrEqual(className, "HEAVY", true))
-      tfClass = TFHeavy;
-    else if(StrEqual(className, "ENGIE", true))
-      tfClass = TFEngie;
-    else if(StrEqual(className, "MEDIC", true))
-      tfClass = TFMedic;
-    else if(StrEqual(className, "SNIPER", true))
-      tfClass = TFSniper;
-    else if(StrEqual(className, "SPY", true))
-      tfClass = TFSpy;
-    else
-    {
-      ++skipCount;
-      continue;
-    }
-
-
-    // Check ID
-    char buff[32];
-    hKeys.GetString("id", buff, sizeof(buff));
-    int idBuff = StringToInt(buff);
-    if(idBuff < 1 || idBuff > MAX_TAUNTID_INT)
-    {
-      ++skipCount;
-      continue;
-    }
-
-    // Class and ID are Valid, Add taunt
-    g_iTauntId[g_iTauntCount]   = idBuff;
-    g_TauntClass[g_iTauntCount] = tfClass;
-
-    // Menu-Ready name string: "(ANY) Some Taunt"
-    hKeys.GetSectionName(buff, sizeof(buff));
-    Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, buff);
-  }
-  while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
-
-  PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount+1, skipCount);
-
-  delete hKeys;
-  return true;
-}
 #endif
 
 
@@ -1698,14 +1594,242 @@ public Action CMD_FriendlySentry(int client, int args)
  * Slap a player and optionally play a custom sound file and/or print a message.
  *
  * sm_cslap <Target>
+ * TODO Add sound file and message override.
+ * TODO Add colours for config.
+ * TODO Add different message styles (hint, center, etc.).
+ * TODO Add damage option?
  */
 #if defined _INCLUDE_CUSTOMSLAP
 public Action CMD_CustomSlap(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_CSLAP_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(!IsClientPlaying(targ_list[i])) // TODO COMMAND_FILTER_ALIVE might make this redundant
+      continue;
+
+    SlapPlayer(targ_list[i], 0, true); // Bots can be slapped
+
+    if(!IsFakeClient(targ_list[i]))
+    {
+      if(g_bSlapUseSound)
+        ClientCommand(targ_list[i], "playgamesound \"%s\"", g_szSlapSound);
+      if(g_bSlapUseMsg)
+        PrintToChat(targ_list[i], "%s", g_szSlapMsg);
+    }
+  }
   return Plugin_Handled;
 }
 #endif
 
+
+
+//=================================
+// Config File
+// TODO Better logging of errors for LoadConfig
+
+/**
+ * Runs LoadConfig manually.
+ *
+ * sm_toybox_reloadcfg
+ */
+public Action CMD_ConfigReload(int client, int args)
+{
+  bool result = LoadConfig();
+  if(result)
+    TagReply(client, "%T", "SFP_ConfigReload_Success", client);
+  else
+    TagReply(client, "%T", "SFP_ConfigReload_Fail", client, "sfp_toybox");
+  return Plugin_Handled;
+}
+
+stock bool LoadConfig()
+{
+  if(!FileExists(g_szConfig))
+  {
+    SetFailState("%T", "SFP_NoConfig", LANG_SERVER, g_szConfig);
+    return false;
+  }
+
+  // Create and check KeyValues
+  KeyValues hKeys = CreateKeyValues("SatansFunPack"); // Requires Manual Delete
+  if(!FileToKeyValues(hKeys, g_szConfig))
+  {
+    SetFailState("%T", "SFP_BadConfig", LANG_SERVER);
+    delete hKeys;
+    return false;
+  }
+
+  if(!hKeys.GotoFirstSubKey())
+  {
+    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER);
+    delete hKeys;
+    return false;
+  }
+
+  // Reset Traversal to root node
+  hKeys.Rewind();
+
+  /**
+   * Load Taunts
+   */
+  #if defined _INCLUDE_TAUNTS
+  if(hKeys.JumpToKey("SFPTaunts", false))
+  {
+    if(!hKeys.GotoFirstSubKey())
+      PrintToServer("%T", "SM_TAUNTMENU_NoTaunts", LANG_SERVER);
+    else
+    {
+      // Zero out Globals
+      for(int i = 0; i < MAX_TAUNTS; ++i)
+      {
+        g_szTauntName[i]  = "";
+        g_iTauntId[i]     = 0;
+        g_TauntClass[i]   = TFInvalid;
+      }
+      g_iTauntCount = -1; // Increment is at start to allow skipping taunts, so start at -1
+
+      int skipCount = 0;
+      do
+      {
+        ++g_iTauntCount;
+
+        // Get Class, check it's valid. If not, skip taunt.
+        char className[8];
+        TFClasses tfClass;
+        hKeys.GetString("class", className, sizeof(className));
+        if(StrEqual(className, "ANY", true))
+          tfClass = TFAllClass;
+        else if(StrEqual(className, "SCOUT", true))
+          tfClass = TFScout;
+        else if(StrEqual(className, "SOLDIER", true))
+          tfClass = TFSoldier;
+        else if(StrEqual(className, "PYRO", true))
+          tfClass = TFPyro;
+        else if(StrEqual(className, "DEMO", true))
+          tfClass = TFDemoman;
+        else if(StrEqual(className, "HEAVY", true))
+          tfClass = TFHeavy;
+        else if(StrEqual(className, "ENGIE", true))
+          tfClass = TFEngie;
+        else if(StrEqual(className, "MEDIC", true))
+          tfClass = TFMedic;
+        else if(StrEqual(className, "SNIPER", true))
+          tfClass = TFSniper;
+        else if(StrEqual(className, "SPY", true))
+          tfClass = TFSpy;
+        else
+        {
+          ++skipCount;
+          continue;
+        }
+
+
+        // Check ID
+        char buff[32];
+        hKeys.GetString("id", buff, sizeof(buff));
+        int idBuff = StringToInt(buff);
+        if(idBuff < 1 || idBuff > MAX_TAUNTID_INT)
+        {
+          ++skipCount;
+          continue;
+        }
+
+        // Class and ID are Valid, Add taunt
+        g_iTauntId[g_iTauntCount]   = idBuff;
+        g_TauntClass[g_iTauntCount] = tfClass;
+
+        // Menu-Ready name string: "(ANY) Some Taunt"
+        hKeys.GetSectionName(buff, sizeof(buff));
+        Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, buff);
+      }
+      while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
+
+      PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount+1, skipCount);
+    }
+  }
+  else
+    PrintToServer("%T", "SFP_NoConfigKey", LANG_SERVER, "SFPTaunts");
+  #endif
+
+
+  hKeys.Rewind();
+
+  /**
+   * Load Custom Slap
+   */
+  #if defined _INCLUDE_CUSTOMSLAP
+  if(hKeys.JumpToKey("SFPCustomSlap", false))
+  {
+    char buff[256];
+
+    // Get Message
+    hKeys.GetString("msg", buff, sizeof(buff));
+    if(strlen(buff) > 0)
+    {
+      g_szSlapMsg = buff;
+      g_bSlapUseMsg = true;
+    }
+    else // Explicitly Disable if empty string
+      g_bSlapUseMsg = false;
+
+
+    // Get Sound
+    hKeys.GetString("sound", buff, sizeof(buff));
+    if(strlen(buff) > 0)
+    {
+      if(FileExists(buff, true, NULL_STRING))
+      {
+        bool result = true;
+        if(!IsSoundPrecached(buff))
+          result = PrecacheSound(buff, false); // Always returns true/false
+
+        if(result)
+        {
+          g_szSlapSound = buff;
+          g_bSlapUseSound = true;
+        }
+        else
+          g_bSlapUseSound = false;
+      }
+    }
+    else // Explicitly Disable if empty string
+      g_bSlapUseSound = false;
+  }
+  else
+    PrintToServer("%T", "SFP_NoConfigKey", LANG_SERVER, "SFPCustomSlap");
+  #endif
+
+  delete hKeys;
+  return true;
+}
 
 
 

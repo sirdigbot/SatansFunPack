@@ -22,7 +22,12 @@
   }
   "SFP_BadConfigSubKey"
   {
-    "en" "Config KeyValues structure is broken: Could not find any subkeys."
+    "en" "Config KeyValues structure is broken: Could not find any sub-sections."
+  }
+  "SFP_NoConfigKey"
+  {
+    "#format" "{1:s}"
+    "en" "Could not find Config Section '{1}'"
   }
   "SFP_NoGameData"
   {
@@ -83,6 +88,15 @@
     "en" "Loaded Satan's Fun Pack - Trails"
   }
 
+  "SFP_ConfigReload_Success"
+  {
+    "en" "Successfully loaded Config"
+  }
+  "SFP_ConfigReload_Fail"
+  {
+    "#format" "{1:s}"
+    "en" "Failed to load Config. {1} has been stopped!"
+  }
 
 
   //=================================
@@ -510,6 +524,10 @@
   {
     "en" "Unable to initialize call to CTFPlayer::PlayTauntSceneFromItem."
   }
+  "SM_TAUNTMENU_NoTaunts"
+  {
+    "en" "No taunts found in config file."
+  }
   "SM_TAUNTMENU_Title"
   {
     "en" "Taunt Menu"
@@ -521,15 +539,6 @@
   "SM_TAUNTMENU_AddressFail"
   {
     "en" "Couldn't find CEconItemView for taunt."
-  }
-
-  "SM_TAUNTRELOAD_Success"
-  {
-    "en" "Successfully loaded Taunt Config"
-  }
-  "SM_TAUNTRELOAD_Fail"
-  {
-    "en" "Failed to load Taunt Config. Plugin has been stopped!"
   }
 
   "SM_SPLAY_Usage"
@@ -573,5 +582,10 @@
   "SM_FRIENDSENTRY_Disable_Self"
   {
     "en" "Disabled Friendly-Sentry."
+  }
+
+  "SM_CSLAP_Usage"
+  {
+    "en" "sm_clsap <Target>"
   }
 }
