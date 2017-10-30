@@ -103,9 +103,17 @@
   {
     "en" "Invalid Hexadecimal Colour. Use 6 digits of 0-9 and A-F. (e.g F306CC)"
   }
+  "SFP_Bad8DigitHexColour"
+  {
+    "en" "Invalid 8-Digit Hex Colour. Use 8 digits of 0-9 and A-F. (e.g F306CCFF)"
+  }
   "SFP_BadRGBColour"
   {
     "en" "Invalid RGB Colour. Use 3 numbers from 0 to 255. (e.g. 12 255 0)"
+  }
+  "SFP_BadRGBAColour"
+  {
+    "en" "Invalid RGBA Colour. Use 4 numbers from 0 to 255. (e.g. 12 230 0 255)"
   }
   "SFP_BadWeaponSlot"
   {
@@ -527,5 +535,43 @@
   "SM_SPLAY_Usage"
   {
     "en" "sm_splay <Target> <Filename>"
+  }
+
+  "SM_COLOURSELF_Usage"
+  {
+    "en" "sm_colour [Target] <8-Digit Hex Colour/RGBA Colour>"
+  }
+  "SM_COLWEAPON_Done"
+  {
+    "#format" "{1:d},{2:d},{3:d},{4:d}"
+    "en" "Set Colour to: {1} {2} {3} {4}"
+  }
+  "SM_COLWEAPON_Done_Server"
+  {
+    "#format" "{1:s},{2:d},{3:d},{4:d},{5:d}"
+    "en" "Set Colour of {1} to: {2} {3} {4} {5}"
+  }
+
+  "SM_FRIENDSENTRY_Usage"
+  {
+    "en" "sm_friendlysentry [Target] <1/0>"
+  }
+  "SM_FRIENDSENTRY_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Friendly-Sentry for {1}."
+  }
+  "SM_FRIENDSENTRY_Enable_Self"
+  {
+    "en" "Enabled Friendly-Sentry."
+  }
+  "SM_FRIENDSENTRY_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Friendly-Sentry for {1}."
+  }
+  "SM_FRIENDSENTRY_Disable_Self"
+  {
+    "en" "Disabled Friendly-Sentry."
   }
 }

@@ -203,9 +203,41 @@ stock bool HexToRGB(const char[] hexStr, int &RedOut, int &GreenOut, int &BlueOu
 
 
 /**
+ * Convert 8-digit Hex Number into RGBA.
+ *
+ * @param hexStr      Hex string to check.
+ * @param RedOut      Integer to store Red value in.
+ * @param GreenOut    Integer to store Green value in.
+ * @param BlueOut     Integer to store Blue value in.
+ * @param AlphaOut    Integer to store Alpha value in.
+ * @return bool       Returns true if successful, false if not.
+ */
+stock bool HexToRGBA(const char[] hexStr, int &RedOut, int &GreenOut, int &BlueOut, int &AlphaOut)
+{
+  if(strlen(hexStr) != 8)
+    return false;
+
+  char redStr[3], greenStr[3], blueStr[3], alphaStr[3];
+
+  strcopy(redStr,   sizeof(redStr),   hexStr);
+  strcopy(greenStr, sizeof(greenStr), hexStr[2]);
+  strcopy(blueStr,  sizeof(blueStr),  hexStr[4]);
+  strcopy(alphaStr, sizeof(alphaStr), hexStr[6]);
+
+  RedOut    = StringToInt(redStr, 16);
+  GreenOut  = StringToInt(greenStr, 16);
+  BlueOut   = StringToInt(blueStr, 16);
+  AlphaOut  = StringToInt(alphaStr, 16);
+  return true;
+}
+
+
+/**
  * Check if integer is between 0 and 255.
  *
- * @param hexStr      Int value to check
+ * @param red         Int value for red component.
+ * @param green       Int value for green component.
+ * @param blue        Int value for blue component.
  * @return bool       Returns true if successful, false if not.
  */
 stock bool IsColourRGB(const int red, const int green, const int blue)
@@ -215,6 +247,29 @@ stock bool IsColourRGB(const int red, const int green, const int blue)
   if(green < 0 || green > 255)
     return false;
   if(blue < 0 || blue > 255)
+    return false;
+  return true;
+}
+
+
+/**
+ * Check if integer is between 0 and 255.
+ *
+ * @param red         Int value for red component.
+ * @param green       Int value for green component.
+ * @param blue        Int value for blue component.
+ * @param alpha       Int value for alpha component.
+ * @return bool       Returns true if successful, false if not.
+ */
+stock bool IsColourRGBA(const int red, const int green, const int blue, const int alpha)
+{
+  if(red < 0 || red > 255)
+    return false;
+  if(green < 0 || green > 255)
+    return false;
+  if(blue < 0 || blue > 255)
+    return false;
+  if(alpha < 0 || alpha > 255)
     return false;
   return true;
 }

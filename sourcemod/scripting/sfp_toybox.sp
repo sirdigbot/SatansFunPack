@@ -94,6 +94,10 @@ TFClasses g_TauntClass[MAX_TAUNTS];
 int     g_iTauntCount;
 #endif
 
+#if defined _INCLUDE_FRIENDLYSENTRY
+bool    g_bFriendlySentry[MAXPLAYERS + 1];
+#endif
+
 
 public Plugin myinfo =
 {
@@ -353,6 +357,9 @@ public void OnClientDisconnect_Post(int client)
   #if defined _INCLUDE_PITCH
   g_iPitch[client] = PITCH_DEFAULT;
   #endif
+  #if defined _INCLUDE_FRIENDLYSENTRY
+  g_bFriendlySentry[client] = false;
+  #endif
   return;
 }
 
@@ -384,6 +391,37 @@ public Action Hook_NormalSound(
 }
 
 
+public Action OnTakeDamage(
+  int victim,
+  int &attacker,
+  int &inflictor,
+  float &damage,
+  int &damagetype,
+  int &weapon,
+  float damageForce[3],
+  float damagePosition[3])
+{
+  #if defined _INCLUDE_FRIENDLYSENTRY
+  if(!IsValidEntity(inflictor))
+    return Plugin_Continue;
+
+  char classname[32];
+  GetEdictClassname(inflictor, classname, sizeof(classname));
+  if(StrEqual(classname, "obj_sentrygun", true)
+  || StrEqual(classname, "tf_projectile_sentryrocket", true))
+  {
+    if(attacker > 1 && attacker <= MaxClients && g_bFriendlySentry[attacker])
+    {
+      damage = 0.0;
+      return Plugin_Changed;
+    }
+  }
+  #endif
+  return Plugin_Continue;
+}
+
+
+
 
 //=================================
 // Commands
@@ -401,7 +439,7 @@ public Action Hook_NormalSound(
 #if defined _INCLUDE_COLOURWEP
 public Action CMD_ColourWeapon(int client, int args)
 {
-  if(args < 2 && args > 5)
+  if(args < 2 || args > 5)
   {
     TagReplyUsage(client, "%T", "SM_COLWEAPON_Usage", client);
     return Plugin_Handled;
@@ -1393,6 +1431,7 @@ public Action CMD_StealthPlay(int client, int args)
     }
   }
 
+  // Get Target
   char targ_name[MAX_TARGET_LENGTH];
   int targ_list[MAXPLAYERS], targ_count;
   bool tn_is_ml;
@@ -1426,13 +1465,141 @@ public Action CMD_StealthPlay(int client, int args)
  * Set a player's colour.
  *
  * sm_colour [Target] <Hex Colour>
- * OR sm_colour [Target] <Red 0-255> <Green 0-255> <Blue 0-255>
- * You can either have 1/2, or 3/4 args.
- * Both 1 & 3 self target.
+ * OR sm_colour [Target] <Red 0-255> <Green 0-255> <Blue 0-255> <Alpha 0-255>
+ * You can either have 1/2, or 4/5 args.
+ * Both 1 & 4 self target.
+ * TODO Check if this works after respawn
  */
 #if defined _INCLUDE_COLOUR
 public Action CMD_ColourPlayer(int client, int args)
 {
+  if(args < 1 || args > 5 || args == 3)
+  {
+    TagReplyUsage(client, "%T", "SM_COLOURSELF_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get minimum required args
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Get Target. Default to client.
+  bool bSelfTarget = false;
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if(args == 2 || args == 4) // Either 8-Hex or RGBA, with target specified
+  {
+    if(!CheckCommandAccess(client, "sm_colour_target", ADMFLAG_BAN, true))
+    {
+      TagReply(client, "%T", "SFP_NoTargeting", client);
+      return Plugin_Handled;
+    }
+
+    if ((targ_count = ProcessTargetString(
+      arg1,
+      client,
+      targ_list,
+      MAXPLAYERS,
+      COMMAND_FILTER_ALIVE,
+      targ_name,
+      sizeof(targ_name),
+      tn_is_ml)) <= 0)
+    {
+      ReplyToTargetError(client, targ_count);
+      return Plugin_Handled;
+    }
+  }
+  else // No target, set to client
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    targ_count = 1;
+    targ_list[0] = client;
+    GetClientName(client, targ_name, sizeof(targ_name));
+    bSelfTarget = true;
+  }
+
+  // Get Colour
+  int iRed, iGreen, iBlue, iAlpha;
+  char arg2[7], arg3[4], arg4[4], arg5[4]; // Arg2 can be 6 or 3-digits, 3, 4 & 5 are only 3.
+
+
+  if(args == 1)       // arg1:8-Digit Hex
+  {
+    if(!HexToRGBA(arg1, iRed, iGreen, iBlue, iAlpha))
+    {
+      TagReplyUsage(client, "%T", "SFP_Bad8DigitHexColour", client);
+      return Plugin_Handled;
+    }
+  }
+  else if(args == 2)  // arg1:Target, arg2:8-Digit Hex
+  {
+    GetCmdArg(2, arg2, sizeof(arg2));
+
+    if(!HexToRGBA(arg2, iRed, iGreen, iBlue, iAlpha))
+    {
+      TagReplyUsage(client, "%T", "SFP_Bad8DigitHexColour", client);
+      return Plugin_Handled;
+    }
+  }
+  else if(args == 4)  // arg1-4:RGBA
+  {
+    GetCmdArg(2, arg2, sizeof(arg2));
+    GetCmdArg(3, arg3, sizeof(arg3));
+    GetCmdArg(4, arg4, sizeof(arg4));
+
+    iRed    = StringToInt(arg1);
+    iGreen  = StringToInt(arg2);
+    iBlue   = StringToInt(arg3);
+    iAlpha  = StringToInt(arg4);
+    if(!IsColourRGBA(iRed, iGreen, iBlue, iAlpha))
+    {
+      TagReplyUsage(client, "%T", "SFP_BadRGBAColour", client);
+      return Plugin_Handled;
+    }
+  }
+  else if(args == 5)  // arg1:Target, arg2-5:RGBA
+  {
+    GetCmdArg(2, arg2, sizeof(arg2));
+    GetCmdArg(3, arg3, sizeof(arg3));
+    GetCmdArg(4, arg4, sizeof(arg4));
+    GetCmdArg(5, arg5, sizeof(arg5));
+
+    iRed    = StringToInt(arg2);
+    iGreen  = StringToInt(arg3);
+    iBlue   = StringToInt(arg4);
+    iAlpha  = StringToInt(arg5);
+    if(!IsColourRGBA(iRed, iGreen, iBlue, iAlpha))
+    {
+      TagReplyUsage(client, "%T", "SFP_BadRGBAColour", client);
+      return Plugin_Handled;
+    }
+  }
+
+  // Target and Colour Ready. Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+      SetEntityRenderColor(targ_list[i], iRed, iGreen, iBlue, iAlpha);
+  }
+
+  if(bSelfTarget)
+    TagReply(client, "%T", "SM_COLOURSELF_Done", client, iRed, iGreen, iBlue, iAlpha);
+  else
+  {
+    TagActivity(client, "%T", "SM_COLOURSELF_Done_Server", LANG_SERVER,
+      targ_name,
+      iRed,
+      iGreen,
+      iBlue,
+      iAlpha);
+  }
   return Plugin_Handled;
 }
 #endif
@@ -1442,13 +1609,85 @@ public Action CMD_ColourPlayer(int client, int args)
 /**
  * Set a player's sentry to deal no damage.
  * TODO Add godmode too?
- * TODO Add sentry build hook, store index.
- * TODO Add damage hook to players, check if source is sentry and owner has friendlysentry.
  * sm_friendlysentry [Target] <1/0>
  */
 #if defined _INCLUDE_FRIENDLYSENTRY
 public Action CMD_FriendlySentry(int client, int args)
 {
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_FRIENDSENTRY_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Self Target
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_FRIENDSENTRY_Usage", client);
+      return Plugin_Handled;
+    }
+
+    g_bFriendlySentry[client] = view_as<bool>(state);
+
+    if(state == 1)
+      TagReply(client, "%T", "SM_FRIENDSENTRY_Enable_Self", client);
+    else
+      TagReply(client, "%T", "SM_FRIENDSENTRY_Disable_Self", client);
+    return Plugin_Handled;
+  }
+
+  // Other Target
+  char arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  int state = GetStringBool(arg2, false, true, true, true);
+  if(state == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_FRIENDSENTRY_Usage", client);
+    return Plugin_Handled;
+  }
+  bool bState = view_as<bool>(state);
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0, // Allow bots and observers, only takes effect if you build a sentry
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+    g_bFriendlySentry[targ_list[i]] = bState;
+
+  if(bState)
+    TagActivity(client, "%T", "SM_FRIENDSENTRY_Enable", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_FRIENDSENTRY_Disable", LANG_SERVER, targ_name);
+
   return Plugin_Handled;
 }
 #endif
@@ -1456,9 +1695,9 @@ public Action CMD_FriendlySentry(int client, int args)
 
 
 /**
- * Slap a player and play Navi's "HEY, LISTEN"
+ * Slap a player and optionally play a custom sound file and/or print a message.
  *
- * sm_lslap <Target>
+ * sm_cslap <Target>
  */
 #if defined _INCLUDE_CUSTOMSLAP
 public Action CMD_CustomSlap(int client, int args)
