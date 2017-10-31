@@ -25,8 +25,6 @@
 #define _INCLUDE_LOCATEIP
 #define _INCLUDE_ID
 #define _INCLUDE_PROFILE
-//#define _INCLUDE_HELP
-//#define _INCLUDE_CMDS
 #define _INCLUDE_CHECKRESTART
 #define _INCLUDE_JOINGROUP
 
@@ -38,8 +36,6 @@ enum CommandNames {
   ComLOCATEIP,
   ComPLAYERID,
   ComPROFILE,
-  ComHELP,
-  ComCMDS,
   ComCHECKRESTART,
   ComJOINGROUP,
   ComTOTAL
@@ -103,6 +99,8 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("common.phrases");
+  LoadTranslations("core.phrases");
 
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
@@ -110,7 +108,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- Profile\n- HelpMenu\n- CmdMenu\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- Profile\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -156,14 +154,6 @@ public void OnPluginStart()
   RegConsoleCmd("sm_profile",  Cmd_Profile, "Get a Player's Steam Profile");
   #endif
 
-  #if defined _INCLUDE_HELP
-  RegConsoleCmd("sm_help", CMD_Help, "Display Server Help Menu");
-  #endif
-
-  #if defined _INCLUDE_CMDS
-  RegConsoleCmd("sm_cmds", CMD_Commands, "Display Server Help Menu");
-  #endif
-
   #if defined _INCLUDE_CHECKRESTART
   RegConsoleCmd("sm_checkforupdate", CMD_CheckRestartRequest, "Check if Valve has sent a Restart Request to the Server");
   #endif
@@ -171,6 +161,11 @@ public void OnPluginStart()
   #if defined _INCLUDE_JOINGROUP
   RegConsoleCmd("sm_joingroup", CMD_JoinGroup, "Display the group for the server");
   #endif
+
+  /**
+   * These commands dont really need target-override checks,
+   * since they dont DO anything to others.
+   */
 
   PrintToServer("%T", "SFP_InfoUtilsLoaded", LANG_SERVER);
 }
@@ -219,12 +214,6 @@ void ProcessDisabledCmds()
 
   if(StrContains(buffer, "Profile", true) != -1)
     g_bDisabledCmds[ComPROFILE] = true;
-
-  if(StrContains(buffer, "HelpMenu", true) != -1)
-    g_bDisabledCmds[ComHELP] = true;
-
-  if(StrContains(buffer, "CmdMenu", true) != -1)
-    g_bDisabledCmds[ComCMDS] = true;
 
   if(StrContains(buffer, "CheckRestart", true) != -1)
     g_bDisabledCmds[ComCHECKRESTART] = true;
