@@ -35,20 +35,21 @@
 #define _INCLUDE_CUSTOMSLAP
 
 // List of commands that can be disabled.
-enum CMDNames {
-  CmdCOLOURWEAPON = 0,
-  CmdRESIZEWEAPON,
-  CmdFOV,
-  CmdSCREAM,
-  CmdSCREAMTOGGLE,
-  CmdPITCH,
-  CmdPITCHTOGGLE,
-  CmdTAUNT,
-  CmdSPLAY,
-  CmdCOLOUR,
-  CmdFRIENDLYSENTRY,
-  CmdCSLAP,
-  CmdTOTAL
+// Set by CVar, updated in ProcessDisabledCmds, Checked in Command.
+enum CommandNames {
+  ComCOLOURWEAPON = 0,
+  ComRESIZEWEAPON,
+  ComFOV,
+  ComSCREAM,
+  ComSCREAMTOGGLE,
+  ComPITCH,
+  ComPITCHTOGGLE,
+  ComTAUNT,
+  ComSPLAY,
+  ComCOLOUR,
+  ComFRIENDLYSENTRY,
+  ComCSLAP,
+  ComTOTAL
 };
 
 
@@ -58,7 +59,7 @@ Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
 Handle  h_bDisabledCmds = null;
-bool    g_bDisabledCmds[CmdTOTAL];
+bool    g_bDisabledCmds[ComTOTAL];
 
 
 #if defined _INCLUDE_RESIZEWEP
@@ -200,7 +201,7 @@ public void OnPluginStart()
   BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
   HookConVarChange(h_szConfig, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- colourweapon\n- resizeweapon\n- fov\n- scream\n- screamtoggle\n- pitch\n- pitchtoggle\n- taunt\n- splay\n- colour\n- friendlysentry\n- cslap", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -375,46 +376,46 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
  */
 void ProcessDisabledCmds()
 {
-  for(int i = 0; i < view_as<int>(CmdTOTAL); ++i)
+  for(int i = 0; i < view_as<int>(ComTOTAL); ++i)
     g_bDisabledCmds[i] = false;
 
   char buffer[256];
   GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
-  if(StrContains(buffer, "colourweapon", true) != -1)
-    g_bDisabledCmds[CmdCOLOURWEAPON] = true;
+  if(StrContains(buffer, "ColourWeapon", true) != -1)
+    g_bDisabledCmds[ComCOLOURWEAPON] = true;
 
-  if(StrContains(buffer, "resizeweapon", true) != -1)
-    g_bDisabledCmds[CmdRESIZEWEAPON] = true;
+  if(StrContains(buffer, "ResizeWeapon", true) != -1)
+    g_bDisabledCmds[ComRESIZEWEAPON] = true;
 
-  if(StrContains(buffer, "fov", true) != -1)
-    g_bDisabledCmds[CmdFOV] = true;
+  if(StrContains(buffer, "FOV", true) != -1)
+    g_bDisabledCmds[ComFOV] = true;
 
-  if(StrContains(buffer, "scream", true) != -1)
-    g_bDisabledCmds[CmdSCREAM] = true;
+  if(StrContains(buffer, "ScreamCmd", true) != -1)
+    g_bDisabledCmds[ComSCREAM] = true;
 
-  if(StrContains(buffer, "screamtoggle", true) != -1)
-    g_bDisabledCmds[CmdSCREAMTOGGLE] = true;
+  if(StrContains(buffer, "ScreamToggle", true) != -1)
+    g_bDisabledCmds[ComSCREAMTOGGLE] = true;
 
-  if(StrContains(buffer, "pitch", true) != -1)
-    g_bDisabledCmds[CmdPITCH] = true;
+  if(StrContains(buffer, "PitchCmd", true) != -1)
+    g_bDisabledCmds[ComPITCH] = true;
 
-  if(StrContains(buffer, "pitchtoggle", true) != -1)
-    g_bDisabledCmds[CmdPITCHTOGGLE] = true;
+  if(StrContains(buffer, "PitchToggle", true) != -1)
+    g_bDisabledCmds[ComPITCHTOGGLE] = true;
 
-  if(StrContains(buffer, "taunt", true) != -1)
-    g_bDisabledCmds[CmdTAUNT] = true;
+  if(StrContains(buffer, "TauntMenu", true) != -1)
+    g_bDisabledCmds[ComTAUNT] = true;
 
-  if(StrContains(buffer, "splay", true) != -1)
-    g_bDisabledCmds[CmdSPLAY] = true;
+  if(StrContains(buffer, "SPlay", true) != -1)
+    g_bDisabledCmds[ComSPLAY] = true;
 
-  if(StrContains(buffer, "colour", true) != -1)
-    g_bDisabledCmds[CmdCOLOUR] = true;
+  if(StrContains(buffer, "ColourSelf", true) != -1)
+    g_bDisabledCmds[ComCOLOUR] = true;
 
-  if(StrContains(buffer, "friendlysentry", true) != -1)
-    g_bDisabledCmds[CmdFRIENDLYSENTRY] = true;
+  if(StrContains(buffer, "FriendlySentry", true) != -1)
+    g_bDisabledCmds[ComFRIENDLYSENTRY] = true;
 
-  if(StrContains(buffer, "cslap", true) != -1)
-    g_bDisabledCmds[CmdCSLAP] = true;
+  if(StrContains(buffer, "CSlap", true) != -1)
+    g_bDisabledCmds[ComCSLAP] = true;
   return;
 }
 
@@ -518,7 +519,7 @@ public Action OnTakeDamage(
 #if defined _INCLUDE_COLOURWEP
 public Action CMD_ColourWeapon(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdCOLOURWEAPON])
+  if(!g_bDisabledCmds[ComCOLOURWEAPON])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -695,7 +696,7 @@ public Action CMD_ColourWeapon(int client, int args)
 #if defined _INCLUDE_RESIZEWEP
 public Action CMD_ResizeWeapon(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdRESIZEWEAPON])
+  if(!g_bDisabledCmds[ComRESIZEWEAPON])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -756,7 +757,7 @@ public Action CMD_ResizeWeapon(int client, int args)
 
   if(args == 2) // No target, set to client.
   {
-    if(!IsClientPlaying(client)) // TODO: Does this need to be applied to targeted cmds?
+    if(!IsClientPlaying(client)) // TODO: check if this is applied to all targeted cmds
     {
       TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
@@ -841,7 +842,7 @@ public Action CMD_ResizeWeapon(int client, int args)
 #if defined _INCLUDE_FOV
 public Action CMD_FieldOfView(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdFOV])
+  if(!g_bDisabledCmds[ComFOV])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -981,7 +982,7 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
 #if defined _INCLUDE_SCREAM
 public Action CMD_Scream(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdSCREAM])
+  if(!g_bDisabledCmds[ComSCREAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1048,7 +1049,7 @@ stock void PlayerScream(int client)
  */
 public Action CMD_ScreamToggle(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdSCREAMTOGGLE])
+  if(!g_bDisabledCmds[ComSCREAMTOGGLE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1091,7 +1092,7 @@ public Action CMD_ScreamToggle(int client, int args)
 #if defined _INCLUDE_PITCH
 public Action CMD_Pitch(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdPITCH])
+  if(!g_bDisabledCmds[ComPITCH])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1224,7 +1225,7 @@ public Action CMD_Pitch(int client, int args)
  */
 public Action CMD_PitchToggle(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdPITCHTOGGLE])
+  if(!g_bDisabledCmds[ComPITCHTOGGLE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1267,7 +1268,7 @@ public Action CMD_PitchToggle(int client, int args)
 #if defined _INCLUDE_TAUNTS
 public Action CMD_TauntMenu(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdTAUNT])
+  if(!g_bDisabledCmds[ComTAUNT])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1433,7 +1434,7 @@ stock int ExecuteTaunt(int client, int tauntIndex)
 #if defined _INCLUDE_SPLAY
 public Action CMD_StealthPlay(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdSPLAY])
+  if(!g_bDisabledCmds[ComSPLAY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1514,7 +1515,7 @@ public Action CMD_StealthPlay(int client, int args)
 #if defined _INCLUDE_COLOUR
 public Action CMD_ColourPlayer(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdCOLOUR])
+  if(!g_bDisabledCmds[ComCOLOUR])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1663,7 +1664,7 @@ public Action CMD_ColourPlayer(int client, int args)
 #if defined _INCLUDE_FRIENDLYSENTRY
 public Action CMD_FriendlySentry(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdFRIENDLYSENTRY])
+  if(!g_bDisabledCmds[ComFRIENDLYSENTRY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1763,7 +1764,7 @@ public Action CMD_FriendlySentry(int client, int args)
 #if defined _INCLUDE_CUSTOMSLAP
 public Action CMD_CustomSlap(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdCSLAP])
+  if(!g_bDisabledCmds[ComCSLAP])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));

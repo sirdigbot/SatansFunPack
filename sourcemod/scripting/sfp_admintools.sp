@@ -18,22 +18,23 @@
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
 
 // List of commands that can be disabled.
-enum CMDNames {
-  CmdCCOM,
-  CmdTBAN,
-  CmdADDCOND,
-  CmdREMCOND,
-  CmdDISARM,
-  CmdSWITCHTEAM,
-  CmdFORCESPEC,
-  CmdFSAY,
-  CmdFSAYTEAM,
-  CmdNAMELOCK,
-  CmdNOTARGET,
-  CmdOUTLINE,
-  CmdTELELOCK,
-  CmdOPENTELE,
-  CmdTOTAL
+// Set by CVar, updated in ProcessDisabledCmds, Checked in Command.
+enum CommandNames {
+  ComCCOM,
+  ComTBAN,
+  ComADDCOND,
+  ComREMCOND,
+  ComDISARM,
+  ComSWITCHTEAM,
+  ComFORCESPEC,
+  ComFSAYALL,
+  ComFSAYTEAM,
+  ComNAMELOCK,
+  ComNOTARGET,
+  ComOUTLINE,
+  ComTELELOCK,
+  ComOPENTELE,
+  ComTOTAL
 };
 
 
@@ -42,7 +43,7 @@ enum CMDNames {
 Handle  h_bUpdate     = null;
 bool    g_bUpdate;
 Handle  h_bDisabledCmds = null;
-bool    g_bDisabledCmds[CmdTOTAL];
+bool    g_bDisabledCmds[ComTOTAL];
 
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
@@ -91,7 +92,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_admintools_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ccom\n- tban\n- addcond\n- remcond\n- disarm\n- switchteam\n- forcespec\n- fsay\n- fsayteam\n- namelock\n- notarget\n- outline\n- telelock\n- opentele", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_admintools_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- CCom\n- TBan\n- AddCond\n- RemCond\n- Disarm\n- SwitchTeam\n- ForceSpec\n- FSayAll\n- FSayTeam\n- NameLock\n- NoTarget\n- Outline\n- TeleLock\n- OpenTele", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -151,52 +152,52 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
  */
 void ProcessDisabledCmds()
 {
-  for(int i = 0; i < view_as<int>(CmdTOTAL); ++i)
+  for(int i = 0; i < view_as<int>(ComTOTAL); ++i)
     g_bDisabledCmds[i] = false;
 
   char buffer[300]; // TODO get proper size
   GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
-  if(StrContains(buffer, "ccom", true) != -1)
-    g_bDisabledCmds[CmdCCOM] = true;
+  if(StrContains(buffer, "CCom", true) != -1)
+    g_bDisabledCmds[ComCCOM] = true;
 
-  if(StrContains(buffer, "tban", true) != -1)
-    g_bDisabledCmds[CmdTBAN] = true;
+  if(StrContains(buffer, "TBan", true) != -1)
+    g_bDisabledCmds[ComTBAN] = true;
 
-  if(StrContains(buffer, "addcond", true) != -1)
-    g_bDisabledCmds[CmdADDCOND] = true;
+  if(StrContains(buffer, "AddCond", true) != -1)
+    g_bDisabledCmds[ComADDCOND] = true;
 
-  if(StrContains(buffer, "remcond", true) != -1)
-    g_bDisabledCmds[CmdREMCOND] = true;
+  if(StrContains(buffer, "RemCond", true) != -1)
+    g_bDisabledCmds[ComREMCOND] = true;
 
-  if(StrContains(buffer, "disarm", true) != -1)
-    g_bDisabledCmds[CmdDISARM] = true;
+  if(StrContains(buffer, "Disarm", true) != -1)
+    g_bDisabledCmds[ComDISARM] = true;
 
-  if(StrContains(buffer, "switchteam", true) != -1)
-    g_bDisabledCmds[CmdSWITCHTEAM] = true;
+  if(StrContains(buffer, "SwitchTeam", true) != -1)
+    g_bDisabledCmds[ComSWITCHTEAM] = true;
 
-  if(StrContains(buffer, "forcespec", true) != -1)
-    g_bDisabledCmds[CmdFORCESPEC] = true;
+  if(StrContains(buffer, "ForceSpec", true) != -1)
+    g_bDisabledCmds[ComFORCESPEC] = true;
 
-  if(StrContains(buffer, "fsay", true) != -1)
-    g_bDisabledCmds[CmdFSAY] = true;
+  if(StrContains(buffer, "FSayAll", true) != -1)
+    g_bDisabledCmds[ComFSAYALL] = true;
 
-  if(StrContains(buffer, "fsayteam", true) != -1)
-    g_bDisabledCmds[CmdFSAYTEAM] = true;
+  if(StrContains(buffer, "FSayTeam", true) != -1)
+    g_bDisabledCmds[ComFSAYTEAM] = true;
 
-  if(StrContains(buffer, "namelock", true) != -1)
-    g_bDisabledCmds[CmdNAMELOCK] = true;
+  if(StrContains(buffer, "NameLock", true) != -1)
+    g_bDisabledCmds[ComNAMELOCK] = true;
 
-  if(StrContains(buffer, "notarget", true) != -1)
-    g_bDisabledCmds[CmdNOTARGET] = true;
+  if(StrContains(buffer, "NoTarget", true) != -1)
+    g_bDisabledCmds[ComNOTARGET] = true;
 
-  if(StrContains(buffer, "outline", true) != -1)
-    g_bDisabledCmds[CmdOUTLINE] = true;
+  if(StrContains(buffer, "Outline", true) != -1)
+    g_bDisabledCmds[ComOUTLINE] = true;
 
-  if(StrContains(buffer, "telelock", true) != -1)
-    g_bDisabledCmds[CmdTELELOCK] = true;
+  if(StrContains(buffer, "TeleLock", true) != -1)
+    g_bDisabledCmds[ComTELELOCK] = true;
 
-  if(StrContains(buffer, "opentele", true) != -1)
-    g_bDisabledCmds[CmdOPENTELE] = true;
+  if(StrContains(buffer, "OpenTele", true) != -1)
+    g_bDisabledCmds[ComOPENTELE] = true;
   return;
 }
 
@@ -269,7 +270,7 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool &result)
  */
 public Action CMD_ClientCmd(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdCCOM])
+  if(!g_bDisabledCmds[ComCCOM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -333,7 +334,7 @@ public Action CMD_ClientCmd(int client, int args)
  */
 public Action CMD_TempBan(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdTBAN])
+  if(!g_bDisabledCmds[ComTBAN])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -415,7 +416,7 @@ public Action CMD_TempBan(int client, int args)
  */
 public Action CMD_AddCond(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdADDCOND])
+  if(!g_bDisabledCmds[ComADDCOND])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -511,7 +512,7 @@ public Action CMD_AddCond(int client, int args)
  */
 public Action CMD_RemCond(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdREMCOND])
+  if(!g_bDisabledCmds[ComREMCOND])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -597,7 +598,7 @@ public Action CMD_RemCond(int client, int args)
  */
 public Action CMD_Disarm(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdDISARM])
+  if(!g_bDisabledCmds[ComDISARM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -656,7 +657,7 @@ public Action CMD_Disarm(int client, int args)
  */
 public Action CMD_SwitchTeam(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdSWITCHTEAM])
+  if(!g_bDisabledCmds[ComSWITCHTEAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -744,7 +745,7 @@ TFTeam GetClientOtherTeam(int client)
  */
 public Action CMD_ForceSpec(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdFORCESPEC])
+  if(!g_bDisabledCmds[ComFORCESPEC])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -797,7 +798,7 @@ public Action CMD_ForceSpec(int client, int args)
  */
 public Action CMD_FakeSay(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdFSAY])
+  if(!g_bDisabledCmds[ComFSAYALL])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -852,7 +853,7 @@ public Action CMD_FakeSay(int client, int args)
  */
 public Action CMD_FakeSayTeam(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdFSAYTEAM])
+  if(!g_bDisabledCmds[ComFSAYTEAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -907,7 +908,7 @@ public Action CMD_FakeSayTeam(int client, int args)
  */
 public Action CMD_NameLock(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdNAMELOCK])
+  if(!g_bDisabledCmds[ComNAMELOCK])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -974,7 +975,7 @@ public Action CMD_NameLock(int client, int args)
  */
 public Action CMD_NoTarget(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdNOTARGET])
+  if(!g_bDisabledCmds[ComNOTARGET])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1090,7 +1091,7 @@ void SetNoTarget(int client, bool state)
  */
 public Action CMD_Outline(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdOUTLINE])
+  if(!g_bDisabledCmds[ComOUTLINE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1204,7 +1205,7 @@ void SetOutline(int client, bool state)
  */
 public Action CMD_TeleLock(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdTELELOCK])
+  if(!g_bDisabledCmds[ComTELELOCK])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1309,7 +1310,7 @@ public Action CMD_TeleLock(int client, int args)
  */
 public Action CMD_OpenTele(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdOPENTELE])
+  if(!g_bDisabledCmds[ComOPENTELE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));

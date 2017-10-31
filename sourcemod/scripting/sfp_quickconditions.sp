@@ -18,10 +18,11 @@
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/quickcond_update.txt"
 
 // List of commands that can be disabled.
-enum CMDNames {
-  CmdBOING,
-  CmdDANCEMONKEY,
-  CmdTOTAL
+// Set by CVar, updated in ProcessDisabledCmds, Checked in Command.
+enum CommandNames {
+  ComBOING,
+  ComDANCEMONKEY,
+  ComTOTAL
 };
 
 
@@ -30,7 +31,7 @@ enum CMDNames {
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 Handle  h_bDisabledCmds = null;
-bool    g_bDisabledCmds[CmdTOTAL];
+bool    g_bDisabledCmds[ComTOTAL];
 
 
 public Plugin myinfo =
@@ -69,7 +70,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_quickcond_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- boing\n- dancemonkey", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_quickcond_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- Boing\n- DanceMonkey", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -96,16 +97,16 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
  */
 void ProcessDisabledCmds()
 {
-  for(int i = 0; i < view_as<int>(CmdTOTAL); ++i)
+  for(int i = 0; i < view_as<int>(ComTOTAL); ++i)
     g_bDisabledCmds[i] = false;
 
   char buffer[300];
   GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
-  if(StrContains(buffer, "boing", true) != -1)
-    g_bDisabledCmds[CmdBOING] = true;
+  if(StrContains(buffer, "Boing", true) != -1)
+    g_bDisabledCmds[ComBOING] = true;
 
-  if(StrContains(buffer, "dancemonkey", true) != -1)
-    g_bDisabledCmds[CmdDANCEMONKEY] = true;
+  if(StrContains(buffer, "DanceMonkey", true) != -1)
+    g_bDisabledCmds[ComDANCEMONKEY] = true;
   return;
 }
 
@@ -119,7 +120,7 @@ void ProcessDisabledCmds()
  */
 public Action CMD_Boing(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdBOING])
+  if(!g_bDisabledCmds[ComBOING])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -204,7 +205,7 @@ public Action CMD_Boing(int client, int args)
  */
 public Action CMD_Dance(int client, int args)
 {
-  if(!g_bDisabledCmds[CmdDANCEMONKEY])
+  if(!g_bDisabledCmds[ComDANCEMONKEY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));

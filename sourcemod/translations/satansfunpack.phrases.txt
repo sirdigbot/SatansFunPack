@@ -593,4 +593,92 @@
   {
     "en" "sm_clsap <Target>"
   }
+
+
+  //=================================
+  // InfoUtils
+
+  "SM_AMIMUTED_MuteGag"
+  {
+    "en" "You are Muted and Gagged (No Microphone or Text Chat)."
+  }
+  "SM_AMIMUTED_Mute"
+  {
+    "en" "You are Muted, but not Gagged. (No Microphone)."
+  }
+  "SM_AMIMUTED_Gag"
+  {
+    "en" "You are Gagged, but not Muted (No Text Chat)."
+  }
+  "SM_AMIMUTED_None"
+  {
+    "en" "You are not Muted or Gagged."
+  }
+
+  "SM_CANHEAR_Usage"
+  {
+    "en" "sm_canplayerhear <Target 1> [Target 2]"
+  }
+  "SM_CANHEAR_True_Self"
+  {
+    "#format" "{1:s}"
+    "en" "{1} can hear you."
+  }
+  "SM_CANHEAR_True"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "{1} can hear {2}."
+  }
+  "SM_CANHEAR_False_Self"
+  {
+    "#format" "{1:s}"
+    "en" "{1} has muted you."
+  }
+  "SM_CANHEAR_False"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "{1} has muted {2}."
+  }
+
+  "SM_LOCATE_Usage"
+  {
+    "en" "sm_locateip <Target>"
+  }
+  "SM_LOCATE_IPFail"
+  {
+    "en" "Could not find client's IP."
+  }
+  "SM_LOCATE_CountryFail"
+  {
+    "en" "Could not find client's Country."
+  }
+  "SM_LOCATE_Done"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "{1}'s Country is {2}."
+  }
+
+  "SM_PLAYERID_Usage"
+  {
+    "en" "sm_id <Target> [ID Type 1-4]"
+  }
+  "SM_PLAYERID_Found"
+  {
+    "#format" "{1:s},{2:s},{3:s}"
+    "en" "{1}'s {2} is: {3}"
+  }
+
+  "SM_PROFILE_Usage"
+  {
+    "en" "sm_profile <Target>"
+  }
+
+  "SM_CHECKRESTART_True"
+  {
+    "en" "Master Server has issued a Restart Request since the map started. There may be an Update."
+  }
+  "SM_CHECKRESTART_False"
+  {
+    "en" "No Restart Request has been issued."
+  }
 }
