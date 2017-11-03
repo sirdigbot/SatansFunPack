@@ -197,7 +197,7 @@ public void OnPluginStart()
 
   char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
   GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
-  Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", cvarBuffer);
+  Format(pathBuffer, sizeof(pathBuffer), "configs/%s", cvarBuffer);
   BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
   HookConVarChange(h_szConfig, UpdateCvars);
 
@@ -335,7 +335,7 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
   else if(cvar == h_szConfig)
   {
     char pathBuffer[CONFIG_SIZE];
-    Format(pathBuffer, sizeof(pathBuffer), "configs/%s.cfg", newValue);
+    Format(pathBuffer, sizeof(pathBuffer), "configs/%s", newValue);
     BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
     LoadConfig();
   }
@@ -1276,8 +1276,9 @@ public Action CMD_TauntMenu(int client, int args)
     return Plugin_Handled;
   }
 
-  Menu menu = new Menu(TauntMenuHandler, MENU_ACTIONS_ALL);
-  SetMenuTitle(menu, "%T", "SM_TAUNTMENU_Title", LANG_SERVER); // Menus are server-wide.
+  Menu menu = new Menu(TauntMenuHandler,
+    MenuAction_End|MenuAction_Display|MenuAction_DrawItem|MenuAction_Select);
+  SetMenuTitle(menu, "Taunt Menu"); // Translated in handler
 
   for(int i = 0; i < g_iTauntCount; ++i)
   {
@@ -1852,15 +1853,15 @@ stock bool LoadConfig()
   KeyValues hKeys = CreateKeyValues("SatansFunPack"); // Requires Manual Delete
   if(!FileToKeyValues(hKeys, g_szConfig))
   {
-    SetFailState("%T", "SFP_BadConfig", LANG_SERVER);
     delete hKeys;
+    SetFailState("%T", "SFP_BadConfig", LANG_SERVER, g_szConfig);
     return false;
   }
 
   if(!hKeys.GotoFirstSubKey())
   {
-    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER);
     delete hKeys;
+    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER, g_szConfig);
     return false;
   }
 

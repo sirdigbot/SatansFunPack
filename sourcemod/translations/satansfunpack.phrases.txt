@@ -18,11 +18,13 @@
   }
   "SFP_BadConfig"
   {
-    "en" "Config KeyValues structure is broken."
+    "#format" "{1:s}"
+    "en" "Config KeyValues structure is broken. ({1})"
   }
   "SFP_BadConfigSubKey"
   {
-    "en" "Config KeyValues structure is broken: Could not find any sub-sections."
+    "#format" "{1:s}"
+    "en" "Config KeyValues structure is broken: Could not find any sub-sections. ({1})"
   }
   "SFP_NoConfigKey"
   {
@@ -62,6 +64,10 @@
   "SFP_GroupManagerLoaded"
   {
     "en" "Loaded Satan's Fun Pack - Group Manager"
+  }
+  "SFP_HelpLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Help Menu"
   }
   "SFP_InfoUtilsLoaded"
   {
@@ -680,5 +686,18 @@
   "SM_CHECKRESTART_False"
   {
     "en" "No Restart Request has been issued."
+  }
+
+
+  //=================================
+  // Help Menu
+
+  "SM_HELPMENU_Title"
+  {
+    "en" "Help Menu"
+  }
+  "SM_HELPMENU_NoRules"
+  {
+    "en" "Could not find server rules. Check the help menu."
   }
 }

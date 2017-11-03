@@ -1,0 +1,20 @@
+"Updater"
+{
+  "Information"
+  {
+    "Version"
+    {
+      "Latest" "1.0.0"
+      "Previous" "0.0.0"
+    }
+
+    "Notes" "Initial Release"
+  }
+
+  "Files"
+  {
+    "Plugin" "Path_SM/plugins/sfp_help.smx"
+
+    "Source" "Path_SM/scripting/sfp_help.sp"
+  }
+}

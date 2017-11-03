@@ -21,7 +21,7 @@
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
-char    g_szList[206] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 206 exactly, incl \0.
+char    g_szList[219] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 219 exactly, incl \0.
 Handle  h_szConfig = null;
 
 
@@ -66,7 +66,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_szConfig = CreateConVar("sm_satansfunpack_config", "satansfunpack.cfg", "Config File used for Satan'sFunPack (Relative to Sourcemod/Configs)\n(Default: satansfunpack.cfg)", FCVAR_SPONLY);
+  h_szConfig = CreateConVar("sm_satansfunpack_config", "satansfunpack.cfg", "Config File used for Satan's Fun Pack (Relative to Sourcemod/Configs)\n(Default: satansfunpack.cfg)", FCVAR_SPONLY);
   if(!h_szConfig)
     SetFailState("Config CVar somehow failed to be created."); // To stop compile warnings.
 
@@ -83,6 +83,7 @@ public void OnPluginStart()
   count += CheckFileAndCache("Duel", "plugins/sfp_duel.smx");
   count += CheckFileAndCache("GodMode", "plugins/sfp_godmode.smx");
   count += CheckFileAndCache("GroupManager", "plugins/sfp_groupmanager.smx");
+  count += CheckFileAndCache("HelpMenu", "plugins/sfp_help.smx");
   count += CheckFileAndCache("InfoUtils", "plugins/sfp_infoutils.smx");
   count += CheckFileAndCache("Mirror", "plugins/sfp_mirror.smx");
   count += CheckFileAndCache("QuickConditions", "plugins/sfp_quickconditions.smx");
