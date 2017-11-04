@@ -519,7 +519,7 @@ public Action OnTakeDamage(
 #if defined _INCLUDE_COLOURWEP
 public Action CMD_ColourWeapon(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCOLOURWEAPON])
+  if(g_bDisabledCmds[ComCOLOURWEAPON])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -696,7 +696,7 @@ public Action CMD_ColourWeapon(int client, int args)
 #if defined _INCLUDE_RESIZEWEP
 public Action CMD_ResizeWeapon(int client, int args)
 {
-  if(!g_bDisabledCmds[ComRESIZEWEAPON])
+  if(g_bDisabledCmds[ComRESIZEWEAPON])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -842,7 +842,7 @@ public Action CMD_ResizeWeapon(int client, int args)
 #if defined _INCLUDE_FOV
 public Action CMD_FieldOfView(int client, int args)
 {
-  if(!g_bDisabledCmds[ComFOV])
+  if(g_bDisabledCmds[ComFOV])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -982,7 +982,7 @@ public void OnGetDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult re
 #if defined _INCLUDE_SCREAM
 public Action CMD_Scream(int client, int args)
 {
-  if(!g_bDisabledCmds[ComSCREAM])
+  if(g_bDisabledCmds[ComSCREAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1049,7 +1049,7 @@ stock void PlayerScream(int client)
  */
 public Action CMD_ScreamToggle(int client, int args)
 {
-  if(!g_bDisabledCmds[ComSCREAMTOGGLE])
+  if(g_bDisabledCmds[ComSCREAMTOGGLE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1092,7 +1092,7 @@ public Action CMD_ScreamToggle(int client, int args)
 #if defined _INCLUDE_PITCH
 public Action CMD_Pitch(int client, int args)
 {
-  if(!g_bDisabledCmds[ComPITCH])
+  if(g_bDisabledCmds[ComPITCH])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1225,7 +1225,7 @@ public Action CMD_Pitch(int client, int args)
  */
 public Action CMD_PitchToggle(int client, int args)
 {
-  if(!g_bDisabledCmds[ComPITCHTOGGLE])
+  if(g_bDisabledCmds[ComPITCHTOGGLE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1268,7 +1268,7 @@ public Action CMD_PitchToggle(int client, int args)
 #if defined _INCLUDE_TAUNTS
 public Action CMD_TauntMenu(int client, int args)
 {
-  if(!g_bDisabledCmds[ComTAUNT])
+  if(g_bDisabledCmds[ComTAUNT])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1435,7 +1435,7 @@ stock int ExecuteTaunt(int client, int tauntIndex)
 #if defined _INCLUDE_SPLAY
 public Action CMD_StealthPlay(int client, int args)
 {
-  if(!g_bDisabledCmds[ComSPLAY])
+  if(g_bDisabledCmds[ComSPLAY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1516,7 +1516,7 @@ public Action CMD_StealthPlay(int client, int args)
 #if defined _INCLUDE_COLOUR
 public Action CMD_ColourPlayer(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCOLOUR])
+  if(g_bDisabledCmds[ComCOLOUR])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1665,7 +1665,7 @@ public Action CMD_ColourPlayer(int client, int args)
 #if defined _INCLUDE_FRIENDLYSENTRY
 public Action CMD_FriendlySentry(int client, int args)
 {
-  if(!g_bDisabledCmds[ComFRIENDLYSENTRY])
+  if(g_bDisabledCmds[ComFRIENDLYSENTRY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1765,7 +1765,7 @@ public Action CMD_FriendlySentry(int client, int args)
 #if defined _INCLUDE_CUSTOMSLAP
 public Action CMD_CustomSlap(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCSLAP])
+  if(g_bDisabledCmds[ComCSLAP])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));

@@ -270,7 +270,7 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool &result)
  */
 public Action CMD_ClientCmd(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCCOM])
+  if(g_bDisabledCmds[ComCCOM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -334,7 +334,7 @@ public Action CMD_ClientCmd(int client, int args)
  */
 public Action CMD_TempBan(int client, int args)
 {
-  if(!g_bDisabledCmds[ComTBAN])
+  if(g_bDisabledCmds[ComTBAN])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -416,7 +416,7 @@ public Action CMD_TempBan(int client, int args)
  */
 public Action CMD_AddCond(int client, int args)
 {
-  if(!g_bDisabledCmds[ComADDCOND])
+  if(g_bDisabledCmds[ComADDCOND])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -512,7 +512,7 @@ public Action CMD_AddCond(int client, int args)
  */
 public Action CMD_RemCond(int client, int args)
 {
-  if(!g_bDisabledCmds[ComREMCOND])
+  if(g_bDisabledCmds[ComREMCOND])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -598,7 +598,7 @@ public Action CMD_RemCond(int client, int args)
  */
 public Action CMD_Disarm(int client, int args)
 {
-  if(!g_bDisabledCmds[ComDISARM])
+  if(g_bDisabledCmds[ComDISARM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -657,7 +657,7 @@ public Action CMD_Disarm(int client, int args)
  */
 public Action CMD_SwitchTeam(int client, int args)
 {
-  if(!g_bDisabledCmds[ComSWITCHTEAM])
+  if(g_bDisabledCmds[ComSWITCHTEAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -745,7 +745,7 @@ TFTeam GetClientOtherTeam(int client)
  */
 public Action CMD_ForceSpec(int client, int args)
 {
-  if(!g_bDisabledCmds[ComFORCESPEC])
+  if(g_bDisabledCmds[ComFORCESPEC])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -798,7 +798,7 @@ public Action CMD_ForceSpec(int client, int args)
  */
 public Action CMD_FakeSay(int client, int args)
 {
-  if(!g_bDisabledCmds[ComFSAYALL])
+  if(g_bDisabledCmds[ComFSAYALL])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -853,7 +853,7 @@ public Action CMD_FakeSay(int client, int args)
  */
 public Action CMD_FakeSayTeam(int client, int args)
 {
-  if(!g_bDisabledCmds[ComFSAYTEAM])
+  if(g_bDisabledCmds[ComFSAYTEAM])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -908,7 +908,7 @@ public Action CMD_FakeSayTeam(int client, int args)
  */
 public Action CMD_NameLock(int client, int args)
 {
-  if(!g_bDisabledCmds[ComNAMELOCK])
+  if(g_bDisabledCmds[ComNAMELOCK])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -975,7 +975,7 @@ public Action CMD_NameLock(int client, int args)
  */
 public Action CMD_NoTarget(int client, int args)
 {
-  if(!g_bDisabledCmds[ComNOTARGET])
+  if(g_bDisabledCmds[ComNOTARGET])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1091,7 +1091,7 @@ void SetNoTarget(int client, bool state)
  */
 public Action CMD_Outline(int client, int args)
 {
-  if(!g_bDisabledCmds[ComOUTLINE])
+  if(g_bDisabledCmds[ComOUTLINE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1205,7 +1205,7 @@ void SetOutline(int client, bool state)
  */
 public Action CMD_TeleLock(int client, int args)
 {
-  if(!g_bDisabledCmds[ComTELELOCK])
+  if(g_bDisabledCmds[ComTELELOCK])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1310,7 +1310,7 @@ public Action CMD_TeleLock(int client, int args)
  */
 public Action CMD_OpenTele(int client, int args)
 {
-  if(!g_bDisabledCmds[ComOPENTELE])
+  if(g_bDisabledCmds[ComOPENTELE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));

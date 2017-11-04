@@ -63,6 +63,8 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("common.phrases");
+  LoadTranslations("core.phrases");
 
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
@@ -120,7 +122,7 @@ void ProcessDisabledCmds()
  */
 public Action CMD_Boing(int client, int args)
 {
-  if(!g_bDisabledCmds[ComBOING])
+  if(g_bDisabledCmds[ComBOING])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -168,20 +170,20 @@ public Action CMD_Boing(int client, int args)
   }
 
 
-  bool bState = false;
+  int iState = GetStringBool(state, false, true, true, true);
+  if(iState == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_BOING_Usage", client);
+    return Plugin_Handled;
+  }
 
-  if(StrEqual(state, "off", false) || StrEqual(state, "0", true))
-    bState = true;
-  else if(StrEqual(state, "on", false) || StrEqual(state, "1", true))
-    bState = false;
 
-
-  if(bState)
+  if(iState == 1)
   {
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_AddCondition(targ_list[i], TFCond_HalloweenSpeedBoost, TFCondDuration_Infinite, 0);
-      TagReply(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
+      TagPrintChat(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
     }
   }
   else
@@ -189,7 +191,7 @@ public Action CMD_Boing(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_RemoveCondition(targ_list[i], TFCond_HalloweenSpeedBoost);
-      TagReply(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
+      TagPrintChat(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
     }
   }
 
@@ -205,7 +207,7 @@ public Action CMD_Boing(int client, int args)
  */
 public Action CMD_Dance(int client, int args)
 {
-  if(!g_bDisabledCmds[ComDANCEMONKEY])
+  if(g_bDisabledCmds[ComDANCEMONKEY])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -260,8 +262,8 @@ public Action CMD_Dance(int client, int args)
   {
     for(int i = 0; i < targ_count; ++i)
     {
-      TF2_AddCondition(targ_list[i], TFCond_HalloweenThriller, view_as<float>(iArg2), 0);
-      TagReply(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
+      TF2_AddCondition(targ_list[i], TFCond_HalloweenThriller, StringToFloat(arg2), 0);
+      TagPrintChat(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
     }
   }
   else if (iArg2 < 0)
@@ -269,7 +271,7 @@ public Action CMD_Dance(int client, int args)
     for(int i = 0; i < targ_count; ++i)
     {
       TF2_RemoveCondition(targ_list[i], TFCond_HalloweenThriller);
-      TagReply(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
+      TagPrintChat(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
     }
   }
   else // if iArg2 = 0; if It's not "stop" and not an int above 0

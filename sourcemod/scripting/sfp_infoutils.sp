@@ -259,7 +259,7 @@ void ProcessJoinGroupCvar() // TODO: Verify
 #if defined _INCLUDE_AMIMUTED
 public Action CMD_MuteGagStatus(int client, int args)
 {
-  if(!g_bDisabledCmds[ComAMIMUTED])
+  if(g_bDisabledCmds[ComAMIMUTED])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -304,7 +304,7 @@ public Action CMD_MuteGagStatus(int client, int args)
 #if defined _INCLUDE_CANPLAYERHEAR
 public Action CMD_HearCheck(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCANPLAYERHEAR])
+  if(g_bDisabledCmds[ComCANPLAYERHEAR])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -372,7 +372,7 @@ public Action CMD_HearCheck(int client, int args)
 #if defined _INCLUDE_LOCATEIP
 public Action CMD_LocateIP(int client, int args)
 {
-  if(!g_bDisabledCmds[ComLOCATEIP])
+  if(g_bDisabledCmds[ComLOCATEIP])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -426,7 +426,7 @@ public Action CMD_LocateIP(int client, int args)
 #if defined _INCLUDE_ID
 public Action CMD_PlayerID(int client, int args)
 {
-  if(!g_bDisabledCmds[ComPLAYERID])
+  if(g_bDisabledCmds[ComPLAYERID])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -505,7 +505,7 @@ public Action CMD_PlayerID(int client, int args)
 #if defined _INCLUDE_PROFILE
 public Action Cmd_Profile(int client, int args)
 {
-  if(!g_bDisabledCmds[ComPROFILE])
+  if(g_bDisabledCmds[ComPROFILE])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -568,7 +568,7 @@ stock void ShowMOTDUrl(int client, char[] title, char[] url)
 #if defined _INCLUDE_CHECKRESTART
 public Action CMD_CheckRestartRequest(int client, int args)
 {
-  if(!g_bDisabledCmds[ComCHECKRESTART])
+  if(g_bDisabledCmds[ComCHECKRESTART])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -594,7 +594,7 @@ public Action CMD_CheckRestartRequest(int client, int args)
 #if defined _INCLUDE_JOINGROUP
 public Action CMD_JoinGroup(int client, int args)
 {
-  if(!g_bDisabledCmds[ComJOINGROUP])
+  if(g_bDisabledCmds[ComJOINGROUP])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
