@@ -29,6 +29,12 @@ Handle  h_iRandomBias = null;
 int     g_iRandomBias;
 
 
+/**
+ * Known Bugs:
+ * - Random can sometimes target no-one, this returns a failed target error.
+ * - RandomX did not work because MAXPLAYERS was larger than the MaxClients array.
+ *   - This has probably been fixed.
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Targeting",
@@ -69,79 +75,79 @@ public void OnPluginStart()
   g_iRandomBias = GetConVarInt(h_iRandomBias);
   HookConVarChange(h_iRandomBias, UpdateCvars);
 
-  AddMultiTargetFilter("admins", Filter_Admins, "All Admins", false);
-  AddMultiTargetFilter("!admins", Filter_NotAdmins, "All Non-Admins", false);
-  AddMultiTargetFilter("mods", Filter_Mods, "All Moderators", false);
-  AddMultiTargetFilter("!mods", Filter_NotMods, "All Non-Moderators", false);
-  AddMultiTargetFilter("staff", Filter_Staff, "All Staff", false);
-  AddMultiTargetFilter("!staff", Filter_NotStaff, "All Non-Staff", false);
+  AddMultiTargetFilter("@admins", Filter_Admins, "All Admins", false);
+  AddMultiTargetFilter("@!admins", Filter_NotAdmins, "All Non-Admins", false);
+  AddMultiTargetFilter("@mods", Filter_Mods, "All Moderators", false);
+  AddMultiTargetFilter("@!mods", Filter_NotMods, "All Non-Moderators", false);
+  AddMultiTargetFilter("@staff", Filter_Staff, "All Staff", false);
+  AddMultiTargetFilter("@!staff", Filter_NotStaff, "All Non-Staff", false);
 
   // Random
-  AddMultiTargetFilter("random", Filter_Random, "Random Players", false);
+  AddMultiTargetFilter("@random", Filter_Random, "Random Players", false);
   #if defined _TARGET_RANDOM_VARIATION
-  AddMultiTargetFilter("random1", Filter_RandomMulti, "1 Random Player", false);
-  AddMultiTargetFilter("random2", Filter_RandomMulti, "2 Random Players", false);
-  AddMultiTargetFilter("random3", Filter_RandomMulti, "3 Random Players", false);
-  AddMultiTargetFilter("random4", Filter_RandomMulti, "4 Random Players", false);
-  AddMultiTargetFilter("random5", Filter_RandomMulti, "5 Random Players", false);
-  AddMultiTargetFilter("random6", Filter_RandomMulti, "6 Random Players", false);
-  AddMultiTargetFilter("random7", Filter_RandomMulti, "7 Random Players", false);
-  AddMultiTargetFilter("random8", Filter_RandomMulti, "8 Random Players", false);
-  AddMultiTargetFilter("random9", Filter_RandomMulti, "9 Random Players", false);
-  AddMultiTargetFilter("random10", Filter_RandomMulti, "10 Random Players", false);
+  AddMultiTargetFilter("@random1", Filter_RandomMulti, "1 Random Player", false);
+  AddMultiTargetFilter("@random2", Filter_RandomMulti, "2 Random Players", false);
+  AddMultiTargetFilter("@random3", Filter_RandomMulti, "3 Random Players", false);
+  AddMultiTargetFilter("@random4", Filter_RandomMulti, "4 Random Players", false);
+  AddMultiTargetFilter("@random5", Filter_RandomMulti, "5 Random Players", false);
+  AddMultiTargetFilter("@random6", Filter_RandomMulti, "6 Random Players", false);
+  AddMultiTargetFilter("@random7", Filter_RandomMulti, "7 Random Players", false);
+  AddMultiTargetFilter("@random8", Filter_RandomMulti, "8 Random Players", false);
+  AddMultiTargetFilter("@random9", Filter_RandomMulti, "9 Random Players", false);
+  AddMultiTargetFilter("@random10", Filter_RandomMulti, "10 Random Players", false);
 
-  AddMultiTargetFilter("random11", Filter_RandomMulti, "11 Random Players", false);
-  AddMultiTargetFilter("random12", Filter_RandomMulti, "12 Random Players", false);
-  AddMultiTargetFilter("random13", Filter_RandomMulti, "13 Random Players", false);
-  AddMultiTargetFilter("random14", Filter_RandomMulti, "14 Random Players", false);
-  AddMultiTargetFilter("random15", Filter_RandomMulti, "15 Random Players", false);
-  AddMultiTargetFilter("random16", Filter_RandomMulti, "16 Random Players", false);
-  AddMultiTargetFilter("random17", Filter_RandomMulti, "17 Random Players", false);
-  AddMultiTargetFilter("random18", Filter_RandomMulti, "18 Random Players", false);
-  AddMultiTargetFilter("random19", Filter_RandomMulti, "19 Random Players", false);
-  AddMultiTargetFilter("random20", Filter_RandomMulti, "20 Random Players", false);
+  AddMultiTargetFilter("@random11", Filter_RandomMulti, "11 Random Players", false);
+  AddMultiTargetFilter("@random12", Filter_RandomMulti, "12 Random Players", false);
+  AddMultiTargetFilter("@random13", Filter_RandomMulti, "13 Random Players", false);
+  AddMultiTargetFilter("@random14", Filter_RandomMulti, "14 Random Players", false);
+  AddMultiTargetFilter("@random15", Filter_RandomMulti, "15 Random Players", false);
+  AddMultiTargetFilter("@random16", Filter_RandomMulti, "16 Random Players", false);
+  AddMultiTargetFilter("@random17", Filter_RandomMulti, "17 Random Players", false);
+  AddMultiTargetFilter("@random18", Filter_RandomMulti, "18 Random Players", false);
+  AddMultiTargetFilter("@random19", Filter_RandomMulti, "19 Random Players", false);
+  AddMultiTargetFilter("@random20", Filter_RandomMulti, "20 Random Players", false);
 
-  AddMultiTargetFilter("random21", Filter_RandomMulti, "21 Random Players", false);
-  AddMultiTargetFilter("random22", Filter_RandomMulti, "22 Random Players", false);
-  AddMultiTargetFilter("random23", Filter_RandomMulti, "23 Random Players", false);
-  AddMultiTargetFilter("random24", Filter_RandomMulti, "24 Random Players", false);
-  AddMultiTargetFilter("random25", Filter_RandomMulti, "25 Random Players", false);
-  AddMultiTargetFilter("random26", Filter_RandomMulti, "26 Random Players", false);
-  AddMultiTargetFilter("random27", Filter_RandomMulti, "27 Random Players", false);
-  AddMultiTargetFilter("random28", Filter_RandomMulti, "28 Random Players", false);
-  AddMultiTargetFilter("random29", Filter_RandomMulti, "29 Random Players", false);
-  AddMultiTargetFilter("random30", Filter_RandomMulti, "30 Random Players", false);
+  AddMultiTargetFilter("@random21", Filter_RandomMulti, "21 Random Players", false);
+  AddMultiTargetFilter("@random22", Filter_RandomMulti, "22 Random Players", false);
+  AddMultiTargetFilter("@random23", Filter_RandomMulti, "23 Random Players", false);
+  AddMultiTargetFilter("@random24", Filter_RandomMulti, "24 Random Players", false);
+  AddMultiTargetFilter("@random25", Filter_RandomMulti, "25 Random Players", false);
+  AddMultiTargetFilter("@random26", Filter_RandomMulti, "26 Random Players", false);
+  AddMultiTargetFilter("@random27", Filter_RandomMulti, "27 Random Players", false);
+  AddMultiTargetFilter("@random28", Filter_RandomMulti, "28 Random Players", false);
+  AddMultiTargetFilter("@random29", Filter_RandomMulti, "29 Random Players", false);
+  AddMultiTargetFilter("@random30", Filter_RandomMulti, "30 Random Players", false);
 
-  AddMultiTargetFilter("random31", Filter_RandomMulti, "31 Random Players", false);
+  AddMultiTargetFilter("@random31", Filter_RandomMulti, "31 Random Players", false);
   #endif
 
   // Classes
-  AddMultiTargetFilter("scouts",      Filter_Scout, "All Scouts", false);
-  AddMultiTargetFilter("!scouts",     Filter_NotScout, "All Non-Scouts", false);
+  AddMultiTargetFilter("@scouts",      Filter_Scout, "All Scouts", false);
+  AddMultiTargetFilter("@!scouts",     Filter_NotScout, "All Non-Scouts", false);
 
-  AddMultiTargetFilter("soldiers",    Filter_Soldier, "All Soldiers", false);
-  AddMultiTargetFilter("!soldiers",   Filter_NotSoldier, "All Non-Soldiers", false);
+  AddMultiTargetFilter("@soldiers",    Filter_Soldier, "All Soldiers", false);
+  AddMultiTargetFilter("@!soldiers",   Filter_NotSoldier, "All Non-Soldiers", false);
 
-  AddMultiTargetFilter("pyros",       Filter_Pyro, "All Pyros", false);
-  AddMultiTargetFilter("!pyros",      Filter_NotPyro, "All Non-Pyros", false);
+  AddMultiTargetFilter("@pyros",       Filter_Pyro, "All Pyros", false);
+  AddMultiTargetFilter("@!pyros",      Filter_NotPyro, "All Non-Pyros", false);
 
-  AddMultiTargetFilter("demomen",     Filter_Demo, "All Demomen", false);
-  AddMultiTargetFilter("!demomen",    Filter_NotDemo, "All Non-Demomen", false);
+  AddMultiTargetFilter("@demomen",     Filter_Demo, "All Demomen", false);
+  AddMultiTargetFilter("@!demomen",    Filter_NotDemo, "All Non-Demomen", false);
 
-  AddMultiTargetFilter("heavies",     Filter_Heavy, "All Heavies", false); // TODO Heavys?
-  AddMultiTargetFilter("!heavies",    Filter_NotHeavy, "All Non-Heavies", false);
+  AddMultiTargetFilter("@heavies",     Filter_Heavy, "All Heavies", false); // TODO Heavys?
+  AddMultiTargetFilter("@!heavies",    Filter_NotHeavy, "All Non-Heavies", false);
 
-  AddMultiTargetFilter("engineers",   Filter_Engie, "All Engineers", false);
-  AddMultiTargetFilter("!engineers",  Filter_NotEngie, "All Non-Engineers", false);
+  AddMultiTargetFilter("@engineers",   Filter_Engie, "All Engineers", false);
+  AddMultiTargetFilter("@!engineers",  Filter_NotEngie, "All Non-Engineers", false);
 
-  AddMultiTargetFilter("medics",      Filter_Medic, "All Medics", false);
-  AddMultiTargetFilter("!medics",     Filter_NotMedic, "All Non-Medics", false);
+  AddMultiTargetFilter("@medics",      Filter_Medic, "All Medics", false);
+  AddMultiTargetFilter("@!medics",     Filter_NotMedic, "All Non-Medics", false);
 
-  AddMultiTargetFilter("snipers",     Filter_Sniper, "All Snipers", false);
-  AddMultiTargetFilter("!snipers",    Filter_NotSniper, "All Non-Snipers", false);
+  AddMultiTargetFilter("@snipers",     Filter_Sniper, "All Snipers", false);
+  AddMultiTargetFilter("@!snipers",    Filter_NotSniper, "All Non-Snipers", false);
 
-  AddMultiTargetFilter("spies",       Filter_Spy, "All Spies", false);
-  AddMultiTargetFilter("!spies",      Filter_NotSpy, "All Non-Spies", false);
+  AddMultiTargetFilter("@spies",       Filter_Spy, "All Spies", false);
+  AddMultiTargetFilter("@!spies",      Filter_NotSpy, "All Non-Spies", false);
 
   /**
    * Overrides
@@ -308,15 +314,15 @@ public bool Filter_Random(char[] pattern, Handle clients)
 public bool Filter_RandomMulti(char[] pattern, Handle clients)
 {
   // Bit dodgy but it should be better than StrEquals.
-  char numString[3]; // TODO: This should be fine but idk, check.
-  BreakString(pattern[6], numString, sizeof(numString)); // 6 = "random", gives us the number.
+  char numString[3];
+  BreakString(pattern[7], numString, sizeof(numString)); // 7 = "random", gives us the number.
   int randCount = StringToInt(numString);
 
   if(randCount < 1 || randCount > 31)
     return false; // Target fail.
 
   // Create Array of valid client indexes, sort randomly, count X people in order.
-  int indexes[MAXPLAYERS + 1];
+  int[] indexes = new int[MaxClients + 1];
   for(int i = 0; i <= MaxClients; ++i)
   {
     if(IsClientPlaying(i, true))
@@ -325,22 +331,22 @@ public bool Filter_RandomMulti(char[] pattern, Handle clients)
       indexes[i] = 0;
   }
 
-  SortIntegers(indexes, sizeof(indexes), Sort_Random);
+  SortIntegers(indexes, MaxClients + 1, Sort_Random); // Dynamic Array, manually set size.
 
   bool found = false;
   int limit = (randCount < MaxClients) ? randCount : MaxClients;
   int count = 0;
   for(int i = 0; i <= MaxClients; ++i) // Count MaxClients; unknown number of blank spaces.
   {
-    if(count >= limit)
-      break;
-
     if(indexes[i] == 0) // The above for-loop sets 0 for all invalid clients.
       continue;
 
     PushArrayCell(clients, indexes[i]);
     found = true;
     count++;
+
+    if(count >= limit)
+      break;
   }
   return found;
 }
