@@ -4,7 +4,7 @@
 #define _sfp_shared_included
 
 #define MAX_BOOLSTRING_LENGTH 8           // "disable" + \0
-#define STANDARD_TAG "\x04[SM]\x01"
+#define STANDARD_TAG "\x04[SM]\x01 "
 #define MAX_SLOTSTRING_LENGTH 10          // "secondary" + \0
 #define CONFIG_SIZE PLATFORM_MAX_PATH+13  // 13 = "configs/" + ".cfg" + \0
 
@@ -57,7 +57,7 @@ stock void TagReply(int client, const char[] msg, any...)
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  ReplyToCommand(client, "%s %s", STANDARD_TAG, outStr);
+  ReplyToCommand(client, "%s%s", STANDARD_TAG, outStr);
   return;
 }
 
@@ -75,7 +75,7 @@ stock void TagPrintChat(int client, const char[] msg, any...)
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  PrintToChat(client, "%s %s", STANDARD_TAG, outStr);
+  PrintToChat(client, "%s%s", STANDARD_TAG, outStr);
   return;
 }
 
@@ -93,7 +93,7 @@ stock void TagActivity(int client, const char[] msg, any ...)
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  ShowActivity2(client, "%s %s", STANDARD_TAG, msg);
+  ShowActivity2(client, STANDARD_TAG, "%s", outStr);
   return;
 }
 

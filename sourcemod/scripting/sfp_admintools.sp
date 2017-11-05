@@ -47,12 +47,15 @@ bool    g_bDisabledCmds[ComTOTAL];
 
 Handle  h_iTempBanMax = null;
 int     g_iTempBanMax;
-bool    g_bNoTarget[MAXPLAYERS + 1];   //= {..., false}; TODO Why does this fail to compile
-bool    g_bOutline[MAXPLAYERS + 1];   //= {..., false};
+bool    g_bNoTarget[MAXPLAYERS + 1];
+bool    g_bOutline[MAXPLAYERS + 1];
 bool    g_bTeleLock[MAXPLAYERS + 1];
 bool    g_bOpenTele[MAXPLAYERS + 1];
 
-
+/**
+ * Known Bugs:
+ * - TODO OpenTele and Telelock should indicate the tele is different.
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Admin Tools",
@@ -108,7 +111,7 @@ public void OnPluginStart()
   RegAdminCmd("sm_remcond",     CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_removecond",  CMD_RemCond, ADMFLAG_BAN, "Remove a Condition from a Player");
   RegAdminCmd("sm_disarm",      CMD_Disarm, ADMFLAG_BAN, "Strip Weapons from a Player");
-  RegAdminCmd("sm_switchteam",   CMD_SwitchTeam, ADMFLAG_BAN, "Force Player to switch Teams");
+  RegAdminCmd("sm_switchteam",  CMD_SwitchTeam, ADMFLAG_BAN, "Force Player to switch Teams");
   RegAdminCmd("sm_forcespec",   CMD_ForceSpec, ADMFLAG_BAN, "Force Player into Spectator");
   RegAdminCmd("sm_fsay",        CMD_FakeSay, ADMFLAG_BAN, "I didn't say that, I swear!");
   RegAdminCmd("sm_fsayteam",    CMD_FakeSayTeam, ADMFLAG_BAN, "I didn't say that, I swear!");
@@ -233,7 +236,7 @@ public void OnClientDisconnect_Post(int client)
 
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool &result)
 {
-  int iOwner = GetEntPropEnt(teleporter, Prop_Data, "m_hBuilder");
+  int iOwner = GetEntPropEnt(teleporter, Prop_Send, "m_hBuilder");
 
   if(iOwner < 1 || iOwner > MaxClients) // TODO: Does this work against RTD?
     return Plugin_Continue;
@@ -305,7 +308,7 @@ public Action CMD_ClientCmd(int client, int args)
     client,
     targ_list,
     MAXPLAYERS,
-    COMMAND_FILTER_NO_BOTS,
+    0, // Works on bots
     targ_name,
     sizeof(targ_name),
     tn_is_ml)) <= 0)
@@ -349,19 +352,17 @@ public Action CMD_TempBan(int client, int args)
   }
 
   // Process args
-  char arg1[MAX_NAME_LENGTH], arg2[16], argFull[256], dummyArg3[4];
+  char arg1[MAX_NAME_LENGTH], arg2[16], argFull[256];
   GetCmdArgString(argFull, sizeof(argFull));
 
   int argIndex = BreakString(argFull, arg1, sizeof(arg1));
   int buffer = BreakString(argFull[argIndex], arg2, sizeof(arg2));
-  argIndex += buffer;
 
   // Check for 3rd arg/reason, get index if any
-  buffer = BreakString(argFull[argIndex], dummyArg3, sizeof(dummyArg3));
-  if(buffer != -1)
-    argIndex += buffer;
-  else
+  if(buffer == -1)
     argIndex = -1;
+  else
+    argIndex += buffer;
 
   // Check Args
   int duration = StringToInt(arg2);
@@ -454,8 +455,9 @@ public Action CMD_AddCond(int client, int args)
     }
 
     // Output
-    TF2_AddCondition(client, view_as<TFCond>(iArg1), view_as<float>(iArg2), 0);
+    TF2_AddCondition(client, view_as<TFCond>(iArg1), StringToFloat(arg2), 0);
     TagReply(client, "%T", "SM_ADDCOND_Done", client, iArg1);
+    return Plugin_Handled;
   }
 
   // Process args on target player, args is > 2
@@ -467,7 +469,6 @@ public Action CMD_AddCond(int client, int args)
 
   char arg3[16];
   GetCmdArg(3, arg3, sizeof(arg3));
-  int iArg3 = StringToInt(arg3);
 
   // Check arg2
   if(iArg2 < 0)
@@ -497,7 +498,7 @@ public Action CMD_AddCond(int client, int args)
 
   // Output
   for(int i = 0; i < targ_count; ++i)
-    TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), view_as<float>(iArg3), 0);
+    TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), StringToFloat(arg3), 0);
 
   TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
@@ -549,6 +550,7 @@ public Action CMD_RemCond(int client, int args)
 
     TF2_RemoveCondition(client, view_as<TFCond>(iArg1));
     TagReply(client, "%T", "SM_REMCOND_Done", client, iArg1);
+    return Plugin_Handled;
   }
 
   // Other target, args is > 1
@@ -956,7 +958,7 @@ public Action CMD_NameLock(int client, int args)
   for(int i = 0; i < targ_count; ++i)
   {
     int userid = GetClientUserId(targ_list[i]);  // TODO: Do you need to verify IDs
-    ServerCommand("namelockid %i %i", userid, (state == 1) ? 1 : 0);
+    ServerCommand("namelockid %i %i", userid, state);
   }
 
   if(state)
