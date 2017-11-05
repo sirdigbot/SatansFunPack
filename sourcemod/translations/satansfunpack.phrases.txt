@@ -96,7 +96,7 @@
 
   "SFP_ConfigReload_Success"
   {
-    "en" "Successfully loaded Config"
+    "en" "Successfully Loaded Config"
   }
   "SFP_ConfigReload_Fail"
   {
@@ -106,7 +106,7 @@
   "SFP_CmdDisabled"
   {
     "#format" "{1:s}"
-    "en" "{1} is Disabled."
+    "en" "{1} is Disabled Server-wide."
   }
 
 
@@ -142,7 +142,7 @@
   }
   "SFP_BadWeaponSlot"
   {
-    "en" "Invalid Weapon Slot. Use 1/2/3 or Primary/Secondary/Melee."
+    "en" "Invalid Weapon Slot. Use All, 1/2/3 or Primary/Secondary/Melee."
   }
 
 
@@ -406,7 +406,7 @@
   // ToyBox
   "SM_COLWEAPON_Usage"
   {
-    "en" "sm_colourweapon [Target] <Slot (1/2/3/All)> <Hex Colour/RGB Colour>"
+    "en" "sm_colourweapon [Target] <Slot (1/2/3/All)> <Hex/RGB Colour>"
   }
   "SM_COLWEAPON_Done"
   {
@@ -425,18 +425,18 @@
   }
   "SM_SIZEWEAPON_Scale"
   {
-    "#format" "{1:f},{2:f}"
+    "#format" "{1:.1f},{2:.1f}"
     "en" "Scale is out of range. Use a number between {1} and {2}."
     // TODO do these floats display right?
   }
   "SM_SIZEWEAPON_Done"
   {
-    "#format" "{1:f}"
+    "#format" "{1:.1f}"
     "en" "Set Size of Weapon[s] to {1}x"
   }
   "SM_SIZEWEAPON_Done_Server" // TODO: Improve the wording of this.
   {
-    "#format" "{1:s},{2:f}"
+    "#format" "{1:s},{2:.1f}"
     "en" "Set Size of {1} Weapon[s] to {2}x"
   }
 
@@ -489,6 +489,7 @@
 
   "SM_PITCH_Usage"
   {
+    "#format" "{1:d},{2:d}"
     "en" "sm_pitch [Target] <{1} to {2} or Reset/Default>"
   }
   "SM_PITCH_Disabled"
@@ -554,19 +555,19 @@
 
   "SM_SPLAY_Usage"
   {
-    "en" "sm_splay <Target> <Filename>"
+    "en" "sm_splay <Target> <File Path>"
   }
 
   "SM_COLOURSELF_Usage"
   {
-    "en" "sm_colour [Target] <8-Digit Hex Colour/RGBA Colour>"
+    "en" "sm_colour [Target] <8-Digit Hex/RGBA Colour>"
   }
-  "SM_COLWEAPON_Done"
+  "SM_COLOURSELF_Done"
   {
     "#format" "{1:d},{2:d},{3:d},{4:d}"
     "en" "Set Colour to: {1} {2} {3} {4}"
   }
-  "SM_COLWEAPON_Done_Server"
+  "SM_COLOURSELF_Done_Server"
   {
     "#format" "{1:s},{2:d},{3:d},{4:d},{5:d}"
     "en" "Set Colour of {1} to: {2} {3} {4} {5}"

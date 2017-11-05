@@ -3,6 +3,7 @@
 // Libraries/Modules
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #undef REQUIRE_PLUGIN
 #tryinclude <updater>
 #tryinclude <tf2items>
@@ -128,6 +129,12 @@ char    g_szSlapMsg[256];
 #endif
 
 
+/**
+ * Known Bugs:
+ * - TODO sm_colour should have a non-admin alpha limiting cvar
+ * - ResetColour, ResetWeaponColour and ResetWeaponSize should be added.
+ * - FriendlySentry should indicate the sentry is different.
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Toy Box",
@@ -163,7 +170,7 @@ public void OnPluginStart()
   // SDKTools Hooks
   // Thank you to FlaminSarge for the sdktools code.
   #if defined _INCLUDE_TAUNTS
-  Handle gameData = LoadGameConfigFile("tf2.satansfunpack.txt");
+  Handle gameData = LoadGameConfigFile("tf2.satansfunpack");
   if (gameData == INVALID_HANDLE)
   {
     SetFailState("%T", "SFP_NoGameData", LANG_SERVER);
@@ -200,6 +207,7 @@ public void OnPluginStart()
   Format(pathBuffer, sizeof(pathBuffer), "configs/%s", cvarBuffer);
   BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
   HookConVarChange(h_szConfig, UpdateCvars);
+  LoadConfig();
 
   h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
   ProcessDisabledCmds();
@@ -317,6 +325,9 @@ public void OnPluginStart()
         #if defined _INCLUDE_FOV
         QueryClientConVar(i, "fov_desired", OnGetDesiredFOV);
         #endif
+        #if defined _INCLUDE_FRIENDLYSENTRY
+        SDKHook(i, SDKHook_OnTakeDamage, OnTakeDamage);
+        #endif
       }
     }
   }
@@ -427,6 +438,9 @@ public void OnClientPutInServer(int client)
     #if defined _INCLUDE_FOV
     QueryClientConVar(client, "fov_desired", OnGetDesiredFOV);
     #endif
+    #if defined _INCLUDE_FRIENDLYSENTRY
+    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+    #endif
   }
   return;
 }
@@ -485,12 +499,12 @@ public Action OnTakeDamage(
   if(!IsValidEntity(inflictor))
     return Plugin_Continue;
 
-  char classname[32];
+  char classname[27];
   GetEdictClassname(inflictor, classname, sizeof(classname));
   if(StrEqual(classname, "obj_sentrygun", true)
   || StrEqual(classname, "tf_projectile_sentryrocket", true))
   {
-    if(attacker > 1 && attacker <= MaxClients && g_bFriendlySentry[attacker])
+    if(attacker > 0 && attacker <= MaxClients && g_bFriendlySentry[attacker])
     {
       damage = 0.0;
       return Plugin_Changed;
@@ -727,7 +741,8 @@ public Action CMD_ResizeWeapon(int client, int args)
     flScale = StringToFloat(arg3);
   }
   if((FloatCompare(flScale, g_flResizeLower) == -1
-  || FloatCompare(flScale, g_flResizeUpper) == 1)
+  || FloatCompare(flScale, g_flResizeUpper) == 1
+  || FloatCompare(flScale, 0.0) == 0)
   && !CheckCommandAccess(client, "sm_resizeweapon_nolimit", ADMFLAG_BAN, true))
   {
     TagReply(client, "%T", "SM_SIZEWEAPON_Scale", client, g_flResizeLower, g_flResizeUpper);
@@ -1209,9 +1224,10 @@ public Action CMD_Pitch(int client, int args)
   }
 
   if(isDefault)
-    TagActivity(client, "%T", "SM_PITCH_Done_Server", LANG_SERVER);
+    TagActivity(client, "%T", "SM_PITCH_Done_Server_Default", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_PITCH_Done_Server_Default", LANG_SERVER);
+    TagActivity(client, "%T", "SM_PITCH_Done_Server", LANG_SERVER, targ_name, val);
+
 
   return Plugin_Handled;
 }
@@ -1326,51 +1342,51 @@ public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int para
         case TFClass_Scout:
         {
           if(g_TauntClass[index] != TFScout)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Sniper:
         {
           if(g_TauntClass[index] != TFSniper)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Soldier:
         {
           if(g_TauntClass[index] != TFSoldier)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_DemoMan:
         {
           if(g_TauntClass[index] != TFDemoman)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Medic:
         {
           if(g_TauntClass[index] != TFMedic)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Heavy:
         {
           if(g_TauntClass[index] != TFHeavy)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Pyro:
         {
           if(g_TauntClass[index] != TFPyro)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Spy:
         {
           if(g_TauntClass[index] != TFSpy)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         case TFClass_Engineer:
         {
           if(g_TauntClass[index] != TFEngie)
-            return ITEMDRAW_DISABLED;
+            return ITEMDRAW_IGNORE;
         }
         default:
         {
-          return ITEMDRAW_DISABLED; // Should never run.
+          return ITEMDRAW_IGNORE; // Should never run.
         }
       }
     }
@@ -1578,7 +1594,7 @@ public Action CMD_ColourPlayer(int client, int args)
 
   // Get Colour
   int iRed, iGreen, iBlue, iAlpha;
-  char arg2[7], arg3[4], arg4[4], arg5[4]; // Arg2 can be 6 or 3-digits, 3, 4 & 5 are only 3.
+  char arg2[9], arg3[4], arg4[4], arg5[4]; // Arg2 can be 8 or 3-digits, 3, 4 & 5 are only 3.
 
 
   if(args == 1)       // arg1:8-Digit Hex
@@ -1633,11 +1649,22 @@ public Action CMD_ColourPlayer(int client, int args)
     }
   }
 
+
+  bool bDefault = false;
+  if(iRed == 255 && iGreen == 255 && iBlue == 255 && iAlpha == 255)
+    bDefault = true;
+
   // Target and Colour Ready. Apply
   for(int i = 0; i < targ_count; ++i)
   {
     if(IsClientPlaying(targ_list[i]))
+    {
       SetEntityRenderColor(targ_list[i], iRed, iGreen, iBlue, iAlpha);
+      if(bDefault)
+        SetEntityRenderMode(targ_list[i], RENDER_NORMAL);
+      else
+        SetEntityRenderMode(targ_list[i], RENDER_TRANSALPHA);
+    }
   }
 
   if(bSelfTarget)
@@ -1976,20 +2003,8 @@ stock bool LoadConfig()
     hKeys.GetString("sound", buff, sizeof(buff));
     if(strlen(buff) > 0)
     {
-      if(FileExists(buff, true, NULL_STRING))
-      {
-        bool result = true;
-        if(!IsSoundPrecached(buff))
-          result = PrecacheSound(buff, false); // Always returns true/false
-
-        if(result)
-        {
-          g_szSlapSound = buff;
-          g_bSlapUseSound = true;
-        }
-        else
-          g_bSlapUseSound = false;
-      }
+      g_szSlapSound = buff;
+      g_bSlapUseSound = true;
     }
     else // Explicitly Disable if empty string
       g_bSlapUseSound = false;
