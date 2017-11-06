@@ -35,7 +35,8 @@ enum CommandNames {
   ComCANPLAYERHEAR,
   ComLOCATEIP,
   ComPLAYERID,
-  ComPROFILE,
+  ComPROFILECMD,
+  ComGETPROFILE,
   ComCHECKRESTART,
   ComJOINGROUP,
   ComTOTAL
@@ -108,7 +109,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- Profile\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- ProfileCmd\n- GetProfile\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -151,7 +152,8 @@ public void OnPluginStart()
   #endif
 
   #if defined _INCLUDE_PROFILE
-  RegConsoleCmd("sm_profile",  Cmd_Profile, "Get a Player's Steam Profile");
+  RegConsoleCmd("sm_profile",  Cmd_Profile, "Display a Player's Steam Profile");
+  RegConsoleCmd("sm_getprofile",  Cmd_GetProfile, "Get a Player's Steam Profile URL");
   #endif
 
   #if defined _INCLUDE_CHECKRESTART
@@ -212,8 +214,11 @@ void ProcessDisabledCmds()
   if(StrContains(buffer, "PlayerID", true) != -1)
     g_bDisabledCmds[ComPLAYERID] = true;
 
-  if(StrContains(buffer, "Profile", true) != -1)
-    g_bDisabledCmds[ComPROFILE] = true;
+  if(StrContains(buffer, "ProfileCmd", true) != -1)
+    g_bDisabledCmds[ComPROFILECMD] = true;
+
+  if(StrContains(buffer, "GetProfile", true) != -1)
+    g_bDisabledCmds[ComGETPROFILE] = true;
 
   if(StrContains(buffer, "CheckRestart", true) != -1)
     g_bDisabledCmds[ComCHECKRESTART] = true;
@@ -322,7 +327,7 @@ public Action CMD_HearCheck(int client, int args)
   char arg1[MAX_NAME_LENGTH], targ1Name[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
 
-  int targ1 = FindTarget(client, arg1, true, true); // No bots or immunity
+  int targ1 = FindTarget(client, arg1, true, false); // No bots or immunity
   if(targ1 == -1)
     return Plugin_Handled;
   GetClientName(targ1, targ1Name, sizeof(targ1Name));
@@ -335,7 +340,7 @@ public Action CMD_HearCheck(int client, int args)
   {
     char arg2[MAX_NAME_LENGTH];
     GetCmdArg(2, arg2, sizeof(arg2));
-    targ2 = FindTarget(client, arg2, true, true); // No bots or immunity
+    targ2 = FindTarget(client, arg2, true, false); // No bots or immunity
     if(targ2 == -1)
       return Plugin_Handled;
     GetClientName(targ2, targ2Name, sizeof(targ2Name));
@@ -344,6 +349,12 @@ public Action CMD_HearCheck(int client, int args)
     targ2 = client;
 
   // Output
+  if(targ1 == targ2)
+  {
+    TagReply(client, "%T", "SM_CANHEAR_SelfTarget", client);
+    return Plugin_Handled;
+  }
+
   if(IsClientMuted(targ1, targ2))
   {
     if(targ2 == client)
@@ -444,7 +455,7 @@ public Action CMD_PlayerID(int client, int args)
   char arg1[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
 
-  int target = FindTarget(client, arg1, true, g_bIdIgnoreImmunity);
+  int target = FindTarget(client, arg1, true, !g_bIdIgnoreImmunity);
   if(target == -1)
     return Plugin_Handled;
 
@@ -498,14 +509,14 @@ public Action CMD_PlayerID(int client, int args)
 
 
 /**
- * Get a player's profile through their SteamID64
+ * Get a player's profile through their SteamID64 and display it.
  *
  * sm_profile <Target>
  */
 #if defined _INCLUDE_PROFILE
 public Action Cmd_Profile(int client, int args)
 {
-  if(g_bDisabledCmds[ComPROFILE])
+  if(g_bDisabledCmds[ComPROFILECMD])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -523,7 +534,7 @@ public Action Cmd_Profile(int client, int args)
   char arg1[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
 
-  int target = FindTarget(client, arg1, true, g_bProfileIgnoreImmunity);
+  int target = FindTarget(client, arg1, true, !g_bProfileIgnoreImmunity);
   if(target == -1)
     return Plugin_Handled;
 
@@ -533,8 +544,51 @@ public Action Cmd_Profile(int client, int args)
 
   // Show page
   char pageUrl[192];
-  Format(pageUrl, 128, "https://steamcommunity.com/profiles/%s/", idStr);
+  Format(pageUrl, sizeof(pageUrl), "https://steamcommunity.com/profiles/%s/", idStr);
   ShowMOTDUrl(client, "Player Profile", pageUrl);
+  return Plugin_Handled;
+}
+
+/**
+ * Get a player's profile through their SteamID64 and print to client.
+ *
+ * sm_getprofile <Target>
+ */
+public Action Cmd_GetProfile(int client, int args)
+{
+  if(g_bDisabledCmds[ComGETPROFILE])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_GETPROFILE_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Get Target
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  int target = FindTarget(client, arg1, true, !g_bProfileIgnoreImmunity);
+  if(target == -1)
+    return Plugin_Handled;
+
+  // Get SteamID64
+  char idStr[MAX_STEAMID_SIZE];
+  GetClientAuthId(target, AuthId_SteamID64, idStr, sizeof(idStr), true);
+
+  // Get Full Name, in case arg1 was a partial name
+  GetClientName(target, arg1, sizeof(arg1));
+
+  // Show page
+  char pageUrl[192];
+  Format(pageUrl, sizeof(pageUrl), "https://steamcommunity.com/profiles/%s/", idStr);
+  TagReply(client, "%T", "SM_GETPROFILE_Done", client, arg1, pageUrl);
   return Plugin_Handled;
 }
 #endif

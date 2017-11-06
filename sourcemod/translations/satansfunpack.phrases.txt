@@ -377,7 +377,7 @@
   // QuickConditions
   "SM_BOING_Usage"
   {
-    "en" "sm_boing [Target] <1/0/On/Off>"
+    "en" "sm_boing [Target] <1/0>"
   }
   "SM_BOING_On"
   {
@@ -626,6 +626,10 @@
   {
     "en" "sm_canplayerhear <Target 1> [Target 2]"
   }
+  "SM_CANHEAR_SelfTarget"
+  {
+    "en" "Target 1 and Target 2 are the same."
+  }
   "SM_CANHEAR_True_Self"
   {
     "#format" "{1:s}"
@@ -678,6 +682,15 @@
   "SM_PROFILE_Usage"
   {
     "en" "sm_profile <Target>"
+  }
+  "SM_GETPROFILE_Usage"
+  {
+    "en" "sm_getprofile <Target>"
+  }
+  "SM_GETPROFILE_Done"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "{1}'s Steam Profile is: {2}"
   }
 
   "SM_CHECKRESTART_True"

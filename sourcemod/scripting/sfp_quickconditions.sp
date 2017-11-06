@@ -118,7 +118,7 @@ void ProcessDisabledCmds()
  * Give player infinite jumps and double fire rate.
  * (Cond 72/TFCond_HalloweenSpeedBoost)
  *
- * sm_boing [Target] <1/0/On/Off>
+ * sm_boing [Target] <1/0>
  */
 public Action CMD_Boing(int client, int args)
 {
