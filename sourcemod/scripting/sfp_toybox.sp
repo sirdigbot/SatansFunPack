@@ -585,7 +585,7 @@ public Action CMD_ColourWeapon(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -604,7 +604,7 @@ public Action CMD_ColourWeapon(int client, int args)
     slotIndex = GetWeaponSlotIndex(arg2);
   if(slotIndex == TF_Slot_Invalid)
   {
-    TagReplyUsage(client, "%T", "SFP_BadWeaponSlot", client);
+    TagReply(client, "%T", "SFP_BadWeaponSlot", client);
     return Plugin_Handled;
   }
 
@@ -617,7 +617,7 @@ public Action CMD_ColourWeapon(int client, int args)
   {
     if(!HexToRGB(arg2, iRed, iGreen, iBlue))
     {
-      TagReplyUsage(client, "%T", "SFP_BadHexColour", client);
+      TagReply(client, "%T", "SFP_BadHexColour", client);
       return Plugin_Handled;
     }
   }
@@ -627,7 +627,7 @@ public Action CMD_ColourWeapon(int client, int args)
 
     if(!HexToRGB(arg3, iRed, iGreen, iBlue))
     {
-      TagReplyUsage(client, "%T", "SFP_BadHexColour", client);
+      TagReply(client, "%T", "SFP_BadHexColour", client);
       return Plugin_Handled;
     }
   }
@@ -641,7 +641,7 @@ public Action CMD_ColourWeapon(int client, int args)
     iBlue   = StringToInt(arg4);
     if(!IsColourRGB(iRed, iGreen, iBlue))
     {
-      TagReplyUsage(client, "%T", "SFP_BadRGBColour", client);
+      TagReply(client, "%T", "SFP_BadRGBColour", client);
       return Plugin_Handled;
     }
   }
@@ -656,7 +656,7 @@ public Action CMD_ColourWeapon(int client, int args)
     iBlue   = StringToInt(arg5);
     if(!IsColourRGB(iRed, iGreen, iBlue))
     {
-      TagReplyUsage(client, "%T", "SFP_BadRGBColour", client);
+      TagReply(client, "%T", "SFP_BadRGBColour", client);
       return Plugin_Handled;
     }
   }
@@ -758,7 +758,7 @@ public Action CMD_ResizeWeapon(int client, int args)
     slotIndex = GetWeaponSlotIndex(arg2);
   if(slotIndex == TF_Slot_Invalid)
   {
-    TagReplyUsage(client, "%T", "SFP_BadWeaponSlot", client);
+    TagReply(client, "%T", "SFP_BadWeaponSlot", client);
     return Plugin_Handled;
   }
 
@@ -774,7 +774,7 @@ public Action CMD_ResizeWeapon(int client, int args)
   {
     if(!IsClientPlaying(client)) // TODO: check if this is applied to all targeted cmds
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -879,7 +879,7 @@ public Action CMD_FieldOfView(int client, int args)
   {
     if(!IsClientPlaying(client, true)) // Allow Spectators to use on self.
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1135,7 +1135,7 @@ public Action CMD_Pitch(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1582,7 +1582,7 @@ public Action CMD_ColourPlayer(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1601,7 +1601,7 @@ public Action CMD_ColourPlayer(int client, int args)
   {
     if(!HexToRGBA(arg1, iRed, iGreen, iBlue, iAlpha))
     {
-      TagReplyUsage(client, "%T", "SFP_Bad8DigitHexColour", client);
+      TagReply(client, "%T", "SFP_Bad8DigitHexColour", client);
       return Plugin_Handled;
     }
   }
@@ -1611,7 +1611,7 @@ public Action CMD_ColourPlayer(int client, int args)
 
     if(!HexToRGBA(arg2, iRed, iGreen, iBlue, iAlpha))
     {
-      TagReplyUsage(client, "%T", "SFP_Bad8DigitHexColour", client);
+      TagReply(client, "%T", "SFP_Bad8DigitHexColour", client);
       return Plugin_Handled;
     }
   }
@@ -1627,7 +1627,7 @@ public Action CMD_ColourPlayer(int client, int args)
     iAlpha  = StringToInt(arg4);
     if(!IsColourRGBA(iRed, iGreen, iBlue, iAlpha))
     {
-      TagReplyUsage(client, "%T", "SFP_BadRGBAColour", client);
+      TagReply(client, "%T", "SFP_BadRGBAColour", client);
       return Plugin_Handled;
     }
   }
@@ -1644,7 +1644,7 @@ public Action CMD_ColourPlayer(int client, int args)
     iAlpha  = StringToInt(arg5);
     if(!IsColourRGBA(iRed, iGreen, iBlue, iAlpha))
     {
-      TagReplyUsage(client, "%T", "SFP_BadRGBAColour", client);
+      TagReply(client, "%T", "SFP_BadRGBAColour", client);
       return Plugin_Handled;
     }
   }
@@ -1714,7 +1714,7 @@ public Action CMD_FriendlySentry(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1970,7 +1970,7 @@ stock bool LoadConfig()
       }
       while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
 
-      PrintToServer("Config Loaded %i Taunts, Skipped %i.", g_iTauntCount+1, skipCount);
+      PrintToServer("%T", "SM_TAUNTMENU_ConfigLoad", LANG_SERVER, g_iTauntCount+1, skipCount);
     }
   }
   else

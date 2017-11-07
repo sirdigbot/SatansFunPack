@@ -2,6 +2,7 @@
 //=================================
 // Libraries/Modules
 #include <sourcemod>
+#include <clientprefs>
 #undef REQUIRE_PLUGIN
 #tryinclude <updater>
 #define REQUIRE_PLUGIN
@@ -19,10 +20,11 @@
 #define MAX_HELP_SECTIONS 64
 #define MAX_HELP_ITEMS    64
 #define MAX_ITEM_FLAGS    13  // Maximum number of possible item flags.
-#define SECT_IDX_SIZE     3   // "64" +\0
-#define ITEM_IDX_SIZE     3
+#define SECT_IDX_SIZE     3   // "64" + \0
+#define ITEM_IDX_SIZE     7   // "64_64" + \0
 
-#define _INCLUDE_RULES  // Help command must be included. sm_rules is a shortcut, however.
+#define _INCLUDE_RULES      // Help command must be included. sm_rules is a shortcut, however.
+//#define _ALT_HELPCMD      // Use sm_helpmenu instead of sm_help (Conflicts stock adminhelp.smx)
 
 // Section Flags
 #define SECT_HIDDEN   (1<<0) // Section is unlisted. Must use "open:___" to see.
@@ -60,6 +62,7 @@
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
+bool    g_bLateLoad;
 Handle  h_szHelpCfg = null;
 char    g_szHelpCfg[PLATFORM_MAX_PATH];
 
@@ -77,9 +80,18 @@ char      g_szFirstGreetIdx[SECT_IDX_SIZE]; // Idx (str) of First-Time Greeting 
 char      g_szWelcomeIdx[SECT_IDX_SIZE];    // Idx (str) of Regular Greeting Menu, -1 for none.
 char      g_szRulesIdx[SECT_IDX_SIZE];      // Idx (str) of Rules section (to use with sm_rules)
 int       g_iSectionCount;
-// TODO Cleanly implement a way to go back to previous submenus, which can stack.
-// TODO Make FirstGreet and Welcome do something.
 
+Handle    g_ReturnVisitCookie = null;
+bool      g_bGreetingDisplayed[MAXPLAYERS + 1]; // Has the greeting appeared yet
+
+
+/**
+ * Known Bugs
+ * TODO Add a way to go back to previous submenus, which can stack.
+ * TODO Add a print-to-chat feature into the item flags
+ * TODO Add time limit flag for inner-sections
+ * TODO Add exit-disable for inner-sections
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Help Menu",
@@ -96,13 +108,14 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 {
-	EngineVersion engine = GetEngineVersion();
-	if(engine != Engine_TF2)
-	{
-		Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
-		return APLRes_Failure;
-	}
-	return APLRes_Success;
+  g_bLateLoad = late;
+  EngineVersion engine = GetEngineVersion();
+  if(engine != Engine_TF2)
+  {
+    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    return APLRes_Failure;
+  }
+  return APLRes_Success;
 }
 
 
@@ -123,13 +136,23 @@ public void OnPluginStart()
   GetConVarString(h_szHelpCfg, buff, sizeof(buff));
   Format(formatBuff, sizeof(formatBuff), "configs/%s", buff);
   BuildPath(Path_SM, g_szHelpCfg, sizeof(g_szHelpCfg), formatBuff);
-  LoadConfig();
 
 
+  g_ReturnVisitCookie = RegClientCookie("satansfunpack_returnvisit", "Used to Mark Returning Players", CookieAccess_Public);
+
+  #if defined _ALT_HELPCMD
+  RegConsoleCmd("sm_helpmenu",  CMD_HelpMenu,   "Displays the Server Help Menu");
+  #else
   RegConsoleCmd("sm_help",  CMD_HelpMenu,   "Displays the Server Help Menu");
-  #if defined _INCLUDE_RULES
-  RegConsoleCmd("sm_rules", CMD_RulesMenu,  "Display the Server Rules");
   #endif
+
+  #if defined _INCLUDE_RULES
+  RegConsoleCmd("sm_rules",     CMD_RulesMenu,  "Display the Server Rules");
+  #endif
+  RegAdminCmd("sm_helpmenu_reloadcfg", CMD_ReloadCfg, ADMFLAG_ROOT, "Reload Help Menu");
+
+
+  HookEvent("player_spawn", Event_Spawn, EventHookMode_Post);
 
   /**
    * Overrides
@@ -144,6 +167,16 @@ public void OnPluginStart()
   g_fbMapItemFlags    = new StringMap();
   g_szMapItemCCom     = new StringMap();
   g_szMapItemRedirIdx = new StringMap();
+  LoadConfig();
+
+  if(g_bLateLoad)
+  {
+    for(int i = 1; i <= MaxClients; ++i)
+    {
+      if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
+        g_bGreetingDisplayed[i] = true;
+    }
+  }
 
   PrintToServer("%T", "SFP_HelpLoaded", LANG_SERVER);
 }
@@ -168,6 +201,44 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
 }
 
 
+public Action Event_Spawn(Handle event, char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
+  if(client < 1 || client > MaxClients)
+    return Plugin_Continue;
+
+  if(!g_bGreetingDisplayed[client] && AreClientCookiesCached(client))
+  {
+    g_bGreetingDisplayed[client] = true;
+
+    char buff[2];
+    GetClientCookie(client, g_ReturnVisitCookie, buff, sizeof(buff));
+
+    if(!StrEqual(buff, "1", true)) // First Time Visit
+    {
+      SetClientCookie(client, g_ReturnVisitCookie, "1");
+
+      if(!StrEqual(g_szFirstGreetIdx, "", true))
+        OpenSubmenu(client, g_szFirstGreetIdx);
+      else if(!StrEqual(g_szWelcomeIdx, "", true)) // First-Greet Overrides Welcome
+        OpenSubmenu(client, g_szWelcomeIdx);
+    }
+    else // Return Visit
+    {
+      if(!StrEqual(g_szWelcomeIdx, "", true))
+        OpenSubmenu(client, g_szWelcomeIdx);
+    }
+  }
+  return Plugin_Continue;
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+  g_bGreetingDisplayed[client] = false;
+  return;
+}
+
+
 
 /**
  * Show the help menu
@@ -176,6 +247,12 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
  */
 public Action CMD_HelpMenu(int client, int args)
 {
+  if(!IsClientPlaying(client, true)) // Allow Spectator
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
+
   OpenHelpMenu(client);
   return Plugin_Handled;
 }
@@ -291,6 +368,12 @@ public int HelpMenuHandler(Handle menu, MenuAction action, int param1, int param
 #if defined _INCLUDE_RULES
 public Action CMD_RulesMenu(int client, int args)
 {
+  if(!IsClientPlaying(client, true)) // Allow Spectator
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
+
   if(!StrEqual(g_szRulesIdx, "", true))
     OpenSubmenu(client, g_szRulesIdx);
   else
@@ -302,6 +385,9 @@ public Action CMD_RulesMenu(int client, int args)
 
 void OpenSubmenu(int client, char[] index)
 {
+  if(StrEqual(index, "", true))
+    return;
+
   Menu menu = new Menu(SubMenuHandler,
     MenuAction_End|MenuAction_Cancel|MenuAction_DrawItem|MenuAction_Select);
 
@@ -310,27 +396,16 @@ void OpenSubmenu(int client, char[] index)
   SetMenuTitle(menu, titleBuff);
   SetMenuExitBackButton(menu, true);
 
-  char itemIdx[ITEM_IDX_SIZE * 2]; // "64_64" \0
+  char itemIdx[ITEM_IDX_SIZE]; // "64_64" \0
   int count = 0, flags;
   Format(itemIdx, sizeof(itemIdx), "%s_%i", index, count);
   bool idxExists = g_fbMapItemFlags.GetValue(itemIdx, flags);
 
   while(idxExists && count < MAX_HELP_ITEMS)
   {
-    // Hide Item if Necessary
-    bool bShow = true;
-    if(HasFlag(flags, ITEM_ADMIN)
-      && !CheckCommandAccess(client, "sm_helpmenu_admin", ADMFLAG_BAN, true))
-    {
-      bShow = false;
-    }
-
-    if(bShow)
-    {
-      char itemText[MAX_HELP_STR];
-      g_szMapItemText.GetString(itemIdx, itemText, sizeof(itemText));
-      AddMenuItem(menu, itemIdx, itemText);
-    }
+    char itemText[MAX_HELP_STR];
+    g_szMapItemText.GetString(itemIdx, itemText, sizeof(itemText));
+    AddMenuItem(menu, itemIdx, itemText);
 
     count++;
     Format(itemIdx, sizeof(itemIdx), "%s_%i", index, count);
@@ -365,36 +440,42 @@ public int SubMenuHandler(Handle menu, MenuAction action, int param1, int param2
       int flags;
       g_fbMapItemFlags.GetValue(info, flags);
 
-      // Admin filtering is done. Check classes and text display mode.
-      if(HasFlag(flags, ITEM_TEXTONLY)) // Overrides all others.
-        return ITEMDRAW_RAWLINE;
+      // Get text display mode.
+      int displayMode = style;
+      if(HasFlag(flags, ITEM_TEXTONLY))
+        displayMode = ITEMDRAW_DISABLED;
 
-      if(HasFlag(flags, SECT_ALLCLASS))
-        return style;
+      // Check Admin-only
+      if(HasFlag(flags, ITEM_ADMIN)
+        && !CheckCommandAccess(param1, "sm_helpmenu_admin", ADMFLAG_BAN, true))
+        return ITEMDRAW_IGNORE;
+
+      // Check classes
+      if(HasFlag(flags, ITEM_ALLCLASS))
+        return displayMode;
 
       switch(TF2_GetPlayerClass(param1))
       {
         case TFClass_Scout:
-          return (HasFlag(flags, ITEM_SCOUT))   ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_SCOUT))   ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Soldier:
-          return (HasFlag(flags, ITEM_SOLDIER)) ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_SOLDIER)) ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Pyro:
-          return (HasFlag(flags, ITEM_PYRO))    ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_PYRO))    ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_DemoMan:
-          return (HasFlag(flags, ITEM_DEMO))    ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_DEMO))    ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Heavy:
-          return (HasFlag(flags, ITEM_HEAVY))   ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_HEAVY))   ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Engineer:
-          return (HasFlag(flags, ITEM_ENGIE))   ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_ENGIE))   ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Medic:
-          return (HasFlag(flags, ITEM_MEDIC))   ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_MEDIC))   ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Sniper:
-          return (HasFlag(flags, ITEM_SNIPER))  ? style : ITEMDRAW_IGNORE;
+          return (HasFlag(flags, ITEM_SNIPER))  ? displayMode : ITEMDRAW_IGNORE;
         case TFClass_Spy:
-          return (HasFlag(flags, ITEM_SPY))     ? style : ITEMDRAW_IGNORE;
-        default:
-          return style;
+          return (HasFlag(flags, ITEM_SPY))     ? displayMode : ITEMDRAW_IGNORE;
       }
+      return ITEMDRAW_IGNORE;
     }
 
     case MenuAction_Select:
@@ -404,23 +485,24 @@ public int SubMenuHandler(Handle menu, MenuAction action, int param1, int param2
       GetMenuItem(menu, param2, info, sizeof(info));
       int flags;
       g_fbMapItemFlags.GetValue(info, flags);
+      bool result;
 
       // Check item flags to handle CCOM/Redirect Behaviour
       if(HasFlag(flags, ITEM_CCOM))
       {
         char ccomBuff[MAX_HELP_STR];
-        g_szMapItemCCom.GetString(info, ccomBuff, sizeof(ccomBuff));
+        result = g_szMapItemCCom.GetString(info, ccomBuff, sizeof(ccomBuff));
 
-        if(IsClientInGame(param1))
+        if(result && IsClientInGame(param1))
           FakeClientCommandEx(param1, ccomBuff);
       }
 
       if(HasFlag(flags, ITEM_REDIRECT))
       {
         char sectIdxBuff[MAX_HELP_STR];
-        g_szMapItemRedirIdx.GetString(info, sectIdxBuff, sizeof(sectIdxBuff));
+        result = g_szMapItemRedirIdx.GetString(info, sectIdxBuff, sizeof(sectIdxBuff));
 
-        if(IsClientInGame(param1))
+        if(result && IsClientInGame(param1))
           OpenSubmenu(param1, sectIdxBuff);
       }
     }
@@ -428,6 +510,21 @@ public int SubMenuHandler(Handle menu, MenuAction action, int param1, int param2
   return 0;
 }
 
+
+
+/**
+ * Reload the Help Menu Config
+ *
+ * sm_helpmenu_reloadcfg
+ */
+public Action CMD_ReloadCfg(int client, int args)
+{
+  if(LoadConfig())
+    TagReply(client, "%T", "SFP_ConfigReload_Success", client);
+  else
+    TagReply(client, "%T", "SFP_ConfigReload_Fail", client, "sfp_help");
+  return Plugin_Handled;
+}
 
 
 /**
@@ -507,57 +604,63 @@ stock bool LoadConfig()
     // TODO: Optimise this if possible.
     // StrContains is safe here since these are all fixed, non-clashing strings.
     hKeys.GetString("filter", buffer, sizeof(buffer), "");  // Defaults to empty
-    if(StrContains(buffer, "admin", true) != -1)
-      AddFlag(flags, SECT_ADMIN);
 
-    bool bAllClass = true;
-    if(StrContains(buffer, "scout", true) != -1)
+    if(strlen(buffer) > 0)
     {
-      AddFlag(flags, SECT_SCOUT);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "soldier", true) != -1)
-    {
-      AddFlag(flags, SECT_SOLDIER);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "pyro", true) != -1)
-    {
-      AddFlag(flags, SECT_PYRO);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "demo", true) != -1)
-    {
-      AddFlag(flags, SECT_DEMO);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "heavy", true) != -1)
-    {
-      AddFlag(flags, SECT_HEAVY);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "engie", true) != -1)
-    {
-      AddFlag(flags, SECT_ENGIE);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "medic", true) != -1)
-    {
-      AddFlag(flags, SECT_MEDIC);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "sniper", true) != -1)
-    {
-      AddFlag(flags, SECT_SNIPER);
-      bAllClass = false;
-    }
-    if(StrContains(buffer, "spy", true) != -1)
-    {
-      AddFlag(flags, SECT_SPY);
-      bAllClass = false;
-    }
+      if(StrContains(buffer, "admin", true) != -1)
+        AddFlag(flags, SECT_ADMIN);
 
-    if(bAllClass)
+      bool bAllClass = true;
+      if(StrContains(buffer, "scout", true) != -1)
+      {
+        AddFlag(flags, SECT_SCOUT);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "soldier", true) != -1)
+      {
+        AddFlag(flags, SECT_SOLDIER);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "pyro", true) != -1)
+      {
+        AddFlag(flags, SECT_PYRO);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "demo", true) != -1)
+      {
+        AddFlag(flags, SECT_DEMO);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "heavy", true) != -1)
+      {
+        AddFlag(flags, SECT_HEAVY);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "engie", true) != -1)
+      {
+        AddFlag(flags, SECT_ENGIE);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "medic", true) != -1)
+      {
+        AddFlag(flags, SECT_MEDIC);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "sniper", true) != -1)
+      {
+        AddFlag(flags, SECT_SNIPER);
+        bAllClass = false;
+      }
+      if(StrContains(buffer, "spy", true) != -1)
+      {
+        AddFlag(flags, SECT_SPY);
+        bAllClass = false;
+      }
+
+      if(bAllClass)
+        AddFlag(flags, SECT_ALLCLASS);
+    }
+    else
       AddFlag(flags, SECT_ALLCLASS);
 
     g_fbMapSectFlags.SetValue(index, flags);
@@ -581,7 +684,7 @@ stock bool LoadConfig()
       do
       {
         ++itemCount;
-        char itemIndex[ITEM_IDX_SIZE * 2]; // "64_64" + \0
+        char itemIndex[ITEM_IDX_SIZE]; // "64_64" + \0
         Format(itemIndex, sizeof(itemIndex), "%i_%i", g_iSectionCount, itemCount);
 
         hKeys.GetString("text", buffer, sizeof(buffer), ""); // Defaults to empty
@@ -595,7 +698,7 @@ stock bool LoadConfig()
           g_fbMapItemFlags.SetValue(itemIndex, flags);
         }
         else
-          g_fbMapItemFlags.SetValue(itemIndex, 0);
+          g_fbMapItemFlags.SetValue(itemIndex, ITEM_STANDARD|ITEM_ALLCLASS);
 
       } while(hKeys.GotoNextKey() && itemCount < MAX_HELP_ITEMS);
 
@@ -606,6 +709,7 @@ stock bool LoadConfig()
 
 	} while(hKeys.GotoNextKey() && g_iSectionCount < MAX_HELP_SECTIONS);
 
+  PrintToServer("%T", "SM_HELPMENU_ConfigLoad", LANG_SERVER, g_iSectionCount+1); // 0-idx
   delete hKeys;
   return true;
 }
@@ -692,6 +796,7 @@ void ProcessItemStringEffect(
     // Dereference Menu Index to Redirect To
     char buff[MAX_HELP_STR];
     strcopy(buff, sizeof(buff), flagString[5]); // Trim "open:"
+    bool found = false;
 
     for(int i = 0; i < g_szMapSectName.Size; ++i)
     {
@@ -702,9 +807,13 @@ void ProcessItemStringEffect(
       if(StrEqual(name, buff, true))
       {
         g_szMapItemRedirIdx.SetString(itemIdx, sectIdx, true);
+        found = true;
         break;
       }
     }
+
+    if(!found)
+      g_szMapItemRedirIdx.SetString(itemIdx, "", true);
 
     AddFlag(flags, flagBuff);
   }

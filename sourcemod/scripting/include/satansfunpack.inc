@@ -111,7 +111,7 @@ stock bool IsClientPlaying(int iClient,
   bool bAllowReplay=false,
   bool bAllowSourceTV=false)
 {
-  if(iClient <= 0) // TODO: Can we check MaxClients outside of a plugin?
+  if(iClient <= 0 || iClient > MaxClients)
     return false;
   if(!IsClientInGame(iClient))
     return false;

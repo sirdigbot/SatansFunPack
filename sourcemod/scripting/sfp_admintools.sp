@@ -443,7 +443,7 @@ public Action CMD_AddCond(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -535,7 +535,7 @@ public Action CMD_RemCond(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -999,7 +999,7 @@ public Action CMD_NoTarget(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1115,7 +1115,7 @@ public Action CMD_Outline(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1229,7 +1229,7 @@ public Action CMD_TeleLock(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 
@@ -1334,7 +1334,7 @@ public Action CMD_OpenTele(int client, int args)
   {
     if(!IsClientPlaying(client))
     {
-      TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+      TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
     }
 

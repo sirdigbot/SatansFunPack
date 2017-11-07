@@ -274,7 +274,7 @@ public Action CMD_MuteGagStatus(int client, int args)
 
   if(!IsClientPlaying(client))
   {
-    TagReplyUsage(client, "%T", "SFP_InGameOnly", client);
+    TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
   }
 

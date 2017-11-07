@@ -552,6 +552,11 @@
   {
     "en" "Couldn't find CEconItemView for taunt."
   }
+  "SM_TAUNTMENU_ConfigLoad"
+  {
+    "#format" "{1:d},{2:d}"
+    "en" "Taunt Menu Loaded {1} Taunts, Skipped {2}."
+  }
 
   "SM_SPLAY_Usage"
   {
@@ -713,5 +718,10 @@
   "SM_HELPMENU_NoRules"
   {
     "en" "Could not find server rules. Check the help menu."
+  }
+  "SM_HELPMENU_ConfigLoad"
+  {
+    "#format" "{1:d}"
+    "en" "Help Menu Loaded {1} Sections."
   }
 }
