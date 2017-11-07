@@ -724,4 +724,46 @@
     "#format" "{1:d}"
     "en" "Help Menu Loaded {1} Sections."
   }
+
+
+  //=================================
+  // Chat Vision
+
+  "SM_CHATVISION_Reload"
+  {
+    "en" "Reloaded Admin Chat Vision"
+  }
+  "SM_CHATADMIN_Usage"
+  {
+    "en" "sm_ischatadmin <Target>"
+  }
+  "SM_CHATADMIN_True"
+  {
+    "#format" "{1:s}"
+    "en" "{1} can see enemy team chat."
+  }
+  "SM_CHATADMIN_False"
+  {
+    "#format" "{1:s}"
+    "en" "{1} cannot see enemy team chat."
+  }
+
+
+  //=================================
+  // Mirror
+
+  "SM_MIRROR_Usage"
+  {
+    "en" "sm_mirror <Target> <1/0>"
+  }
+  "SM_MIRROR_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Mirror Damage for {1}."
+  }
+  "SM_MIRROR_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Mirror Damage for {1}."
+  }
 }

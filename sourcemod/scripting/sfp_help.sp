@@ -136,6 +136,7 @@ public void OnPluginStart()
   GetConVarString(h_szHelpCfg, buff, sizeof(buff));
   Format(formatBuff, sizeof(formatBuff), "configs/%s", buff);
   BuildPath(Path_SM, g_szHelpCfg, sizeof(g_szHelpCfg), formatBuff);
+  HookConVarChange(h_szHelpCfg, UpdateCvars);
 
 
   g_ReturnVisitCookie = RegClientCookie("satansfunpack_returnvisit", "Used to Mark Returning Players", CookieAccess_Public);

@@ -26,28 +26,8 @@ A collection of useful commands for TF2 Servers.
 | --------------------------- |------------------------------------ | --- |
 | **satansfunpack_version**   | Plugin Version                      | -- |
 | **sm_satansfunpack_update** | Should Satan's Fun Pack Auto-Update | `1` |
-| **sm_satansfunpack_config** | General Config File                 | `satansfunpack.cfg` |
 
-General Config Structure:
-```
-"SFPCustomSlap"
-{
-  // Leave blank to disable. Max Length 256
-  // Path is relative to tf2/sound/. (Same paths used for sm_play)
-  "sound"   ""
-  "msg"     ""
-}
-
-"SFPTaunts"
-{
-  // Keys and values are case-sensitive. Taunt names are not.
-  "Yeti Punch"
-  {
-    "class" "ANY" // Also: SCOUT, SOLDIER, PYRO, DEMO, HEAVY, ENGIE, MEDIC, SNIPER, SPY
-    "id"    "1182"
-  }
-}
-```
+<br/>
 
 | Command               | Description                                        | Syntax |
 | --------------------- | -------------------------------------------------- | --- |
@@ -130,6 +110,9 @@ Help Config Structure:
 | ------------ | ----------------------------------------------------- | ---------- |
 | **sm_help**  | Displays the help menu                                | `sm_help`  |
 | **sm_rules** | Display the "Rules" section of the help menu (if any) | `sm_rules` |
+
+**Note:** Recompile with `_ALT_HELPCMD` uncommented to change `sm_help` to `sm_helpmenu`.  
+`sm_help` will clash with the default sourcemod plugin `adminhelp.smx`.  
 
 <br/>
 
@@ -218,22 +201,42 @@ Help Config Structure:
 
 ## Toy Box (sfp_toybox.smx)
 
-| ConVar                       | Description                            | Default |
-| ---------------------------- | -------------------------------------- | --- |
-| **sm_toybox_disabledcmds**   | List of commands to completely disable | `""` |
-| **sm_resizeweapon_upper**    | Upper limit of sm_resizeweapon         | `3.0` |
-| **sm_resizeweapon_lower**    | Lower limit of sm_resizeweapon         | `-3.0` |
-| **sm_fov_upper**             | Upper limit of sm_fov                  | `160` |
-| **sm_fov_lower**             | Lower limit of sm_fov                  | `30` |
-| **sm_scream_enable_default** | Is sm_scream enabled by default        | `1` |
-| **sm_pitch_enable_default**  | Is sm_pitch enabled by default         | `1` |
-| **sm_pitch_upper**           | Upper limit of sm_pitch                | `200` |
-| **sm_pitch_lower**           | Lower limit of sm_pitch                | `50` |
+| ConVar                          | Description                            | Default |
+| ------------------------------- | -------------------------------------- | --- |
+| **sm_toybox_disabledcmds**      | List of commands to completely disable | `""` |
+| **sm_resizeweapon_upper**       | Upper limit of sm_resizeweapon         | `3.0` |
+| **sm_resizeweapon_lower**       | Lower limit of sm_resizeweapon         | `-3.0` |
+| **sm_fov_upper**                | Upper limit of sm_fov                  | `160` |
+| **sm_fov_lower**                | Lower limit of sm_fov                  | `30` |
+| **sm_scream_enable_default**    | Is sm_scream enabled by default        | `1` |
+| **sm_pitch_enable_default**     | Is sm_pitch enabled by default         | `1` |
+| **sm_pitch_upper**              | Upper limit of sm_pitch                | `200` |
+| **sm_pitch_lower**              | Lower limit of sm_pitch                | `50` |
+| **sm_satansfunpack_toyconfig**  | Toy Box Config File             | `satansfunpack_toybox.cfg` |
 
-<br/>
+Toy Box Config Structure:
+```
+"SFPCustomSlap"
+{
+  // Leave blank to disable. Max Length 256
+  // Path is relative to tf2/sound/. (Same paths used for sm_play)
+  "sound"   ""
+  "msg"     ""
+}
+
+"SFPTaunts"
+{
+  // Keys and values are case-sensitive. Taunt names are not.
+  "Yeti Punch"
+  {
+    "class" "ANY" // Also: SCOUT, SOLDIER, PYRO, DEMO, HEAVY, ENGIE, MEDIC, SNIPER, SPY
+    "id"    "1182"
+  }
+}
+```
 
 | Command                 | Description                                      | Syntax |
-| ----------------------- | -------------------------------------------------| --- |
+| ----------------------- | ------------------------------------------------ | --- |
 | **sm_toybox_reloadcfg** | Reload the General Config file                   | `sm_toybox_reloadcfg` |
 | **sm_colourweapon**     | Set the colour of a player's weapon              | `sm_colourweapon [Target] <Slot (All/1/2/3)> <Hex/RGB Colour>` |
 | **sm_colorweapon**      | *Alias for sm_colourweapon*                      | -- |
@@ -255,8 +258,8 @@ Help Config Structure:
 
 <br/>
 
-| Overrides                     | Description |
-| ----------------------------- | --- |
+| Overrides                     | Description              |
+| ----------------------------- | ------------------------ |
 | **sm_colourweapon_target**    | Client can target others |
 | **sm_resizeweapon_target**    | Client can target others |
 | **sm_resizeweapon_nolimit**   | Client is unrestricted by upper/lower limits |
@@ -276,7 +279,36 @@ Help Config Structure:
 
 ## Mirror (sfp_mirror.smx)
 
-**- Not Implemented -**
+| Command       | Description                            | Syntax                     |
+| ------------- | -------------------------------------- | -------------------------- |
+| **sm_mirror** | Redirect a player's damage to themself | `sm_mirror <Target> <1/0>` |
+
+<br/>
+
+<a name="chatvision"/>
+
+## Chat Vision (sfp_chatvision.smx)
+
+**Passive** Echos all teamchat messages to Chat-Admins (players with access to `sm_chatvision_access`)  
+
+| ConVar                    | Description                                               | Default |
+| ------------------------- | ------------------------------------------------------------- | --- |
+| **sm_chatvision_enabled** | Toggle Chat Vision Output (it will still run everything else) | `1` |
+
+<br/>
+
+| Command                   | Description                                              | Syntax |
+| ------------------------- | -------------------------------------------------------- | --- |
+| **sm_chatvision_reload**  | Reloads the list of Chat-Admins (who can see enemy chat) | `sm_chatvision_reload` |
+| **sm_ischatadmin**        | Check if a player is a Chat-Admin | `sm_ischatadmin <Target>` |
+
+<br/>
+
+| Overrides                 | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| **sm_chatvision_access**  | Client is considered admin and will see enemy chat  |
+
+<br/>
 
 <a name="trails"/>
 
@@ -287,12 +319,6 @@ Help Config Structure:
 <a name="bans"/>
 
 ## Bans (sfp_bans.smx)
-
-**- Not Implemented -**
-
-<a name="chatvision"/>
-
-## Chat Vision (sfp_chatvision.smx)
 
 **- Not Implemented -**
 

@@ -33,7 +33,10 @@ bool    g_bUpdate;
 Handle  h_bDisabledCmds = null;
 bool    g_bDisabledCmds[ComTOTAL];
 
-
+/**
+ * Known Bugs
+ * Commands dont use TagActivity. They don't really need to, but they could.
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Quick Conditions",
@@ -178,7 +181,7 @@ public Action CMD_Boing(int client, int args)
   }
 
 
-  if(iState == 1)
+  if(iState)
   {
     for(int i = 0; i < targ_count; ++i)
     {

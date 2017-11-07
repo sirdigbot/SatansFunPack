@@ -320,7 +320,7 @@ public Action CMD_ClientCmd(int client, int args)
   // Run Client Command
   for(int i = 0; i < targ_count; ++i)
   {
-    if (IsClientInGame(targ_list[i]))
+    if(IsClientInGame(targ_list[i]))
       FakeClientCommandEx(targ_list[i], argFull[arg2Idx]);
   }
 
@@ -1060,15 +1060,14 @@ public Action CMD_NoTarget(int client, int args)
   }
 
   // Apply
-  bool bState = (iState == 1) ? true : false;
   for(int i = 0; i < targ_count; ++i)
   {
-    g_bNoTarget[targ_list[i]] = bState;
+    g_bNoTarget[targ_list[i]] = view_as<bool>(iState);
     if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
-      SetNoTarget(targ_list[i], bState);
+      SetNoTarget(targ_list[i], view_as<bool>(iState));
   }
 
-  if(bState)
+  if(iState)
     TagActivity(client, "%T", "SM_NOTARGET_Enable", LANG_SERVER, targ_name);
   else
     TagActivity(client, "%T", "SM_NOTARGET_Disable", LANG_SERVER, targ_name);
@@ -1176,15 +1175,14 @@ public Action CMD_Outline(int client, int args)
   }
 
   // Apply
-  bool bState = (iState == 1) ? true : false;
   for(int i = 0; i < targ_count; ++i)
   {
-    g_bOutline[targ_list[i]] = bState;
+    g_bOutline[targ_list[i]] = view_as<bool>(iState);
     if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
-      SetOutline(targ_list[i], bState);
+      SetOutline(targ_list[i], view_as<bool>(iState));
   }
 
-  if(bState)
+  if(iState)
     TagActivity(client, "%T", "SM_OUTLINE_Enable", LANG_SERVER, targ_name);
   else
     TagActivity(client, "%T", "SM_OUTLINE_Disable", LANG_SERVER, targ_name);
@@ -1292,11 +1290,10 @@ public Action CMD_TeleLock(int client, int args)
   }
 
   // Apply
-  bool bState = (iState == 1) ? true : false;
   for(int i = 0; i < targ_count; ++i)
-    g_bTeleLock[targ_list[i]] = bState;
+    g_bTeleLock[targ_list[i]] = view_as<bool>(iState);
 
-  if(bState)
+  if(iState)
     TagActivity(client, "%T", "SM_TELELOCK_Enable", LANG_SERVER, targ_name);
   else
     TagActivity(client, "%T", "SM_TELELOCK_Disable", LANG_SERVER, targ_name);
@@ -1397,11 +1394,10 @@ public Action CMD_OpenTele(int client, int args)
   }
 
   // Apply
-  bool bState = (iState == 1) ? true : false;
   for(int i = 0; i < targ_count; ++i)
-    g_bOpenTele[targ_list[i]] = bState;
+    g_bOpenTele[targ_list[i]] = view_as<bool>(iState);
 
-  if(bState)
+  if(iState)
     TagActivity(client, "%T", "SM_OPENTELE_Enable", LANG_SERVER, targ_name);
   else
     TagActivity(client, "%T", "SM_OPENTELE_Disable", LANG_SERVER, targ_name);

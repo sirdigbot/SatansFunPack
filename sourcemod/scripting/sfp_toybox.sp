@@ -59,6 +59,8 @@ enum CommandNames {
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
 bool    g_bLateLoad;
+Handle  h_szConfig = null;
+char    g_szConfig[CONFIG_SIZE];
 Handle  h_bDisabledCmds = null;
 bool    g_bDisabledCmds[ComTOTAL];
 
@@ -95,8 +97,6 @@ int     g_iPitch[MAXPLAYERS + 1] = {PITCH_DEFAULT, ...}; // Value is a percentag
 
 #if defined _INCLUDE_TAUNTS
 Handle  h_PlayTauntScene = null;
-Handle  h_szConfig = null;
-char    g_szConfig[CONFIG_SIZE];
 char    g_szTauntName[MAX_TAUNTS][32];
 int     g_iTauntId[MAX_TAUNTS];
 enum TFClasses // Need an addittional All-Class option so dont use TFClassType
@@ -198,16 +198,15 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_szConfig = FindConVar("sm_satansfunpack_config");
-  if(h_szConfig == null)
-    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_config");
+  h_szConfig = CreateConVar("sm_satansfunpack_toyconfig", "satansfunpack_toybox.cfg", "Config File used for Satan's Fun Pack Toy Box (Relative to Sourcemod/Configs)\n(Default: satansfunpack_toybox.cfg)", FCVAR_SPONLY);
 
   char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
   GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
   Format(pathBuffer, sizeof(pathBuffer), "configs/%s", cvarBuffer);
   BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
-  HookConVarChange(h_szConfig, UpdateCvars);
   LoadConfig();
+  HookConVarChange(h_szConfig, UpdateCvars);
+
 
   h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
   ProcessDisabledCmds();
@@ -1279,7 +1278,7 @@ public Action CMD_PitchToggle(int client, int args)
  * Open a menu with a list of taunts, select to use.
  *
  * sm_taunt or sm_taunts
- * Requires satansfunpack.cfg
+ * Requires satansfunpack_toybox.cfg and gamedata file
  */
 #if defined _INCLUDE_TAUNTS
 public Action CMD_TauntMenu(int client, int args)
@@ -1727,7 +1726,7 @@ public Action CMD_FriendlySentry(int client, int args)
 
     g_bFriendlySentry[client] = view_as<bool>(state);
 
-    if(state == 1)
+    if(state)
       TagReply(client, "%T", "SM_FRIENDSENTRY_Enable_Self", client);
     else
       TagReply(client, "%T", "SM_FRIENDSENTRY_Disable_Self", client);
@@ -1744,7 +1743,6 @@ public Action CMD_FriendlySentry(int client, int args)
     TagReplyUsage(client, "%T", "SM_FRIENDSENTRY_Usage", client);
     return Plugin_Handled;
   }
-  bool bState = view_as<bool>(state);
 
   // Get Target
   char targ_name[MAX_TARGET_LENGTH];
@@ -1767,9 +1765,9 @@ public Action CMD_FriendlySentry(int client, int args)
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
-    g_bFriendlySentry[targ_list[i]] = bState;
+    g_bFriendlySentry[targ_list[i]] = view_as<bool>(state);
 
-  if(bState)
+  if(state)
     TagActivity(client, "%T", "SM_FRIENDSENTRY_Enable", LANG_SERVER, targ_name);
   else
     TagActivity(client, "%T", "SM_FRIENDSENTRY_Disable", LANG_SERVER, targ_name);
@@ -1877,7 +1875,7 @@ stock bool LoadConfig()
   }
 
   // Create and check KeyValues
-  KeyValues hKeys = CreateKeyValues("SatansFunPack"); // Requires Manual Delete
+  KeyValues hKeys = CreateKeyValues("SatansToyBox"); // Requires Manual Delete
   if(!FileToKeyValues(hKeys, g_szConfig))
   {
     delete hKeys;
