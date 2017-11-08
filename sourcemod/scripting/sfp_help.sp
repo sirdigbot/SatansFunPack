@@ -582,7 +582,7 @@ stock bool LoadConfig()
   // Begin Processing and say prayers.
 
   do
-	{
+  {
     char index[SECT_IDX_SIZE], buffer[MAX_HELP_STR];
     ++g_iSectionCount;
     IntToString(g_iSectionCount, index, sizeof(index));
@@ -708,7 +708,7 @@ stock bool LoadConfig()
 
     hKeys.GoBack();   // Jump back to top-level section.
 
-	} while(hKeys.GotoNextKey() && g_iSectionCount < MAX_HELP_SECTIONS);
+  } while(hKeys.GotoNextKey() && g_iSectionCount < MAX_HELP_SECTIONS);
 
   PrintToServer("%T", "SM_HELPMENU_ConfigLoad", LANG_SERVER, g_iSectionCount+1); // 0-idx
   delete hKeys;
