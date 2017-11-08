@@ -182,7 +182,7 @@ public bool Filter_Admins(char[] pattern, Handle clients)
   bool found = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(IsClientPlaying(i, true))
+    if(IsClientPlaying(i, true)) // TODO: Is IsClientPlaying appropriate here?
     {
       if(CheckCommandAccess(i, "sm_targetgroup_admin", ADMFLAG_BAN, true))
       {

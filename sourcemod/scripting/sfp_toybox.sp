@@ -664,6 +664,9 @@ public Action CMD_ColourWeapon(int client, int args)
   // Target, Colour and Slot ready. Apply.
   for(int i = 0; i < targ_count; ++i)
   {
+    if(!IsClientPlaying(targ_list[i]))
+      continue;
+
     int weapon;
     switch(slotIndex)
     {
@@ -810,6 +813,9 @@ public Action CMD_ResizeWeapon(int client, int args)
   // Apply
   for(int i = 0; i < targ_count; ++i)
   {
+    if(!IsClientPlaying(targ_list[i]))
+      continue;
+
     int weapon;
     switch(slotIndex)
     {
@@ -1509,7 +1515,10 @@ public Action CMD_StealthPlay(int client, int args)
   }
 
   for(int i = 0; i < targ_count; ++i)
-    ClientCommand(targ_list[i], "playgamesound \"%s\"", Arguments[len]);
+  {
+    if(!IsClientReplay(targ_list[i]) && !IsClientSourceTV(targ_list[i]))
+      ClientCommand(targ_list[i], "playgamesound \"%s\"", Arguments[len]);
+  }
 
   LogAction(client, -1, "\"%L\" played stealth-sound on \"%s\" (file \"%s\")", client, targ_name, Arguments[len]);
 

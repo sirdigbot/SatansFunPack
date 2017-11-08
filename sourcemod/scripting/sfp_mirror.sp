@@ -56,6 +56,8 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("common.phrases");
+  LoadTranslations("core.phrases.txt");
 
   h_bUpdate = FindConVar("sm_satansfunpack_update");
   if(h_bUpdate == null)
@@ -64,11 +66,6 @@ public void OnPluginStart()
   HookConVarChange(h_bUpdate, UpdateCvars);
 
   RegAdminCmd("sm_mirror", CMD_MirrorDamage, ADMFLAG_KICK, "Redirect a player's damage to themself");
-
-  HookEvent("player_builtobject", Event_BuiltObject);
-  HookEvent("object_destroyed",   Event_DestroyedObject,  EventHookMode_Pre);
-  HookEvent("object_detonated",   Event_DestroyedObject, EventHookMode_Pre);
-  HookEvent("object_removed",     Event_DestroyedObject, EventHookMode_Pre);
 
   /*** Handle Late Loads ***/
   if(g_bLateLoad)
@@ -125,28 +122,43 @@ public void OnClientPutInServer(int client)
   return;
 }
 
-public void OnClientDisconnect_Post(int client)
+public void OnClientDisconnect(int client)
 {
   g_bIsMirrored[client] = false;
+  SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
   return;
 }
 
-
-public Action Event_BuiltObject(Handle event, const char[] name, bool dontBroadcast)
+// Hooks Normal Builds and spawns from something like RTD or ent_create
+public void OnEntityCreated(int entity, const char[] classname)
 {
-  int buildingIdx = GetEventInt(event, "index");
-  if(IsValidEdict(buildingIdx))
-		SDKHook(buildingIdx, SDKHook_OnTakeDamage, OnTakeDamage);
-  return Plugin_Continue;
+  if(IsBuilding(classname))
+    SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
+  return;
 }
 
 // Triggers when Removed, Destroyed or Detonated
-public Action Event_DestroyedObject(Handle event, const char[] name, bool dontBroadcast)
+public void OnEntityDestroyed(int entity)
 {
-  int buildingIdx = GetEventInt(event, "index");
-  if(IsValidEdict(buildingIdx))
-		SDKUnhook(buildingIdx, SDKHook_OnTakeDamage, OnTakeDamage);
-  return Plugin_Continue;
+  if(IsValidEdict(entity)) // Limit string usage
+  {
+    char classname[15]; // "obj_teleporter" + \0
+    GetEdictClassname(entity, classname, sizeof(classname));
+    if(IsBuilding(classname))
+      SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
+  }
+  return;
+}
+
+stock bool IsBuilding(const char[] classname)
+{
+  if(StrEqual(classname, "obj_sentrygun", true))
+    return true;
+  else if(StrEqual(classname, "obj_dispenser", true))
+    return true;
+  else if(StrEqual(classname, "obj_teleporter", true))
+    return true;
+  return false;
 }
 
 
@@ -162,12 +174,12 @@ public Action OnTakeDamage(
 {
   if(attacker > 0 && attacker <= MaxClients)
   {
-    if(g_bIsMirrored[attacker] && attacker != victim) // Victim could also be a building
+    if(g_bIsMirrored[attacker] && attacker != victim) // Victim can also be a building
     {
       int hp  = GetClientHealth(attacker);
       int dmg = RoundFloat(damage);
       if(hp > 0 && hp > dmg)
-        SetEntityHealth(attacker, hp - dmg);
+        TF2_SetHealth(attacker, hp - dmg);
       else
         ForcePlayerSuicide(attacker);
 
@@ -205,7 +217,7 @@ public Action CMD_MirrorDamage(int client, int args)
     client,
     targ_list,
     MAXPLAYERS,
-    COMMAND_FILTER_NO_BOTS,
+    0,
     targ_name,
     sizeof(targ_name),
     tn_is_ml)) <= 0)
@@ -222,7 +234,7 @@ public Action CMD_MirrorDamage(int client, int args)
   }
 
   // Apply
-  for(int i = 1; i <= MaxClients; ++i)
+  for(int i = 0; i <= MaxClients; ++i)
     g_bIsMirrored[targ_list[i]] = view_as<bool>(iState);
 
   if(iState)
@@ -230,6 +242,17 @@ public Action CMD_MirrorDamage(int client, int args)
   else
     TagActivity(client, "%T", "SM_MIRROR_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
+}
+
+
+/**
+ * Supposedly, using SetEntityHealth can cause crashing
+ */
+stock void TF2_SetHealth(int client, int health)
+{
+  SetEntProp(client, Prop_Send, "m_iHealth", health);
+  SetEntProp(client, Prop_Data, "m_iHealth", health);
+  return;
 }
 
 

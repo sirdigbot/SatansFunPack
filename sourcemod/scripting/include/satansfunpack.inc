@@ -109,7 +109,8 @@ stock void TagActivity(int client, const char[] msg, any ...)
 stock bool IsClientPlaying(int iClient,
   bool bAllowObserver=false,
   bool bAllowReplay=false,
-  bool bAllowSourceTV=false)
+  bool bAllowSourceTV=false,
+  bool bAllowCoach=false)
 {
   if(iClient <= 0 || iClient > MaxClients)
     return false;
@@ -120,6 +121,8 @@ stock bool IsClientPlaying(int iClient,
   if(!bAllowReplay && IsClientReplay(iClient))
     return false;
   if(!bAllowSourceTV && IsClientSourceTV(iClient))
+    return false;
+  if(!bAllowCoach && GetEntProp(iClient, Prop_Send, "m_bIsCoaching"))
     return false;
   return true;
 }

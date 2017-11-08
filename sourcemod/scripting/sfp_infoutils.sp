@@ -323,6 +323,12 @@ public Action CMD_HearCheck(int client, int args)
     return Plugin_Handled;
   }
 
+  if(!IsClientPlaying(client))
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
+
   // Get First Target
   char arg1[MAX_NAME_LENGTH], targ1Name[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
@@ -530,6 +536,12 @@ public Action Cmd_Profile(int client, int args)
     return Plugin_Handled;
   }
 
+  if(!IsClientPlaying(client))
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
+
   // Get Target
   char arg1[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
@@ -653,6 +665,12 @@ public Action CMD_JoinGroup(int client, int args)
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
     TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
+  if(!IsClientPlaying(client))
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
   }
 

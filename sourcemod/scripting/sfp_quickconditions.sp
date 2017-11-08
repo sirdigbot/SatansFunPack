@@ -185,16 +185,24 @@ public Action CMD_Boing(int client, int args)
   {
     for(int i = 0; i < targ_count; ++i)
     {
-      TF2_AddCondition(targ_list[i], TFCond_HalloweenSpeedBoost, TFCondDuration_Infinite, 0);
-      TagPrintChat(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
+      if(IsClientPlaying(targ_list[i]))
+      {
+        TF2_AddCondition(targ_list[i], TFCond_HalloweenSpeedBoost, TFCondDuration_Infinite, 0);
+        if(!IsFakeClient(targ_list[i]))
+          TagPrintChat(targ_list[i], "%T", "SM_BOING_On", targ_list[i]);
+      }
     }
   }
   else
   {
     for(int i = 0; i < targ_count; ++i)
     {
-      TF2_RemoveCondition(targ_list[i], TFCond_HalloweenSpeedBoost);
-      TagPrintChat(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
+      if(IsClientPlaying(targ_list[i]))
+      {
+        TF2_RemoveCondition(targ_list[i], TFCond_HalloweenSpeedBoost);
+        if(!IsFakeClient(targ_list[i]))
+          TagPrintChat(targ_list[i], "%T", "SM_BOING_Off", targ_list[i]);
+      }
     }
   }
 
@@ -265,16 +273,24 @@ public Action CMD_Dance(int client, int args)
   {
     for(int i = 0; i < targ_count; ++i)
     {
-      TF2_AddCondition(targ_list[i], TFCond_HalloweenThriller, StringToFloat(arg2), 0);
-      TagPrintChat(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
+      if(IsClientPlaying(targ_list[i]))
+      {
+        TF2_AddCondition(targ_list[i], TFCond_HalloweenThriller, StringToFloat(arg2), 0);
+        if(!IsFakeClient(targ_list[i]))
+          TagPrintChat(targ_list[i], "%T", "SM_DANCE_On", targ_list[i]);
+      }
     }
   }
   else if (iArg2 < 0)
   {
     for(int i = 0; i < targ_count; ++i)
     {
-      TF2_RemoveCondition(targ_list[i], TFCond_HalloweenThriller);
-      TagPrintChat(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
+      if(IsClientPlaying(targ_list[i]))
+      {
+        TF2_RemoveCondition(targ_list[i], TFCond_HalloweenThriller);
+        if(!IsFakeClient(targ_list[i]))
+          TagPrintChat(targ_list[i], "%T", "SM_DANCE_Off", targ_list[i]);
+      }
     }
   }
   else // if iArg2 = 0; if It's not "stop" and not an int above 0

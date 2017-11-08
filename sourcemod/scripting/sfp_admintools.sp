@@ -320,7 +320,7 @@ public Action CMD_ClientCmd(int client, int args)
   // Run Client Command
   for(int i = 0; i < targ_count; ++i)
   {
-    if(IsClientInGame(targ_list[i]))
+    if(IsClientPlaying(targ_list[i], true))
       FakeClientCommandEx(targ_list[i], argFull[arg2Idx]);
   }
 
@@ -498,7 +498,10 @@ public Action CMD_AddCond(int client, int args)
 
   // Output
   for(int i = 0; i < targ_count; ++i)
-    TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), StringToFloat(arg3), 0);
+  {
+    if(IsClientPlaying(targ_list[i]))
+      TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), StringToFloat(arg3), 0);
+  }
 
   TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
@@ -584,7 +587,10 @@ public Action CMD_RemCond(int client, int args)
   }
 
   for(int i = 0; i < targ_count; ++i)
-    TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
+  {
+    if(IsClientPlaying(targ_list[i]))
+      TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
+  }
 
   TagActivity(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
@@ -720,10 +726,13 @@ public Action CMD_SwitchTeam(int client, int args)
   // Apply
   for(int i = 0; i < targ_count; ++i)
   {
-    if(team == TFTeam_Unassigned)
-      TF2_ChangeClientTeam(targ_list[i], GetClientOtherTeam(targ_list[i]));
-    else
-      TF2_ChangeClientTeam(targ_list[i], team);
+    if(IsClientPlaying(targ_list[i], true)) // Allow specators. Obviously.
+    {
+      if(team == TFTeam_Unassigned)
+        TF2_ChangeClientTeam(targ_list[i], GetClientOtherTeam(targ_list[i]));
+      else
+        TF2_ChangeClientTeam(targ_list[i], team);
+    }
   }
 
   TagActivity(client, "%T", "SM_SWITCHTEAM_Done", LANG_SERVER, targ_name);
@@ -785,7 +794,10 @@ public Action CMD_ForceSpec(int client, int args)
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
-    TF2_ChangeClientTeam(targ_list[i], TFTeam_Spectator);
+  {
+    if(IsClientPlaying(targ_list[i]))
+      TF2_ChangeClientTeam(targ_list[i], TFTeam_Spectator);
+  }
 
   TagActivity(client, "%T", "SM_FORCESPEC_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
@@ -840,7 +852,10 @@ public Action CMD_FakeSay(int client, int args)
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
-    FakeClientCommandEx(targ_list[i], "say %s", argFull[msgIndex]);
+  {
+    if(IsClientPlaying(targ_list[i], true)) // Allow spectators
+      FakeClientCommandEx(targ_list[i], "say %s", argFull[msgIndex]);
+  }
 
   // Don't output success since the player will just say the message.
   return Plugin_Handled;
@@ -895,7 +910,10 @@ public Action CMD_FakeSayTeam(int client, int args)
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
-    FakeClientCommandEx(targ_list[i], "say_team %s", argFull[msgIndex]);
+  {
+    if(IsClientPlaying(targ_list[i], true)) // Allow Spectators
+      FakeClientCommandEx(targ_list[i], "say_team %s", argFull[msgIndex]);
+  }
 
   // Don't output success since the player will just say the message.
   return Plugin_Handled;
@@ -1063,7 +1081,7 @@ public Action CMD_NoTarget(int client, int args)
   for(int i = 0; i < targ_count; ++i)
   {
     g_bNoTarget[targ_list[i]] = view_as<bool>(iState);
-    if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
+    if(IsClientPlaying(targ_list[i], true) && IsPlayerAlive(targ_list[i])) // Allow spectators
       SetNoTarget(targ_list[i], view_as<bool>(iState));
   }
 
@@ -1178,7 +1196,7 @@ public Action CMD_Outline(int client, int args)
   for(int i = 0; i < targ_count; ++i)
   {
     g_bOutline[targ_list[i]] = view_as<bool>(iState);
-    if(IsClientInGame(targ_list[i]) && IsPlayerAlive(targ_list[i]))
+    if(IsClientPlaying(targ_list[i]) && IsPlayerAlive(targ_list[i]))
       SetOutline(targ_list[i], view_as<bool>(iState));
   }
 
