@@ -733,6 +733,19 @@
   {
     "en" "Reloaded Admin Chat Vision"
   }
+  "SM_CHATVISION_Dead"
+  {
+    "en" "*DEAD*"
+  }
+  "SM_CHATVISION_Spectator"
+  {
+    "en" "SPECTATOR"
+  }
+  "SM_CHATVISION_Enemy"
+  {
+    "en" "ENEMY"
+  }
+
   "SM_CHATADMIN_Usage"
   {
     "en" "sm_ischatadmin <Target>"

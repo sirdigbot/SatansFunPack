@@ -33,6 +33,10 @@ TFTeam  g_PlayerTeam[MAXPLAYERS + 1];
 bool    g_bIsChatAdmin[MAXPLAYERS + 1];
 
 
+/**
+ * Known Bugs
+ * TODO Is spectator all-chat seen by normal players?
+ */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Chat Vision",
@@ -143,24 +147,43 @@ public Action Listener_Say(int client, char[] command, int args)
   char msg[256];
   GetCmdArg(1, msg, sizeof(msg));
 
+  char colour[8], teamStr[11] = "", deadStr[10] = ""; // teamStr = "SPECTATOR" + \0 + 1
   bool bDead = !IsPlayerAlive(client);
-  char colour[8], teamStr[6] = "ENEMY";
-  if(g_PlayerTeam[client] == TFTeam_Red)
-    colour = COL_RED;
-  else if(g_PlayerTeam[client] == TFTeam_Blue)
-    colour = COL_BLU;
-  else
+
+  switch(g_PlayerTeam[client])
   {
-    colour  = COL_SPEC;
-    teamStr = "SPEC";
+    case TFTeam_Spectator:
+    {
+      // Spectators are always dead, dont add text.
+      Format(teamStr, sizeof(teamStr), "%T", "SM_CHATVISION_Spectator", LANG_SERVER);
+      colour = COL_SPEC;
+    }
+
+    case TFTeam_Red:
+    {
+      if(bDead)
+        Format(deadStr, sizeof(deadStr), "%T", "SM_CHATVISION_Dead", LANG_SERVER);
+      Format(teamStr, sizeof(teamStr), "%T", "SM_CHATVISION_Enemy", LANG_SERVER);
+      colour = COL_RED;
+    }
+
+    case TFTeam_Blue:
+    {
+      if(bDead)
+        Format(deadStr, sizeof(deadStr), "%T", "SM_CHATVISION_Dead", LANG_SERVER);
+      Format(teamStr, sizeof(teamStr), "%T", "SM_CHATVISION_Enemy", LANG_SERVER);
+      colour = COL_BLU;
+    }
   }
 
   for(int i = 1; i <= MaxClients; ++i)
   {
-    if(g_bIsChatAdmin[i] && g_PlayerTeam[i] != g_PlayerTeam[client])
+    if(g_bIsChatAdmin[i]
+      && g_PlayerTeam[i] != TFTeam_Unassigned
+      && g_PlayerTeam[i] != g_PlayerTeam[client])
     {
-      PrintToChat(i, "\x01%s(%s) %s%N\x01: %s", // *DEAD*(ENEMY) Bob: Some message
-        (bDead) ? "*DEAD*" : "",
+      PrintToChat(i, "\x01%s(%s) %s%N\x01 :  %s", // *DEAD*(ENEMY) Bob :  Some message
+        deadStr,
         teamStr,
         colour,
         client,
@@ -179,10 +202,17 @@ public Action Listener_ReloadAdmins(int client, char[] command, int args)
 public Action Event_TeamChange(Handle event, char[] name, bool dontBroadcast)
 {
   int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
-  if(client > 0 && client <= MaxClients)
-    g_PlayerTeam[client] = TF2_GetClientTeam(client);
 
-  PrintToChatAll("TEAM CHANGE FIRED"); // DEBUG
+  if(client > 0 && client <= MaxClients)
+  {
+    switch(GetEventInt(event, "team", -1)) // TF2_GetClientTeam does not work here
+    {
+      case 1: g_PlayerTeam[client]  = TFTeam_Spectator;
+      case 2: g_PlayerTeam[client]  = TFTeam_Red;
+      case 3: g_PlayerTeam[client]  = TFTeam_Blue;
+      default: g_PlayerTeam[client] = TFTeam_Unassigned;
+    }
+  }
   return Plugin_Continue;
 }
 

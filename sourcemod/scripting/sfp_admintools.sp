@@ -841,7 +841,7 @@ public Action CMD_FakeSay(int client, int args)
     client,
     targ_list,
     MAXPLAYERS,
-    COMMAND_FILTER_NO_BOTS,
+    0, // Works on bots
     targ_name,
     sizeof(targ_name),
     tn_is_ml)) <= 0)
@@ -899,7 +899,7 @@ public Action CMD_FakeSayTeam(int client, int args)
     client,
     targ_list,
     MAXPLAYERS,
-    COMMAND_FILTER_NO_BOTS,
+    0, // Works on bots
     targ_name,
     sizeof(targ_name),
     tn_is_ml)) <= 0)
