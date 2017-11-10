@@ -48,10 +48,8 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 
 
 /***
- * This core file doesn't do a lot, but is the only file that includes
- * the translation files as part of the updater download.
- * It also Sets the main version and updater cvars.
- * Modules must use FindConVar for the updater cvar setting.
+ * This file doesn't do a lot, but it's a common hub we can attach
+ * any shared files to for updating.
  *
  * As such, this is the ONLY required file.
  ***/

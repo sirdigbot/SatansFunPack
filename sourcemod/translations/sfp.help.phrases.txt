@@ -1,0 +1,23 @@
+"Phrases"
+{
+  "SFP_HelpLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Help Menu"
+  }
+
+
+
+  "SM_HELPMENU_Title"
+  {
+    "en" "Help Menu"
+  }
+  "SM_HELPMENU_NoRules"
+  {
+    "en" "Could not find server rules. Check the help menu."
+  }
+  "SM_HELPMENU_ConfigLoad"
+  {
+    "#format" "{1:d}"
+    "en" "Help Menu Loaded {1} Sections."
+  }
+}

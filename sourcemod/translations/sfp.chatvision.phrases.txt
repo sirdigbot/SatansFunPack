@@ -1,0 +1,41 @@
+"Phrases"
+{
+  "SFP_ChatVisionLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Chat Vision"
+  }
+
+
+
+  "SM_CHATVISION_Reload"
+  {
+    "en" "Reloaded Admin Chat Vision"
+  }
+  "SM_CHATVISION_Dead"
+  {
+    "en" "*DEAD*"
+  }
+  "SM_CHATVISION_Spectator"
+  {
+    "en" "SPECTATOR"
+  }
+  "SM_CHATVISION_Enemy"
+  {
+    "en" "ENEMY"
+  }
+
+  "SM_CHATADMIN_Usage"
+  {
+    "en" "sm_ischatadmin <Target>"
+  }
+  "SM_CHATADMIN_True"
+  {
+    "#format" "{1:s}"
+    "en" "{1} can see enemy team chat."
+  }
+  "SM_CHATADMIN_False"
+  {
+    "#format" "{1:s}"
+    "en" "{1} cannot see enemy team chat."
+  }
+}

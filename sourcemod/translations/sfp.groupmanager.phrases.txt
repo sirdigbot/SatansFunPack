@@ -1,0 +1,7 @@
+"Phrases"
+{
+  "SFP_GroupManagerLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Group Manager"
+  }
+}

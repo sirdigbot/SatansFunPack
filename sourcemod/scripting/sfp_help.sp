@@ -81,7 +81,7 @@ char      g_szWelcomeIdx[SECT_IDX_SIZE];    // Idx (str) of Regular Greeting Men
 char      g_szRulesIdx[SECT_IDX_SIZE];      // Idx (str) of Rules section (to use with sm_rules)
 int       g_iSectionCount;
 
-Handle    g_ReturnVisitCookie = null;
+Handle    h_ckReturnVisit = null;
 bool      g_bGreetingDisplayed[MAXPLAYERS + 1]; // Has the greeting appeared yet
 
 
@@ -91,6 +91,7 @@ bool      g_bGreetingDisplayed[MAXPLAYERS + 1]; // Has the greeting appeared yet
  * TODO Add a print-to-chat feature into the item flags
  * TODO Add time limit flag for inner-sections
  * TODO Add exit-disable for inner-sections
+ * TODO Move admin check in menu creation to handler
  */
 public Plugin myinfo =
 {
@@ -122,10 +123,9 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("sfp.help.phrases");
 
-  h_bUpdate = FindConVar("sm_satansfunpack_update");
-  if(h_bUpdate == null)
-    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_update");
+  h_bUpdate = CreateConVar("sm_sfp_help_update", "1", "Update Satan's Fun Pack - Help Menu Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
@@ -139,7 +139,7 @@ public void OnPluginStart()
   HookConVarChange(h_szHelpCfg, UpdateCvars);
 
 
-  g_ReturnVisitCookie = RegClientCookie("satansfunpack_returnvisit", "Used to Mark Returning Players", CookieAccess_Public);
+  h_ckReturnVisit = RegClientCookie("satansfunpack_returnvisit", "Used to Mark Returning Players", CookieAccess_Public);
 
   #if defined _ALT_HELPCMD
   RegConsoleCmd("sm_helpmenu",  CMD_HelpMenu,   "Displays the Server Help Menu");
@@ -213,11 +213,11 @@ public Action Event_Spawn(Handle event, char[] name, bool dontBroadcast)
     g_bGreetingDisplayed[client] = true;
 
     char buff[2];
-    GetClientCookie(client, g_ReturnVisitCookie, buff, sizeof(buff));
+    GetClientCookie(client, h_ckReturnVisit, buff, sizeof(buff));
 
     if(!StrEqual(buff, "1", true)) // First Time Visit
     {
-      SetClientCookie(client, g_ReturnVisitCookie, "1");
+      SetClientCookie(client, h_ckReturnVisit, "1");
 
       if(!StrEqual(g_szFirstGreetIdx, "", true))
         OpenSubmenu(client, g_szFirstGreetIdx);
@@ -885,23 +885,6 @@ stock bool HasClassFilter(int &val)
   return false;
 }
 
-
-stock void AddFlag(int &val, int flag)
-{
-  val |= flag;
-  return;
-}
-
-stock void RemFlag(int &val, int flag)
-{
-  val &= ~flag;
-  return;
-}
-
-stock bool HasFlag(int val, int flag)
-{
-  return view_as<bool>((val & flag != 0));
-}
 
 
 

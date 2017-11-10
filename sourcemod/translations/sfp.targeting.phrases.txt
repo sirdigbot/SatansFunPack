@@ -1,0 +1,7 @@
+"Phrases"
+{
+  "SFP_TargetingLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Targeting"
+  }
+}

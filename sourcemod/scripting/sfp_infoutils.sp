@@ -100,12 +100,11 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("sfp.infoutils.phrases");
   LoadTranslations("common.phrases");
   LoadTranslations("core.phrases");
 
-  h_bUpdate = FindConVar("sm_satansfunpack_update");
-  if(h_bUpdate == null)
-    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_update");
+  h_bUpdate = CreateConVar("sm_sfp_infoutils_update", "1", "Update Satan's Fun Pack - InfoUtils Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 

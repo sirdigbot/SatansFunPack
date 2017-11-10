@@ -296,3 +296,23 @@ stock TF_Slot_Index GetWeaponSlotIndex(const char[] str)
     return TF_Slot_AllWeapons; // All 3 of the above.
   return TF_Slot_Invalid;
 }
+
+/**
+ * Flagbit Shorthands
+ */
+stock void AddFlag(int &val, int flag)
+{
+  val |= flag;
+  return;
+}
+
+stock void RemFlag(int &val, int flag)
+{
+  val &= ~flag;
+  return;
+}
+
+stock bool HasFlag(int val, int flag)
+{
+  return view_as<bool>((val & flag != 0));
+}

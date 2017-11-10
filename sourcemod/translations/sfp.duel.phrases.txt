@@ -1,0 +1,7 @@
+"Phrases"
+{
+  "SFP_DuelLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Duel"
+  }
+}

@@ -14,6 +14,7 @@
   "Files"
   {
     "Plugin" "Path_SM/plugins/sfp_bans.smx"
+    "Plugin" "Path_SM/translations/sfp.bans.phrases.txt"
 
     "Source" "Path_SM/scripting/sfp_bans.sp"
   }

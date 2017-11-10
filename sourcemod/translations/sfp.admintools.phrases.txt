@@ -1,0 +1,232 @@
+"Phrases"
+{
+  "SFP_AdminToolsLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Admin Tools"
+  }
+
+
+
+  "SM_CCOM_Usage"
+  {
+    "en" "sm_ccom <Target> <Command>"
+  }
+  "SM_CCOM_Done"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Executed Command on {1}: {2}"
+  }
+
+  "SM_TBAN_Usage"
+  {
+    "en" "sm_tban <Target> <Duration> [Reason]"
+  }
+  "SM_TBAN_BadTime"
+  {
+    "#format" "{1:d}"
+    "en" "Ban duration must be between 1 and {1}."
+  }
+  "SM_TBAN_Time"
+  {
+    "#format" "{1:d}"
+    "en" "Temporary Ban ({1}m)"
+  }
+  "SM_TBAN_BanMessage"
+  {
+    "#format" "{1:s},{2:d},{3:s}"
+    "en" "Banned Player {1} for {2} minute[s]. Reason: {3}"
+  }
+
+
+  "SM_ADDCOND_Usage"
+  {
+    "en" "sm_addcond [Target] <Condition> <Duration>"
+  }
+  "SM_ADDCOND_BadCondition"
+  {
+    "en" "Condition must be greater than -1."
+  }
+  "SM_ADDCOND_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Added condition {1} to yourself."
+  }
+  "SM_ADDCOND_Done_Server"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Added Condition {1} to {2}."
+  }
+
+  "SM_REMCOND_Usage"
+  {
+    "en"  "sm_remcond [Target] <Condition>"
+  }
+  "SM_REMCOND_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Removed condition {1} from yourself."
+  }
+  "SM_REMCOND_Done_Server"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Removed Condition {1} from {2}."
+  }
+
+  "SM_DISARM_Usage"
+  {
+    "en" "sm_disarm <Target>"
+  }
+  "SM_DISARM_Done"
+  {
+    "en" "You have been disarmed!"
+  }
+  "SM_DISARM_Done_Server"
+  {
+    "#format" "{1:s}"
+    "en" "Removed All Weapons from {1}."
+  }
+
+  "SM_SWITCHTEAM_Usage"
+  {
+    "en" "sm_switchteam <Target> [Team Red/Blu/Spec]"
+  }
+  "SM_SWITCHTEAM_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Switched {1} to the opposite team."
+  }
+
+  "SM_FORCESPEC_Usage"
+  {
+    "en" "sm_forcespec <Target>"
+  }
+  "SM_FORCESPEC_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Switched {1} into spectator."
+  }
+
+  "SM_FAKESAY_Usage"
+  {
+    "en" "sm_fsay <Target> <Message>"
+  }
+  "SM_FAKESAYTEAM_Usage"
+  {
+    "en" "sm_fsayteam <Target> <Message>"
+  }
+
+  "SM_NAMELOCK_Usage"
+  {
+    "en" "sm_namelock <Target> <1/0>"
+  }
+  "SM_NAMELOCK_Lock" // TODO: Word this better
+  {
+    "#format" "{1:s}"
+    "en" "Locked {1} from changing names."
+  }
+  "SM_NAMELOCK_Unlock"
+  {
+    "#format" "{1:s}"
+    "en" "Unlocked {1} from changing names."
+  }
+
+  "SM_NOTARGET_Usage"
+  {
+    "en" "sm_notarget [Target] <1/0>"
+  }
+  "SM_NOTARGET_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled No-Target for {1}."
+  }
+  "SM_NOTARGET_Enable_Self"
+  {
+    "en" "Enabled No-Target."
+  }
+  "SM_NOTARGET_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled No-Target for {1}."
+  }
+  "SM_NOTARGET_Disable_Self"
+  {
+    "en" "Disabled No-Target."
+  }
+  "SM_NOTARGET_SpawnMsg"
+  {
+    "en" "You have spawned with No-Target on."
+  }
+
+  "SM_OUTLINE_Usage"
+  {
+    "en" "sm_outline [Target] <1/0>"
+  }
+  "SM_OUTLINE_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Outline for {1}."
+  }
+  "SM_OUTLINE_Enable_Self"
+  {
+    "en" "Enabled Outline."
+  }
+  "SM_OUTLINE_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Outline for {1}."
+  }
+  "SM_OUTLINE_Disable_Self"
+  {
+    "en" "Disabled Outline."
+  }
+  "SM_OUTLINE_SpawnMsg"
+  {
+    "en" "You have spawned with Outline on."
+  }
+
+  "SM_TELELOCK_Usage"
+  {
+    "en" "sm_telelock [Target] <1/0>"
+  }
+  "SM_TELELOCK_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Tele-Lock for {1}."
+  }
+  "SM_TELELOCK_Enable_Self"
+  {
+    "en" "Enabled Tele-Lock."
+  }
+  "SM_TELELOCK_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Tele-Lock for {1}."
+  }
+  "SM_TELELOCK_Disable_Self"
+  {
+    "en" "Disabled Tele-Lock."
+  }
+
+  "SM_OPENTELE_Usage"
+  {
+    "en" "sm_opentele [Target] <1/0>"
+  }
+  "SM_OPENTELE_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Open-Tele for {1}."
+  }
+  "SM_OPENTELE_Enable_Self"
+  {
+    "en" "Enabled Open-Tele."
+  }
+  "SM_OPENTELE_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Open-Tele for {1}."
+  }
+  "SM_OPENTELE_Disable_Self"
+  {
+    "en" "Disabled Open-Tele."
+  }
+}

@@ -1,0 +1,7 @@
+"Phrases"
+{
+  "SFP_GodModeLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - God Mode"
+  }
+}

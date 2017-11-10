@@ -14,6 +14,8 @@
   "Files"
   {
     "Plugin" "Path_SM/plugins/sfp_toybox.smx"
+    "Plugin" "Path_SM/translations/sfp.toybox.phrases.txt"
+    "Plugin" "Path_SM/gamedata/tf2.satansfunpack_toybox.txt"
 
     "Source" "Path_SM/scripting/sfp_toybox.sp"
   }

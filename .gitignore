@@ -21,3 +21,9 @@
 !/sourcemod/scripting/sfp_targeting.sp
 !/sourcemod/scripting/sfp_toybox.sp
 !/sourcemod/scripting/sfp_trails.sp
+
+# Script Output
+/scripts/TrailList.txt
+
+# Trail Materials
+/materials

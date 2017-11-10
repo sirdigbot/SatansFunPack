@@ -14,6 +14,7 @@
   "Files"
   {
     "Plugin" "Path_SM/plugins/sfp_help.smx"
+    "Plugin" "Path_SM/translations/sfp.help.phrases.txt"
 
     "Source" "Path_SM/scripting/sfp_help.sp"
   }

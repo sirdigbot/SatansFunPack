@@ -163,6 +163,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
+  LoadTranslations("sfp.toybox.phrases");
   LoadTranslations("common.phrases");
   LoadTranslations("core.phrases.txt");
 
@@ -170,10 +171,10 @@ public void OnPluginStart()
   // SDKTools Hooks
   // Thank you to FlaminSarge for the sdktools code.
   #if defined _INCLUDE_TAUNTS
-  Handle gameData = LoadGameConfigFile("tf2.satansfunpack");
+  Handle gameData = LoadGameConfigFile("tf2.satansfunpack_toybox");
   if (gameData == INVALID_HANDLE)
   {
-    SetFailState("%T", "SFP_NoGameData", LANG_SERVER);
+    SetFailState("%T", "SFP_NoGameData", LANG_SERVER, "tf2.satansfunpack_toybox");
     return;
   }
   StartPrepSDKCall(SDKCall_Player);
@@ -192,9 +193,7 @@ public void OnPluginStart()
 
 
   // Cvars
-  h_bUpdate = FindConVar("sm_satansfunpack_update");
-  if(h_bUpdate == null)
-    SetFailState("%T", "SFP_MainCvarFail", LANG_SERVER, "sm_satansfunpack_update");
+  h_bUpdate = CreateConVar("sm_sfp_toybox_update", "1", "Update Satan's Fun Pack - Toy Box Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 

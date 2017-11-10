@@ -1,0 +1,24 @@
+"Phrases"
+{
+  "SFP_MirrorLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Mirror"
+  }
+
+
+
+  "SM_MIRROR_Usage"
+  {
+    "en" "sm_mirror <Target> <1/0>"
+  }
+  "SM_MIRROR_Enable"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Mirror Damage for {1}."
+  }
+  "SM_MIRROR_Disable"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Mirror Damage for {1}."
+  }
+}
