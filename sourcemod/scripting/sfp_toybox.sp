@@ -1300,7 +1300,7 @@ public Action CMD_TauntMenu(int client, int args)
     MenuAction_End|MenuAction_Display|MenuAction_DrawItem|MenuAction_Select);
   SetMenuTitle(menu, "Taunt Menu"); // Translated in handler
 
-  for(int i = 0; i < g_iTauntCount; ++i)
+  for(int i = 0; i <= g_iTauntCount; ++i) // Taunt Count is 0-idx too, so use <=
   {
     char buffer[4];
     IntToString(i, buffer, sizeof(buffer));
