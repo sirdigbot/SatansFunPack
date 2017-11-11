@@ -100,6 +100,7 @@ stock void TagActivity(int client, const char[] msg, any ...)
 
 /**
  * Check if a client is actually in the game playing.
+ * IsClientObserver will be true if they are dead, too.
  *
  * @param client    Client who issued command
  * @param bObserver Optional. Allow client if they are Observer/Spectator

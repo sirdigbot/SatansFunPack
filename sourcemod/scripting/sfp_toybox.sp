@@ -45,7 +45,8 @@ enum CommandNames {
   ComSCREAMTOGGLE,
   ComPITCH,
   ComPITCHTOGGLE,
-  ComTAUNT,
+  ComTAUNTMENU,
+  ComTAUNTID,
   ComSPLAY,
   ComCOLOUR,
   ComFRIENDLYSENTRY,
@@ -134,6 +135,7 @@ char    g_szSlapMsg[256];
  * - TODO sm_colour should have a non-admin alpha limiting cvar
  * - ResetColour, ResetWeaponColour and ResetWeaponSize should be added.
  * - FriendlySentry should indicate the sentry is different.
+ * - TODO Add sm_tauntidlist to show all valid taunt ids.
  */
 public Plugin myinfo =
 {
@@ -207,7 +209,7 @@ public void OnPluginStart()
   HookConVarChange(h_szConfig, UpdateCvars);
 
 
-  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- TauntID\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -277,9 +279,10 @@ public void OnPluginStart()
   RegAdminCmd("sm_pitchtoggle",     CMD_PitchToggle, ADMFLAG_GENERIC, "Toggle the sm_pitch Command");
   #endif
   #if defined _INCLUDE_TAUNTS
-  // To Appease Lord GabeN
+  // To Appease Lord GabeN, keep these as console cmds
   RegConsoleCmd("sm_taunt",         CMD_TauntMenu, "Perform Any Taunt");
   RegConsoleCmd("sm_taunts",        CMD_TauntMenu, "Perform Any Taunt");
+  RegConsoleCmd("sm_tauntid",       CMD_TauntById, "Perform Any Taunt by Item Index");
   #endif
   #if defined _INCLUDE_SPLAY
   RegAdminCmd("sm_splay",           CMD_StealthPlay, ADMFLAG_GENERIC, "Play Sounds Stealthily");
@@ -309,6 +312,7 @@ public void OnPluginStart()
    * sm_pitch_nolimit
    * sm_colour_target
    * sm_friendlysentry_target
+   * sm_tauntid_target
    */
 
   AddNormalSoundHook(view_as<NormalSHook>(Hook_NormalSound)); // Sourcemod, why?
@@ -412,7 +416,10 @@ void ProcessDisabledCmds()
     g_bDisabledCmds[ComPITCHTOGGLE] = true;
 
   if(StrContains(buffer, "TauntMenu", true) != -1)
-    g_bDisabledCmds[ComTAUNT] = true;
+    g_bDisabledCmds[ComTAUNTMENU] = true;
+
+  if(StrContains(buffer, "TauntID", true) != -1)
+    g_bDisabledCmds[ComTAUNTID] = true;
 
   if(StrContains(buffer, "SPlay", true) != -1)
     g_bDisabledCmds[ComSPLAY] = true;
@@ -1022,6 +1029,12 @@ public Action CMD_Scream(int client, int args)
     return Plugin_Handled;
   }
 
+  if(!CheckCommandAccess(client, "sm_scream_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
   //Get Target
   char arg1[MAX_NAME_LENGTH];
   GetCmdArg(1, arg1, sizeof(arg1));
@@ -1171,6 +1184,12 @@ public Action CMD_Pitch(int client, int args)
     return Plugin_Handled;
   }
 
+  if(!CheckCommandAccess(client, "sm_pitch_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
   // Get Value
   bool isDefault = false;
   char arg2[5];
@@ -1199,7 +1218,6 @@ public Action CMD_Pitch(int client, int args)
       return Plugin_Handled;
     }
   }
-
 
   // Get Target
   char targ_name[MAX_TARGET_LENGTH];
@@ -1280,15 +1298,16 @@ public Action CMD_PitchToggle(int client, int args)
 
 
 /**
- * Open a menu with a list of taunts, select to use.
+ * Execute a taunt by specifiying the item index.
  *
- * sm_taunt or sm_taunts
+ * sm_tauntid [Target] <Taunt Item Index>
  * Requires satansfunpack_toybox.cfg and gamedata file
+ * Will only accept taunt IDs in that file
  */
 #if defined _INCLUDE_TAUNTS
-public Action CMD_TauntMenu(int client, int args)
+public Action CMD_TauntById(int client, int args)
 {
-  if(g_bDisabledCmds[ComTAUNT])
+  if(g_bDisabledCmds[ComTAUNTID])
   {
     char arg0[32];
     GetCmdArg(0, arg0, sizeof(arg0));
@@ -1296,11 +1315,176 @@ public Action CMD_TauntMenu(int client, int args)
     return Plugin_Handled;
   }
 
+  if(args < 1)
+  {
+    TagReplyUsage(client, "%T", "SM_TAUNTBYID_Usage", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  int tauntIdx, globalIndex;
+
+  if(args == 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReply(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    tauntIdx = StringToInt(arg1);
+    globalIndex = IsTauntIndexValid(tauntIdx);
+
+    if(globalIndex == -1)
+    {
+      TagReply(client, "%T", "SM_TAUNTBYID_Invalid", client, tauntIdx);
+      return Plugin_Handled;
+    }
+
+    if(g_TauntClass[globalIndex] != TFAllClass
+      && TF2_GetPlayerClass(client) != view_as<TFClassType>(g_TauntClass[globalIndex]))
+    {
+      switch(g_TauntClass[globalIndex])
+      {
+        case TFScout:   TagReply(client, "%T", "SM_TAUNTBYID_Scout",    client);
+        case TFSoldier: TagReply(client, "%T", "SM_TAUNTBYID_Soldier",  client);
+        case TFPyro:    TagReply(client, "%T", "SM_TAUNTBYID_Pyro",     client);
+        case TFDemoman: TagReply(client, "%T", "SM_TAUNTBYID_Demoman",  client);
+        case TFHeavy:   TagReply(client, "%T", "SM_TAUNTBYID_Heavy",    client);
+        case TFEngie:   TagReply(client, "%T", "SM_TAUNTBYID_Engineer", client);
+        case TFMedic:   TagReply(client, "%T", "SM_TAUNTBYID_Medic",    client);
+        case TFSniper:  TagReply(client, "%T", "SM_TAUNTBYID_Sniper",   client);
+        case TFSpy:     TagReply(client, "%T", "SM_TAUNTBYID_Spy",      client);
+      }
+      return Plugin_Handled;
+    }
+
+    ExecuteTaunt(client, tauntIdx);
+
+    // Clean name by splitting at ") "
+    // This is added during LoadConfig so it's safe.
+    int cleanNameIdx = StrContains(g_szTauntName[globalIndex], ") ", true);
+    if(cleanNameIdx != -1)
+      TagReply(client,
+        "%T",
+        "SM_TAUNTBYID_Done_Self",
+        client,
+        g_szTauntName[globalIndex][cleanNameIdx+2], // +2 to remove ") "
+        tauntIdx);
+    return Plugin_Handled;
+  }
+
+  // Check targeting
+  if(!CheckCommandAccess(client, "sm_tauntid_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg2[16];
+  GetCmdArg(2, arg2, sizeof(arg2));
+  tauntIdx = StringToInt(arg2);
+  globalIndex = IsTauntIndexValid(tauntIdx);
+
+  if(globalIndex == -1)
+  {
+    TagReply(client, "%T", "SM_TAUNTBYID_Invalid", client, tauntIdx);
+    return Plugin_Handled;
+  }
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+    {
+      if(g_TauntClass[globalIndex] == TFAllClass
+      || TF2_GetPlayerClass(targ_list[i]) == view_as<TFClassType>(g_TauntClass[globalIndex]))
+      {
+        ExecuteTaunt(targ_list[i], tauntIdx);
+      }
+    }
+  }
+
+  // Clean name by splitting at ") "
+  // This is added during LoadConfig so it's safe.
+  int cleanNameIdx = StrContains(g_szTauntName[globalIndex], ") ", true);
+  if(cleanNameIdx != -1)
+    TagActivity(
+      client,
+      "%T",
+      "SM_TAUNTBYID_Done",
+      LANG_SERVER,
+      targ_name,
+      g_szTauntName[globalIndex][cleanNameIdx+2], // +2 to remove ") "
+      tauntIdx);
+  return Plugin_Handled;
+}
+
+/**
+ * Check if Taunt Index is in g_iTauntId
+ * Return g_iTauntId index or -1 on failure
+ */
+int IsTauntIndexValid(int itemIndex)
+{
+  int found = -1;
+  for(int i = 0; i < g_iTauntCount; ++i)
+  {
+    if(g_iTauntId[i] == itemIndex)
+    {
+      found = i;
+      break;
+    }
+  }
+  return found;
+}
+
+/**
+ * Open a menu with a list of taunts, select to use.
+ *
+ * sm_taunt or sm_taunts
+ * Requires satansfunpack_toybox.cfg and gamedata file
+ */
+public Action CMD_TauntMenu(int client, int args)
+{
+  if(g_bDisabledCmds[ComTAUNTMENU])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
+  if(args > 0)
+  {
+    // TODO Merge sm_taunt and sm_tauntid
+    TagReply(client, "%T", "SM_TAUNTMENU_TryTauntID", client);
+    return Plugin_Handled;
+  }
+
   Menu menu = new Menu(TauntMenuHandler,
     MenuAction_End|MenuAction_Display|MenuAction_DrawItem|MenuAction_Select);
   SetMenuTitle(menu, "Taunt Menu"); // Translated in handler
 
-  for(int i = 0; i <= g_iTauntCount; ++i) // Taunt Count is 0-idx too, so use <=
+  for(int i = 0; i < g_iTauntCount; ++i)
   {
     char buffer[4];
     IntToString(i, buffer, sizeof(buffer));
@@ -1719,7 +1903,7 @@ public Action CMD_FriendlySentry(int client, int args)
   // Self Target
   if(args == 1)
   {
-    if(!IsClientPlaying(client))
+    if(!IsClientPlaying(client, true)) // Allow Spectators
     {
       TagReply(client, "%T", "SFP_InGameOnly", client);
       return Plugin_Handled;
@@ -1742,6 +1926,12 @@ public Action CMD_FriendlySentry(int client, int args)
   }
 
   // Other Target
+  if(!CheckCommandAccess(client, "sm_friendlysentry_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
   char arg2[MAX_BOOLSTRING_LENGTH];
   GetCmdArg(2, arg2, sizeof(arg2));
 
@@ -1836,7 +2026,7 @@ public Action CMD_CustomSlap(int client, int args)
 
   for(int i = 0; i < targ_count; ++i)
   {
-    if(!IsClientPlaying(targ_list[i])) // TODO COMMAND_FILTER_ALIVE might make this redundant
+    if(!IsClientPlaying(targ_list[i])) // This also checks alive state, but other things too.
       continue;
 
     SlapPlayer(targ_list[i], 0, true); // Bots can be slapped
@@ -1918,13 +2108,11 @@ stock bool LoadConfig()
         g_iTauntId[i]     = 0;
         g_TauntClass[i]   = TFInvalid;
       }
-      g_iTauntCount = -1; // Increment is at start to allow skipping taunts, so start at -1
+      g_iTauntCount = 0;
 
       int skipCount = 0;
       do
       {
-        ++g_iTauntCount;
-
         // Get Class, check it's valid. If not, skip taunt.
         char className[8];
         TFClasses tfClass;
@@ -1955,7 +2143,6 @@ stock bool LoadConfig()
           continue;
         }
 
-
         // Check ID
         char buff[32];
         hKeys.GetString("id", buff, sizeof(buff));
@@ -1966,17 +2153,20 @@ stock bool LoadConfig()
           continue;
         }
 
-        // Class and ID are Valid, Add taunt
+        // Class and ID are Valid, Add taunt and increment
         g_iTauntId[g_iTauntCount]   = idBuff;
         g_TauntClass[g_iTauntCount] = tfClass;
 
         // Menu-Ready name string: "(ANY) Some Taunt"
+        // NOTE g_szTauntName must store ") " before the name to work with sm_tauntid
         hKeys.GetSectionName(buff, sizeof(buff));
         Format(g_szTauntName[g_iTauntCount], sizeof(g_szTauntName[]), "(%s) %s", className, buff);
+
+        ++g_iTauntCount; // Only increment after use/adding to a fixed array or you get 'holes'
       }
       while(hKeys.GotoNextKey() && g_iTauntCount < MAX_TAUNTS);
 
-      PrintToServer("%T", "SM_TAUNTMENU_ConfigLoad", LANG_SERVER, g_iTauntCount+1, skipCount);
+      PrintToServer("%T", "SM_TAUNTMENU_ConfigLoad", LANG_SERVER, g_iTauntCount, skipCount);
     }
   }
   else

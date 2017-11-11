@@ -92,6 +92,7 @@ bool      g_bGreetingDisplayed[MAXPLAYERS + 1]; // Has the greeting appeared yet
  * TODO Add time limit flag for inner-sections
  * TODO Add exit-disable for inner-sections
  * TODO Move admin check in menu creation to handler
+ * TODO Add spacer flag to items
  */
 public Plugin myinfo =
 {

@@ -25,7 +25,7 @@ A collection of useful commands for TF2 Servers.
 | ConVar                      | Description                         | Default |
 | --------------------------- |------------------------------------ | --- |
 | **satansfunpack_version**   | Plugin Version                      | -- |
-| **sm_satansfunpack_update** | Should Satan's Fun Pack Auto-Update | `1` |
+| **sm_satansfunpack_update** | Should satansfunpack.smx Auto-Update | `1` |
 
 <br/>
 
@@ -41,6 +41,7 @@ A collection of useful commands for TF2 Servers.
 
 | ConVar                         | Description                            | Default |
 | ------------------------------ | -------------------------------------- | --- |
+| **sm_sfp_admintools_update**   | Should sfp_admintools.smx Auto-Update  | `1` |
 | **sm_admintools_disabledcmds** | List of commands to completely disable | `""` |
 | **sm_maxtempban**              | Maximum time for sm_tban (minutes)     | `180` |
 
@@ -83,6 +84,7 @@ A collection of useful commands for TF2 Servers.
 
 | ConVar                          | Description            | Default                  |
 | ------------------------------- | ---------------------- | ------------------------ |
+| **sm_sfp_help_update**          | Should sfp_helpmenu.smx Auto-Update | `1` |
 | **sm_satansfunpack_helpconfig** | Help Menu config file  | `satansfunpack_help.cfg` |
 
 Help Config Structure:
@@ -122,6 +124,7 @@ Help Config Structure:
 
 | ConVar                              | Description                            | Default |
 | ----------------------------------- | -------------------------------------- | --- |
+| **sm_sfp_infoutils_update**          | Should sfp_infoutils.smx Auto-Update  | `1` |
 | **sm_infoutils_disabledcmds**       | List of commands to completely disable | `""` |
 | **sm_infoutils_id_noimmunity**      | Ignore Target Immunity with sm_id      | `0` |
 | **sm_infoutils_profile_noimmunity** | Ignore Target Immunity with sm_profile | `0` |
@@ -150,6 +153,7 @@ Help Config Structure:
 
 | ConVar                        | Description                            | Default |
 | ----------------------------- | -------------------------------------- | --- |
+| **sm_sfp_quickconditions_update** | Should sfp_quickconditions.smx Auto-Update  | `1` |
 | **sm_quickcond_disabledcmds** | List of commands to completely disable | `""` |
 
 <br/>
@@ -167,6 +171,7 @@ Help Config Structure:
 
 | ConVar                    | Description                                             | Default |
 | ------------------------- | ------------------------------------------------------- | --- |
+| **sm_sfp_targeting_update** | Should sfp_targeting.smx Auto-Update                  | `1` |
 | **sm_random_target_bias** | @random Selection Threshold (255 < x > bias = selected) | `127` |
 
 <br/>
@@ -203,6 +208,7 @@ Help Config Structure:
 
 | ConVar                          | Description                            | Default |
 | ------------------------------- | -------------------------------------- | --- |
+| **sm_sfp_toybox_update**        | Should sfp_toybox.smx Auto-Update      | `1` |
 | **sm_toybox_disabledcmds**      | List of commands to completely disable | `""` |
 | **sm_resizeweapon_upper**       | Upper limit of sm_resizeweapon         | `3.0` |
 | **sm_resizeweapon_lower**       | Lower limit of sm_resizeweapon         | `-3.0` |
@@ -249,6 +255,7 @@ Toy Box Config Structure:
 | **sm_pitch**            | Set a player's voiceline pitch                   | `sm_pitch [Target] <1-255 or 100/default/reset>` |
 | **sm_pitchtoggle**      | Toggle access to sm_pitch                        | `sm_pitchtoggle [1/0]` |
 | **sm_taunt**            | Perform any taunt                                | `sm_taunt` |
+| **sm_tauntid**          | Perform any taunt by item index                  | `sm_tauntid [Target] <Taunt Item Index>` |
 | **sm_taunts**           | *Alias for sm_taunt*                             | -- |
 | **sm_splay**            | Play a sound to a player without notifying them  | `sm_splay <Target> <File Path>` |
 | **sm_colour**           | Set the colour of a player                       | `sm_colour [Target] <8-Digit Hex/RGBA Colour>` |
@@ -272,12 +279,19 @@ Toy Box Config Structure:
 | **sm_pitch_nolimit**          | Client is unrestricted by upper/lower limits |
 | **sm_colour_target**          | Client can target others |
 | **sm_friendlysentry_target**  | Client can target others |
+| **sm_tauntid_target**         | Client can target others |
 
 <br/>
 
 <a name="mirror"/>
 
 ## Mirror (sfp_mirror.smx)
+
+| ConVar                          | Description                            | Default |
+| ------------------------------- | -------------------------------------- | --- |
+| **sm_sfp_mirror_update**        | Should sfp_mirror.smx Auto-Update      | `1` |
+
+<br/>
 
 | Command       | Description                            | Syntax                     |
 | ------------- | -------------------------------------- | -------------------------- |
@@ -291,8 +305,9 @@ Toy Box Config Structure:
 
 **Passive** Echos all teamchat messages to Chat-Admins (players with access to `sm_chatvision_access`)  
 
-| ConVar                    | Description                                               | Default |
-| ------------------------- | ------------------------------------------------------------- | --- |
+| ConVar                    | Description                                          | Default |
+| ------------------------- | ---------------------------------------------------- | --- |
+| **sm_sfp_chatvision_update**        | Should sfp_chatvision.smx Auto-Update      | `1` |
 | **sm_chatvision_enabled** | Toggle Chat Vision Output (it will still run everything else) | `1` |
 
 <br/>

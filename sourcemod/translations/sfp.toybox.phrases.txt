@@ -160,6 +160,65 @@
     "#format" "{1:d},{2:d}"
     "en" "Taunt Menu Loaded {1} Taunts, Skipped {2}."
   }
+  "SM_TAUNTMENU_TryTauntID"
+  {
+    "en" "The Taunt Menu command cannot play specific taunts. Did you mean /tauntid?"
+  }
+  "SM_TAUNTBYID_Usage"
+  {
+    "en" "sm_tauntid [Target] <Taunt Item Index>"
+  }
+  "SM_TAUNTBYID_Invalid"
+  {
+    "#format" "{1:d}"
+    "en" "{1} is not a valid Taunt Item Index."
+  }
+  "SM_TAUNTBYID_Done"
+  {
+    "#format" "{1:s},{2:s},{3:d}"
+    "en" "Forced {1} to perform taunt '{2}' ({3})."
+  }
+  "SM_TAUNTBYID_Done_Self"
+  {
+    "#format" "{1:s},{2:d}"
+    "en" "Performed Taunt '{1}' ({2})."
+  }
+  "SM_TAUNTBYID_Scout"
+  {
+    "en" "You must be a Scout to perform this taunt."
+  }
+  "SM_TAUNTBYID_Soldier"
+  {
+    "en" "You must be a Soldier to perform this taunt."
+  }
+  "SM_TAUNTBYID_Pyro"
+  {
+    "en" "You must be a Pyro to perform this taunt."
+  }
+  "SM_TAUNTBYID_Demoman"
+  {
+    "en" "You must be a Demoman to perform this taunt."
+  }
+  "SM_TAUNTBYID_Heavy"
+  {
+    "en" "You must be a Heavy to perform this taunt."
+  }
+  "SM_TAUNTBYID_Engineer"
+  {
+    "en" "You must be a Engineer to perform this taunt."
+  }
+  "SM_TAUNTBYID_Medic"
+  {
+    "en" "You must be a Medic to perform this taunt."
+  }
+  "SM_TAUNTBYID_Sniper"
+  {
+    "en" "You must be a Sniper to perform this taunt."
+  }
+  "SM_TAUNTBYID_Spy"
+  {
+    "en" "You must be a Spy to perform this taunt."
+  }
 
   "SM_SPLAY_Usage"
   {

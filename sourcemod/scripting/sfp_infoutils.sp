@@ -271,7 +271,7 @@ public Action CMD_MuteGagStatus(int client, int args)
     return Plugin_Handled;
   }
 
-  if(!IsClientPlaying(client))
+  if(!IsClientPlaying(client, true))
   {
     TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
@@ -322,7 +322,7 @@ public Action CMD_HearCheck(int client, int args)
     return Plugin_Handled;
   }
 
-  if(!IsClientPlaying(client))
+  if(!IsClientPlaying(client, true))
   {
     TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
@@ -535,7 +535,7 @@ public Action Cmd_Profile(int client, int args)
     return Plugin_Handled;
   }
 
-  if(!IsClientPlaying(client))
+  if(!IsClientPlaying(client, true))
   {
     TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
@@ -667,7 +667,7 @@ public Action CMD_JoinGroup(int client, int args)
     return Plugin_Handled;
   }
 
-  if(!IsClientPlaying(client))
+  if(!IsClientPlaying(client, true))
   {
     TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;
