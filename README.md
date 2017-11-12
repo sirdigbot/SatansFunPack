@@ -111,7 +111,13 @@ Help Config Structure:
     "1"           <--- These are arbitrary, write whatever you like.
     {
       "text"  "Here is some standard, numbered text."
-      "flags" ""  <--- "admin", "text", "cmd:<Client Command>", "open:<Section Name>" or TF2 class
+      "flags" ""  <---  Flags, separated by '|':
+                        "admin"
+                        "text"
+                        "cmd:<Client Command>"
+                        "open:<Section Name>"
+                        "msg:<Text>"
+                        "scout", "soldier", "pyro", "demo", "engie", "heavy", "medic", "sniper", "spy"
     }
   }
 }
