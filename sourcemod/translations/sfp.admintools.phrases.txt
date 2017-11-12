@@ -252,6 +252,10 @@
     "#format" "{1:s},{2:s}"
     "en" "Forced and Locked {1} to class {2}."
   }
+  "SM_FORCECLASS_Spawn"
+  {
+    "en" "You cannot change class."
+  }
   "SM_UNLOCKCLASS_Usage"
   {
     "en" "sm_unlockclass <Target>"
@@ -266,6 +270,10 @@
   {
     "en" "sm_hp [Target] <Amount>"
   }
+  "SM_SETHEALTH_Invalid"
+  {
+    "en" "Health amount must be higher than 0."
+  }
   "SM_SETHEALTH_Done_Self"
   {
     "#format" "{1:d}"
@@ -275,5 +283,15 @@
   {
     "#format" "{1:s},{2:d}"
     "en" "Set Health of {1} to {2}."
+  }
+
+  "SM_RESPAWN_Done_Self"
+  {
+    "en" "You have respawned."
+  }
+  "SM_RESPAWN_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Respawned {1}."
   }
 }

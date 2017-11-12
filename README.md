@@ -66,7 +66,8 @@ A collection of useful commands for TF2 Servers.
 | **sm_opentele** | Allow enemies through your teleporter | `sm_opentele [Target] <1/0>` |
 | **sm_forceclass** | Force player to a certain class     | `sm_forceclass <Target> <Class> [Lock 1/0]` |
 | **sm_unlockclass** | Unlock players from `sm_forceclass` lock | `sm_unlockclass <Target>` |
-| **sm_hp** | Set a Player's Health | `sm_hp [Target] <Amount>` |
+| **sm_hp**       | Set a Player's Health                 | `sm_hp [Target] <Amount>` |
+| **sm_respawn**  | Respawn a Player                      | `sm_respawn [Target]` |
 
 <br/>
 
@@ -80,6 +81,7 @@ A collection of useful commands for TF2 Servers.
 | **sm_opentele_target**  | Client can target others |
 | **sm_forceclass_canlock** | Can lock a player into a class with `sm_forceclass` |
 | **sm_sethealth_target** | Client can target others |
+| **sm_respawn_target**   | Client can target others |
 
 **Important Note:** sm_forceclass lock will *very* likely cause a crash if used with a class-limit.  
 

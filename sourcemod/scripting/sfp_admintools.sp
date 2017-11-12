@@ -36,6 +36,7 @@ enum CommandNames {
   ComOPENTELE,
   ComFORCECLASS, // Affects both sm_forceclass and sm_unlockclass
   ComSETHEALTH,
+  ComRESPAWN,
   ComTOTAL
 };
 
@@ -59,6 +60,7 @@ bool    g_bForceClassLocked[MAXPLAYERS + 1];
  * Known Bugs:
  * - TODO OpenTele and Telelock should indicate the tele is different.
  * - TODO Force-class lock can possibly cause a crash if used with a class-limit.
+ * - ForceClass leaves all buildings active
  */
 public Plugin myinfo =
 {
@@ -98,7 +100,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_admintools_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- CCom\n- TBan\n- AddCond\n- RemCond\n- Disarm\n- SwitchTeam\n- ForceSpec\n- FSayAll\n- FSayTeam\n- NameLock\n- NoTarget\n- Outline\n- TeleLock\n- OpenTele\n- ForceClass\n- SetHealth", FCVAR_SPONLY|FCVAR_REPLICATED);
+  h_bDisabledCmds = CreateConVar("sm_admintools_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- CCom\n- TBan\n- AddCond\n- RemCond\n- Disarm\n- SwitchTeam\n- ForceSpec\n- FSayAll\n- FSayTeam\n- NameLock\n- NoTarget\n- Outline\n- TeleLock\n- OpenTele\n- ForceClass\n- SetHealth\n- RespawnCmd", FCVAR_SPONLY|FCVAR_REPLICATED);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
@@ -127,6 +129,7 @@ public void OnPluginStart()
   RegAdminCmd("sm_forceclass",  CMD_ForceClass, ADMFLAG_BAN, "Force a Player to a Certain Class");
   RegAdminCmd("sm_unlockclass", CMD_UnlockClass, ADMFLAG_BAN, "Unlock a Player from sm_forceclass");
   RegAdminCmd("sm_hp",          CMD_SetHealth, ADMFLAG_BAN, "Set a Player's Health");
+  RegAdminCmd("sm_respawn",     CMD_Respawn, ADMFLAG_BAN, "Respawn a player..What else?");
 
   /**
    * Overrides
@@ -138,6 +141,7 @@ public void OnPluginStart()
    * sm_opentele_target - Can client target others with sm_opentele
    * sm_forceclass_canlock - Can lock a player into a class with sm_forceclass
    * sm_sethealth_target - Can client target others with sm_hp
+   * sm_respawn_target  - You get the idea
    */
 
   PrintToServer("%T", "SFP_AdminToolsLoaded", LANG_SERVER);
@@ -216,6 +220,9 @@ void ProcessDisabledCmds()
 
   if(StrContains(buffer, "SetHealth", true) != -1)
     g_bDisabledCmds[ComSETHEALTH] = true;
+
+  if(StrContains(buffer, "RespawnCmd", true) != -1)
+    g_bDisabledCmds[ComRESPAWN] = true;
   return;
 }
 
@@ -247,6 +254,8 @@ public Action OnPlayerChangeClass(Handle event, char[] name, bool dontBroadcast)
     {
       TFClassType current = TF2_GetPlayerClass(client);
       TF2_SetPlayerClass(client, current, false, true); // TODO Verify it works
+      if(!IsFakeClient(client))
+        TagPrintChat(client, "%T", "SM_FORCECLASS_Spawn", client);
     }
   }
 }
@@ -1562,7 +1571,7 @@ public Action CMD_ForceClass(int client, int args)
 
     char arg3[MAX_BOOLSTRING_LENGTH];
     GetCmdArg(3, arg3, sizeof(arg3));
-    
+
     state = GetStringBool(arg3, false, true, true, true);
     if(state == -1)
     {
@@ -1577,6 +1586,7 @@ public Action CMD_ForceClass(int client, int args)
     if(IsClientPlaying(targ_list[i])) // No spectators or dead players
     {
       TF2_SetPlayerClass(targ_list[i], classType, false, true);
+      TF2_RegeneratePlayer(targ_list[i]);
       g_bForceClassLocked[targ_list[i]] = view_as<bool>(state);
     }
   }
@@ -1605,7 +1615,7 @@ public Action CMD_UnlockClass(int client, int args)
 
   if(args < 1)
   {
-    TagReplyUsage(client, "%T", "SM_FORCECLASS_Usage", client);
+    TagReplyUsage(client, "%T", "SM_UNLOCKCLASS_Usage", client);
     return Plugin_Handled;
   }
 
@@ -1672,6 +1682,12 @@ public Action CMD_SetHealth(int client, int args)
     }
 
     int amount = StringToInt(arg1);
+    if(amount < 1)
+    {
+      TagReply(client, "%T", "SM_SETHEALTH_Invalid", client);
+      return Plugin_Handled;
+    }
+
     TF2_SetHealth(client, amount);
     TagReply(client, "%T", "SM_SETHEALTH_Done_Self", client, amount);
     return Plugin_Handled;
@@ -1705,6 +1721,11 @@ public Action CMD_SetHealth(int client, int args)
   char arg2[10];
   GetCmdArg(2, arg2, sizeof(arg2));
   int amount = StringToInt(arg2);
+  if(amount < 1)
+  {
+    TagReply(client, "%T", "SM_SETHEALTH_Invalid", client);
+    return Plugin_Handled;
+  }
 
   // Apply
   for(int i = 0; i < targ_count; ++i)
@@ -1716,6 +1737,75 @@ public Action CMD_SetHealth(int client, int args)
   TagActivity(client, "%T", "SM_SETHEALTH_Done", LANG_SERVER, targ_name, amount);
   return Plugin_Handled;
 }
+
+
+/**
+ * Unlock players from sm_forceclass's lock
+ *
+ * sm_respawn [Target]
+ */
+public Action CMD_Respawn(int client, int args)
+{
+  if(g_bDisabledCmds[ComRESPAWN])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReply(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    TF2_RespawnPlayer(client);
+    TagReply(client, "%T", "SM_RESPAWN_Done_Self", client);
+    return Plugin_Handled;
+  }
+
+
+  if(!CheckCommandAccess(client, "sm_respawn_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  // Get Target List
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+      TF2_RespawnPlayer(targ_list[i]);
+  }
+
+  TagActivity(client, "%T", "SM_RESPAWN_Done", LANG_SERVER, targ_name);
+  return Plugin_Handled;
+}
+
 
 
 

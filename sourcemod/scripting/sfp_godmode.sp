@@ -45,6 +45,7 @@ Handle  h_NoteCooldownTimer[MAXPLAYERS + 1] = {null, ...};
  * Known Bugs
  * - Max Health still drains with the eviction notice
  * - Immortal Note can only be displayed to one person at a time.
+ * - TODO Immortal Note does not display if you damage a pyro.
  */
 public Plugin myinfo =
 {
@@ -197,7 +198,7 @@ public Action TraceAttack(
         FireEvent(event, false); // FireEvent deletes handle. TODO What does broadcast do?
 
         g_bNoteActive[attacker]       = true;
-        h_NoteCooldownTimer[attacker] = CreateTimer(1.5, Timer_ResetGlobals, attacker);
+        h_NoteCooldownTimer[attacker] = CreateTimer(2.5, Timer_ResetGlobals, attacker);
         // Dont put nomapchange flag on one-time timers.
       }
     }
