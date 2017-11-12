@@ -322,7 +322,7 @@ public Action CMD_HearCheck(int client, int args)
     return Plugin_Handled;
   }
 
-  if(!IsClientPlaying(client, true))
+  if(!IsClientPlaying(client, true)) // Allow spectators and dead
   {
     TagReply(client, "%T", "SFP_InGameOnly", client);
     return Plugin_Handled;

@@ -280,6 +280,33 @@ stock bool IsColourRGBA(const int red, const int green, const int blue, const in
 
 
 /**
+ * Check if a string is a valid hex code.
+ *
+ * @param str       String to check.
+ * @return bool     If str is valid 6-digit hex
+ */
+stock bool IsValid6DigitHex(const char[] str)
+{
+  if(strlen(str) != 6)
+    return false;
+
+  bool result = true;
+  for(int i = 0; i < 6; ++i)
+  {
+    // If char is not in valid hex range, break
+    if(!(str[i] >= 0x30 && str[i] <= 0x39)  // 0-9
+    && !(str[i] >= 0x41 && str[i] <= 0x46)  // A-F
+    && !(str[i] >= 0x61 && str[i] <= 0x66)) // a-f
+    {
+      result = false;
+      break;
+    }
+  }
+  return result;
+}
+
+
+/**
  * Get a weapon slot index. Specifically for weapons.
  *
  * @param str             String to check.

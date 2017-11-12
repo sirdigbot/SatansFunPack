@@ -22,6 +22,7 @@
 #define MAX_ITEM_FLAGS    13  // Maximum number of possible item flags.
 #define SECT_IDX_SIZE     3   // "64" + \0
 #define ITEM_IDX_SIZE     7   // "64_64" + \0
+#define CHAT_DEFAULTCOL   "FBECCB" // Normal chat colour in TF2
 
 #define _INCLUDE_RULES      // Help command must be included. sm_rules is a shortcut, however.
 //#define _ALT_HELPCMD      // Use sm_helpmenu instead of sm_help (Conflicts stock adminhelp.smx)
@@ -45,18 +46,19 @@
 #define ITEM_TEXTONLY     (1<<1) // ITEMDRAW_DISABLED. Cannot co-exist with ITEM_STANDARD
 #define ITEM_CCOM         (1<<2) // Item has a Client Command String
 #define ITEM_REDIRECT     (1<<3) // Item has a redirect when selected.
-#define ITEM_ADMIN        (1<<4) // Item is visible to admins only.
-#define ITEM_SCOUT        (1<<5) // Item is visible to certain classes:
-#define ITEM_SOLDIER      (1<<6)
-#define ITEM_PYRO         (1<<7)
-#define ITEM_DEMO         (1<<8)
-#define ITEM_HEAVY        (1<<9)
-#define ITEM_ENGIE        (1<<10)
-#define ITEM_MEDIC        (1<<11)
-#define ITEM_SNIPER       (1<<12)
-#define ITEM_SPY          (1<<13)
-#define ITEM_ALLCLASS     (1<<14)
-#define ITEM_INVALID      (1<<15) // Used for invalid result in GetItemFlagFromStr()
+#define ITEM_PRINTMSG     (1<<4) // Item has a print message string.
+#define ITEM_ADMIN        (1<<5) // Item is visible to admins only.
+#define ITEM_SCOUT        (1<<6) // Item is visible to certain classes:
+#define ITEM_SOLDIER      (1<<7)
+#define ITEM_PYRO         (1<<8)
+#define ITEM_DEMO         (1<<9)
+#define ITEM_HEAVY        (1<<10)
+#define ITEM_ENGIE        (1<<11)
+#define ITEM_MEDIC        (1<<12)
+#define ITEM_SNIPER       (1<<13)
+#define ITEM_SPY          (1<<14)
+#define ITEM_ALLCLASS     (1<<15)
+#define ITEM_INVALID      (1<<16) // Used for invalid result in GetItemFlagFromStr()
 
 //=================================
 // Global
@@ -76,6 +78,7 @@ StringMap g_szMapItemText;      // Item String (Required per item)
 StringMap g_fbMapItemFlags;     // Flagbit for Item (Required per item)
 StringMap g_szMapItemCCom;      // String to run as Client Cmd
 StringMap g_szMapItemRedirIdx;  // Idx (as str) to load on item select (In inner-menu)
+StringMap g_szMapItemPrintMsg;  // String to print when item selected
 char      g_szFirstGreetIdx[SECT_IDX_SIZE]; // Idx (str) of First-Time Greeting Menu, -1 for none.
 char      g_szWelcomeIdx[SECT_IDX_SIZE];    // Idx (str) of Regular Greeting Menu, -1 for none.
 char      g_szRulesIdx[SECT_IDX_SIZE];      // Idx (str) of Rules section (to use with sm_rules)
@@ -84,11 +87,13 @@ int       g_iSectionCount;
 Handle    h_ckReturnVisit = null;
 bool      g_bGreetingDisplayed[MAXPLAYERS + 1]; // Has the greeting appeared yet
 
+Handle    h_szPrintItemColour = null; // CVar for Item print message colour, in hex
+char      g_szPrintItemColour[7];
+
 
 /**
  * Known Bugs
  * TODO Add a way to go back to previous submenus, which can stack.
- * TODO Add a print-to-chat feature into the item flags
  * TODO Add time limit flag for inner-sections
  * TODO Add exit-disable for inner-sections
  * TODO Move admin check in menu creation to handler
@@ -140,6 +145,17 @@ public void OnPluginStart()
   HookConVarChange(h_szHelpCfg, UpdateCvars);
 
 
+  h_szPrintItemColour = CreateConVar("sm_helpmenu_msgcolour", "F4D442", "6-Digit Hex Colour for Help Menu Chat Messages\n(Default: F4D442)", FCVAR_NONE);
+  char hexBuff[7];
+  GetConVarString(h_szPrintItemColour, hexBuff, sizeof(hexBuff));
+  if(IsValid6DigitHex(hexBuff))
+    g_szPrintItemColour = hexBuff;
+  else
+    g_szPrintItemColour = CHAT_DEFAULTCOL;
+
+  HookConVarChange(h_szPrintItemColour, UpdateCvars);
+
+
   h_ckReturnVisit = RegClientCookie("satansfunpack_returnvisit", "Used to Mark Returning Players", CookieAccess_Public);
 
   #if defined _ALT_HELPCMD
@@ -169,6 +185,7 @@ public void OnPluginStart()
   g_fbMapItemFlags    = new StringMap();
   g_szMapItemCCom     = new StringMap();
   g_szMapItemRedirIdx = new StringMap();
+  g_szMapItemPrintMsg = new StringMap();
   LoadConfig();
 
   if(g_bLateLoad)
@@ -198,6 +215,15 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     Format(formatBuff, sizeof(formatBuff), "configs/%s", newValue);
     BuildPath(Path_SM, g_szHelpCfg, sizeof(g_szHelpCfg), formatBuff);
     LoadConfig();
+  }
+  else if(cvar == h_szPrintItemColour)
+  {
+    char buff[7];
+    GetConVarString(h_szPrintItemColour, buff, sizeof(buff));
+    if(IsValid6DigitHex(buff))
+      g_szPrintItemColour = buff;
+    else
+      g_szPrintItemColour = CHAT_DEFAULTCOL;
   }
   return;
 }
@@ -507,6 +533,15 @@ public int SubMenuHandler(Handle menu, MenuAction action, int param1, int param2
         if(result && IsClientInGame(param1))
           OpenSubmenu(param1, sectIdxBuff);
       }
+
+      if(HasFlag(flags, ITEM_PRINTMSG))
+      {
+        char msgBuff[MAX_HELP_STR];
+        result = g_szMapItemPrintMsg.GetString(info, msgBuff, sizeof(msgBuff));
+
+        if(result && IsClientInGame(param1))
+          PrintToChat(param1, "\x07%s%s", g_szPrintItemColour, msgBuff);
+      }
     }
   }
   return 0;
@@ -574,6 +609,7 @@ stock bool LoadConfig()
   g_fbMapItemFlags.Clear();
   g_szMapItemCCom.Clear();
   g_szMapItemRedirIdx.Clear();
+  g_szMapItemPrintMsg.Clear();
   g_szFirstGreetIdx = "";
   g_szWelcomeIdx    = "";
   g_szRulesIdx      = "";
@@ -770,7 +806,7 @@ stock int GetItemFlags(char[] itemIdx, char[] str)
 }
 
 /**
- * Reads a string, gets the flagbit, then handles side effects.
+ * Reads a single string, gets the flagbit, then handles side effects.
  */
 void ProcessItemStringEffect(
   char[]  itemIdx,
@@ -819,6 +855,15 @@ void ProcessItemStringEffect(
 
     AddFlag(flags, flagBuff);
   }
+  else if(flagBuff == ITEM_PRINTMSG)
+  {
+    // Get Print Message String
+    char buff[MAX_HELP_STR];
+    strcopy(buff, sizeof(buff), flagString[4]); // Trim "msg:"
+    g_szMapItemPrintMsg.SetString(itemIdx, buff, true);
+
+    AddFlag(flags, flagBuff);
+  }
   else if(flagBuff != ITEM_INVALID)
     AddFlag(flags, flagBuff);
 
@@ -838,6 +883,8 @@ stock int GetItemFlagFromStr(char[] str)
     return ITEM_CCOM;
   else if(StrContains(str, "open:", true) == 0)
     return ITEM_REDIRECT;
+  else if(StrContains(str, "msg:", true) == 0)
+    return ITEM_PRINTMSG;
   else if(StrEqual(str, "admin", true))
     return ITEM_ADMIN;
 

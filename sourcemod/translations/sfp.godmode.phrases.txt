@@ -7,11 +7,11 @@
 
   "SM_GOD_Usage"
   {
-    "en" "sm_god [Target] [1/0]"
+    "en" "sm_god <[Target] [1/0]>"
   }
   "SM_BUDDHA_Usage"
   {
-    "en" "sm_buddha [Target] [1/0]"
+    "en" "sm_buddha <[Target] [1/0]>"
   }
   "SM_MORAL_Usage"
   {
