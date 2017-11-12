@@ -244,18 +244,6 @@ public Action CMD_MirrorDamage(int client, int args)
 }
 
 
-/**
- * Supposedly, using SetEntityHealth can cause crashing
- */
-stock void TF2_SetHealth(int client, int health)
-{
-  SetEntProp(client, Prop_Send, "m_iHealth", health);
-  SetEntProp(client, Prop_Data, "m_iHealth", health);
-  return;
-}
-
-
-
 
 //=================================
 // Updater

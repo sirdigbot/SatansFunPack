@@ -64,6 +64,9 @@ A collection of useful commands for TF2 Servers.
 | **sm_outline**  | Set outline effect on a player        | `sm_outline [Target] <1/0>` |
 | **sm_telelock** | Lock teleporters from other players   | `sm_telelock [Target] <1/0>` |
 | **sm_opentele** | Allow enemies through your teleporter | `sm_opentele [Target] <1/0>` |
+| **sm_forceclass** | Force player to a certain class     | `sm_forceclass <Target> <Class> [Lock 1/0]` |
+| **sm_unlockclass** | Unlock players from `sm_forceclass` lock | `sm_unlockclass <Target>` |
+| **sm_hp** | Set a Player's Health | `sm_hp [Target] <Amount>` |
 
 <br/>
 
@@ -75,6 +78,12 @@ A collection of useful commands for TF2 Servers.
 | **sm_outline_target**   | Client can target others |
 | **sm_telelock_target**  | Client can target others |
 | **sm_opentele_target**  | Client can target others |
+| **sm_forceclass_canlock** | Can lock a player into a class with `sm_forceclass` |
+| **sm_sethealth_target** | Client can target others |
+
+**Important Note:** sm_forceclass lock will *very* likely cause a crash if used with a class-limit.  
+
+**Not as important Note:** Disabling sm_forceclass will also disable sm_unlockclass.  
 
 <br/>
 
@@ -112,6 +121,12 @@ Help Config Structure:
 | ------------ | ----------------------------------------------------- | ---------- |
 | **sm_help**  | Displays the help menu                                | `sm_help`  |
 | **sm_rules** | Display the "Rules" section of the help menu (if any) | `sm_rules` |
+
+<br/>
+
+| Overrides               | Description |
+| ----------------------- | --- |
+| **sm_helpmenu_admin**   | Client can see anything flagged as admin-only on the help menu |
 
 **Note:** Recompile with `_ALT_HELPCMD` uncommented to change `sm_help` to `sm_helpmenu`.  
 `sm_help` will clash with the default sourcemod plugin `adminhelp.smx`.  
@@ -325,6 +340,34 @@ Toy Box Config Structure:
 
 <br/>
 
+<a name="godmode"/>
+
+## God Mode (sfp_godmode.smx)
+
+| ConVar                    | Description                        | Default |
+| ------------------------- | ---------------------------------- | --- |
+| **sm_sfp_godmode_update** | Should sfp_godmode.smx Auto-Update | `1` |
+
+<br/>
+
+| Command        | Description                                              | Syntax |
+| -------------- | -------------------------------------------------------- | --- |
+| **sm_god**  | Grant a player immunity to damage | `sm_god <[Target] [1/0]>` |
+| **sm_buddha**  | Grant a player immunity to damage, but not damage forces | `sm_buddha <[Target] [1/0]>` |
+| **sm_mortal**  | Revoke Buddha or God Mode from a player | `sm_mortal [Target]` |
+
+<br/>
+
+| Overrides               | Description               |
+| ----------------------- | ------------------------- |
+| **sm_godmode_target**   | Client can target others  |
+| **sm_mortal_target**    | Client can target others  |
+
+**Note:** With both sm_buddha and sm_god, the targeting arguments are optional. However if used, both must be present.  
+This is to prevent chaotic flip-flopping of players that already had the mode on.  
+
+<br/>
+
 <a name="trails"/>
 
 ## Trails (sfp_trails.smx)
@@ -340,12 +383,6 @@ Toy Box Config Structure:
 <a name="duel"/>
 
 ## Duel (sfp_duel.smx)
-
-**- Not Implemented -**
-
-<a name="godmode"/>
-
-## God Mode (sfp_godmode.smx)
 
 **- Not Implemented -**
 

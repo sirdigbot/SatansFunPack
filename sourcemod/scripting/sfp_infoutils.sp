@@ -108,7 +108,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- ProfileCmd\n- GetProfile\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_infoutils_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- AmIMuted\n- CanPlayerHear\n- LocateIP\n- PlayerID\n- ProfileCmd\n- GetProfile\n- CheckRestart\n- JoinGroup", FCVAR_SPONLY|FCVAR_REPLICATED);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 

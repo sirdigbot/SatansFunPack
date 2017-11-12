@@ -209,7 +209,7 @@ public void OnPluginStart()
   HookConVarChange(h_szConfig, UpdateCvars);
 
 
-  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- TauntID\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY);
+  h_bDisabledCmds = CreateConVar("sm_toybox_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- ColourWeapon\n- ResizeWeapon\n- FOV\n- ScreamCmd\n- ScreamToggle\n- PitchCmd\n- PitchToggle\n- TauntMenu\n- TauntID\n- SPlay\n- ColourSelf\n- FriendlySentry\n- CSlap", FCVAR_SPONLY|FCVAR_REPLICATED);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 

@@ -4,4 +4,86 @@
   {
     "en" "Loaded Satan's Fun Pack - God Mode"
   }
+
+  "SM_GOD_Usage"
+  {
+    "en" "sm_god [Target] [1/0]"
+  }
+  "SM_BUDDHA_Usage"
+  {
+    "en" "sm_buddha [Target] [1/0]"
+  }
+  "SM_MORAL_Usage"
+  {
+    "en" "sm_mortal [Target]"
+  }
+
+  "SM_GOD_Enabled_Self"
+  {
+    "en" "Enabled God Mode."
+  }
+  "SM_GOD_Switched_Self"
+  {
+    "en" "Switched from Buddha Mode to God Mode."
+  }
+  "SM_GOD_Disabled_Self"
+  {
+    "en" "Disabled God Mode."
+  }
+  "SM_GOD_Enabled"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled God Mode for {1}."
+  }
+  "SM_GOD_Disabled"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled God Mode for {1}."
+  }
+  "SM_GOD_Spawn"
+  {
+    "en" "You have spawned with God Mode on."
+  }
+
+  "SM_BUDDHA_Enabled_Self"
+  {
+    "en" "Enabled Buddha Mode."
+  }
+  "SM_BUDDHA_Switched_Self"
+  {
+    "en" "Switched from God Mode to Buddha Mode."
+  }
+  "SM_BUDDHA_Disabled_Self"
+  {
+    "en" "Disabled Buddha Mode."
+  }
+  "SM_BUDDHA_Enabled"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Buddha Mode for {1}."
+  }
+  "SM_BUDDHA_Disabled"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Buddha Mode for {1}."
+  }
+  "SM_BUDDHA_Spawn"
+  {
+    "en" "You have spawned with Buddha Mode on."
+  }
+
+  "SM_MORTAL_Done_Self"
+  {
+    "en" "You have become mortal."
+  }
+  "SM_MORTAL_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Made {1} mortal."
+  }
+
+  "SM_GODMODE_Note"
+  {
+    "en" "Immortal"
+  }
 }

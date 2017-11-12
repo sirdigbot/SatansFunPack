@@ -90,4 +90,41 @@
   {
     "en" "Invalid Weapon Slot. Use All, 1/2/3 or Primary/Secondary/Melee."
   }
+
+  "SFP_Scout"
+  {
+    "en" "Scout"
+  }
+  "SFP_Soldier"
+  {
+    "en" "Soldier"
+  }
+  "SFP_Pyro"
+  {
+    "en" "Pyro"
+  }
+  "SFP_Demoman"
+  {
+    "en" "Demoman"
+  }
+  "SFP_Heavy"
+  {
+    "en" "Heavy"
+  }
+  "SFP_Engineer"
+  {
+    "en" "Engineer"
+  }
+  "SFP_Medic"
+  {
+    "en" "Medic"
+  }
+  "SFP_Sniper"
+  {
+    "en" "Sniper"
+  }
+  "SFP_Spy"
+  {
+    "en" "Spy"
+  }
 }

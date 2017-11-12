@@ -317,3 +317,19 @@ stock bool HasFlag(int val, int flag)
 {
   return view_as<bool>((val & flag != 0));
 }
+
+
+
+/**
+ * Set a player's health. For TF2 only.
+ * Supposedly, using SetEntityHealth can cause crashing
+ *
+ * @param client    Client index to set health on
+ * @param health    Amount to set
+ */
+stock void TF2_SetHealth(int client, int health)
+{
+  SetEntProp(client, Prop_Send, "m_iHealth", health);
+  SetEntProp(client, Prop_Data, "m_iHealth", health);
+  return;
+}

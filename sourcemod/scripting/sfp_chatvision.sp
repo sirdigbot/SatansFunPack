@@ -249,7 +249,7 @@ public Action CMD_IsChatAdmin(int client, int args)
   if(target == -1)
     return Plugin_Handled;
 
-  GetClientName(client, arg1, sizeof(arg1)); // To print back to client
+  GetClientName(target, arg1, sizeof(arg1)); // To print back to client
 
   if(g_bIsChatAdmin[target])
     TagReply(client, "%T", "SM_CHATADMIN_True", client, arg1);

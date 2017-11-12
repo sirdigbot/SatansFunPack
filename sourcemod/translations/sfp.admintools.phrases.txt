@@ -229,4 +229,51 @@
   {
     "en" "Disabled Open-Tele."
   }
+
+  "SM_FORCECLASS_Usage"
+  {
+    "en" "sm_forceclass <Target> <Class> [Lock 1/0]"
+  }
+  "SM_FORCECLASS_BadClass"
+  {
+    "en" "Invalid Class. Use 1 to 9 or 'Scout', 'Soldier', etc."
+  }
+  "SM_FORCECLASS_NoLock"
+  {
+    "en" "You do not have access to locking with sm_forceclass."
+  }
+  "SM_FORCECLASS_Done_NoLock"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Forced {1} to class {2}."
+  }
+  "SM_FORCECLASS_Done_Lock"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Forced and Locked {1} to class {2}."
+  }
+  "SM_UNLOCKCLASS_Usage"
+  {
+    "en" "sm_unlockclass <Target>"
+  }
+  "SM_UNLOCKCLASS_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Removed Force-Class Lock from {1}."
+  }
+
+  "SM_SETHEALTH_Usage"
+  {
+    "en" "sm_hp [Target] <Amount>"
+  }
+  "SM_SETHEALTH_Done_Self"
+  {
+    "#format" "{1:d}"
+    "en" "Set Health to {1}."
+  }
+  "SM_SETHEALTH_Done"
+  {
+    "#format" "{1:s},{2:d}"
+    "en" "Set Health of {1} to {2}."
+  }
 }
