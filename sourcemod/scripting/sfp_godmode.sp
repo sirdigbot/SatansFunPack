@@ -22,6 +22,11 @@
 #define ENTPROP_BUDDHA  1
 #define ENTPROP_GOD     0
 
+#define BUILD_SENTRY    0
+#define BUILD_DISPENSER 1
+#define BUILD_ENTRY     2
+#define BUILD_EXIT      3
+
 enum GodMode
 {
   State_Mortal = 0,
@@ -39,6 +44,8 @@ GodMode g_GodModeState[MAXPLAYERS + 1] = {State_Mortal, ...};
 bool    g_bNoteActive[MAXPLAYERS + 1];
 Handle  h_NoteCooldownTimer[MAXPLAYERS + 1] = {null, ...};
 
+bool    g_bBuildingGod[MAXPLAYERS + 1];
+int     g_iBuildingIndex[MAXPLAYERS + 1][4]; // Order: Sentry, Dispenser, Entry, Exit
 
 
 /**
@@ -89,9 +96,25 @@ public void OnPluginStart()
   RegAdminCmd("sm_buddha",  CMD_Buddha, ADMFLAG_BAN, "Toggle Buddha Mode");
   RegAdminCmd("sm_mortal",  CMD_Mortal, ADMFLAG_BAN, "Disable Buddha or God Mode");
 
+  RegAdminCmd("sm_bgod",          CMD_BuildingGod, ADMFLAG_BAN, "Toggle Building God Mode");
+  RegAdminCmd("sm_buildinggod",   CMD_BuildingGod, ADMFLAG_BAN, "Toggle Building God Mode");
+
   HookEvent("player_spawn",         OnPlayerSpawn,  EventHookMode_Post);
   HookEvent("teamplay_round_win",   OnRoundEnd,     EventHookMode_PostNoCopy);
   HookEvent("teamplay_round_start", OnRoundStart,   EventHookMode_PostNoCopy);
+
+  HookEvent("player_builtobject",   Event_BuiltObject);
+  HookEvent("player_sapped_object", Event_Sapped);
+  AddNormalSoundHook(view_as<NormalSHook>(Hook_NormalSound)); // Yes, seriously.
+
+
+  // 'Zero'-out building indexes. -1 = invalid.
+  // Always run, and before lateload in case some buildings dont exist.
+  for(int i = 0; i <= MaxClients; ++i)
+  {
+    for(int j = 0; j < 4; ++j)
+      g_iBuildingIndex[i][j] = -1;
+  }
 
   if(g_bLateLoad)
   {
@@ -99,6 +122,37 @@ public void OnPluginStart()
     {
       if(IsClientInGame(i) && !IsFakeClient(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
         SDKHook(i, SDKHook_TraceAttack, TraceAttack);
+    }
+
+    // Find any Active Buildings and Store Index
+    int idx = MaxClients+1;
+    while((idx = FindEntityByClassname(idx, "obj_sentrygun")) != INVALID_ENT_REFERENCE)
+    {
+      int owner = GetEntPropEnt(idx, Prop_Send, "m_hBuilder");
+      if(IsValidEdict(idx) && owner > 0 && owner <= MaxClients)
+        g_iBuildingIndex[owner][BUILD_SENTRY] = idx;
+    }
+
+    idx = MaxClients+1;
+    while((idx = FindEntityByClassname(idx, "obj_dispenser")) != INVALID_ENT_REFERENCE)
+    {
+      int owner = GetEntPropEnt(idx, Prop_Send, "m_hBuilder");
+      if(IsValidEdict(idx) && owner > 0 && owner <= MaxClients)
+        g_iBuildingIndex[owner][BUILD_DISPENSER] = idx;
+    }
+
+    idx = MaxClients+1;
+    while((idx = FindEntityByClassname(idx, "obj_teleporter")) != INVALID_ENT_REFERENCE)
+    {
+      int owner = GetEntPropEnt(idx, Prop_Send, "m_hBuilder");
+      if(IsValidEdict(idx) && owner > 0 && owner <= MaxClients)
+      {
+        TFObjectMode mode = TF2_GetObjectMode(idx);
+        if(mode == TFObjectMode_Entrance)
+          g_iBuildingIndex[owner][BUILD_ENTRY] = idx;
+        else if(mode == TFObjectMode_Exit)
+          g_iBuildingIndex[owner][BUILD_EXIT] = idx;
+      }
     }
   }
 
@@ -108,6 +162,7 @@ public void OnPluginStart()
    * Overrides
    * sm_godmode_target - Shared with buddha
    * sm_mortal_target
+   * sm_buildinggod_target
    */
 
   PrintToServer("%T", "SFP_GodModeLoaded", LANG_SERVER);
@@ -139,6 +194,9 @@ public void OnClientDisconnect(int client)
   SafeClearTimer(h_NoteCooldownTimer[client]);
   g_GodModeState[client]  = State_Mortal;
   g_bNoteActive[client]   = false;
+  g_bBuildingGod[client]  = false;
+  for(int i = 0; i < 4; ++i)
+    g_iBuildingIndex[client][i] = -1;
   return;
 }
 
@@ -226,6 +284,109 @@ public Action OnRoundEnd(Handle event, char[] name, bool dontBroadcast)
   {
     SafeClearTimer(h_NoteCooldownTimer[i]);
     g_bNoteActive[i] = false;
+  }
+  return Plugin_Continue;
+}
+
+
+public Action Event_BuiltObject(Handle event, const char[] name, bool dontBroadcast)
+{
+  int owner = GetClientOfUserId(GetEventInt(event, "userid"));
+  int buildingIdx = GetEventInt(event, "index");
+
+  if(owner > 0 && owner <= MaxClients && IsValidEdict(buildingIdx))
+  {
+    switch(TF2_GetObjectType(buildingIdx))
+    {
+      case TFObject_Sentry:
+      {
+        g_iBuildingIndex[owner][BUILD_SENTRY]     = buildingIdx;
+        if(g_bBuildingGod[owner])
+          SetEntProp(buildingIdx, Prop_Data, "m_takedamage", 0);
+      }
+
+      case TFObject_Dispenser:
+      {
+        g_iBuildingIndex[owner][BUILD_DISPENSER]  = buildingIdx;
+        if(g_bBuildingGod[owner])
+          SetEntProp(buildingIdx, Prop_Data, "m_takedamage", 0);
+      }
+
+      case TFObject_Teleporter:
+      {
+        TFObjectMode mode = TF2_GetObjectMode(buildingIdx);
+        if(mode == TFObjectMode_Entrance)
+          g_iBuildingIndex[owner][BUILD_ENTRY]    = buildingIdx;
+        else if(mode == TFObjectMode_Exit)
+          g_iBuildingIndex[owner][BUILD_EXIT]     = buildingIdx;
+
+        if(g_bBuildingGod[owner])
+          SetEntProp(buildingIdx, Prop_Data, "m_takedamage", 0);
+      }
+    }
+  }
+  return Plugin_Continue;
+}
+
+// Triggers when building is Removed, Destroyed or Detonated
+public void OnEntityDestroyed(int entity)
+{
+  if(IsValidEdict(entity))  // Limit string usage
+  {
+    if(GetEntSendPropOffs(entity, "m_hBuilder") > 0)
+    {
+      int owner = GetEntPropEnt(entity, Prop_Send, "m_hBuilder");
+      if(owner > 0 && owner <= MaxClients)
+      {
+        char classname[15];     // "obj_teleporter" + \0
+        GetEdictClassname(entity, classname, sizeof(classname));
+
+        if(StrEqual(classname, "obj_sentrygun", true))
+          g_iBuildingIndex[owner][BUILD_SENTRY]     = -1;
+        else if(StrEqual(classname, "obj_dispenser", true))
+          g_iBuildingIndex[owner][BUILD_DISPENSER]  = -1;
+        else if(StrEqual(classname, "obj_teleporter", true))
+        {
+          TFObjectMode mode = TF2_GetObjectMode(entity);
+          if(mode == TFObjectMode_Entrance)
+            g_iBuildingIndex[owner][BUILD_ENTRY]    = -1;
+          else if(mode == TFObjectMode_Exit)
+            g_iBuildingIndex[owner][BUILD_EXIT]     = -1;
+        }
+      }
+    }
+  }
+  return;
+}
+
+public void Event_Sapped(Handle event, const char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(GetEventInt(event, "ownerid"));
+  int sapper = GetEventInt(event, "sapperid");
+
+  if(client > 0 && client <= MaxClients && g_bBuildingGod[client])
+    AcceptEntityInput(sapper, "Kill");
+  return;
+}
+
+// Credit to Tylerst
+public Action Hook_NormalSound(
+  int clients[MAXPLAYERS],
+  int &numClients,
+  char sample[PLATFORM_MAX_PATH],
+  int &entity,
+  int &channel,
+  float &volume,
+  int &level,
+  int &pitch,
+  int &flags)
+{
+  if(StrEqual(sample, "weapons/sapper_timer.wav", false)
+  || (StrContains(sample, "spy_tape_", false) != -1))
+  {
+    // Stop sound if sapper entity is killed (wont apply to regular wrench destroys)
+    if(!IsValidEntity(GetEntPropEnt(entity, Prop_Send, "m_hBuiltOnEntity")))
+      return Plugin_Stop;
   }
   return Plugin_Continue;
 }
@@ -513,11 +674,139 @@ public Action CMD_Mortal(int client, int args)
 }
 
 
+
+/**
+ * Godmode for buildings
+ *
+ * sm_bgod <[Target] [1/0]>
+ * Both args are required at once to prevent chaotic toggling
+ */
+public Action CMD_BuildingGod(int client, int args)
+{
+  if(args == 0)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReply(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    g_bBuildingGod[client] = !g_bBuildingGod[client];
+    if(g_bBuildingGod[client])
+    {
+      SetGodActiveBuildings(client, true); // Toggle godmode on buildings
+      TagReply(client, "%T", "SM_BGOD_Enabled_Self", client);
+    }
+    else
+    {
+      SetGodActiveBuildings(client, false);
+      TagReply(client, "%T", "SM_BGOD_Disabled_Self", client);
+    }
+    return Plugin_Handled;
+  }
+
+  // To prevent annoying flip-flop situations, both args are mandatory at once.
+  if(args == 1)
+  {
+    TagReplyUsage(client, "%T", "SM_BGOD_Usage", client);
+    return Plugin_Handled;
+  }
+
+  if(!CheckCommandAccess(client, "sm_buildinggod_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH], arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    0,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+
+  // Get State
+  int state = GetStringBool(arg2, false, true, true, true);
+  if(state == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_BGOD_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i], true)) // Allow spectators and dead
+    {
+      g_bBuildingGod[targ_list[i]] = view_as<bool>(state);
+      SetGodActiveBuildings(targ_list[i], view_as<bool>(state));
+    }
+  }
+
+  if(state)
+    TagActivity(client, "%T", "SM_BGOD_Enabled", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_BGOD_Disabled", LANG_SERVER, targ_name);
+  return Plugin_Handled;
+}
+
+
+
 stock void SafeClearTimer(Handle &timer)
 {
   if(timer != null)
     KillTimer(timer);
   timer = null;
+  return;
+}
+
+stock void SetGodActiveBuildings(int client, bool state)
+{
+  if(g_iBuildingIndex[client][BUILD_SENTRY] != -1)
+  {
+    SetEntProp(g_iBuildingIndex[client][BUILD_SENTRY],
+      Prop_Data,
+      "m_takedamage",
+      (state) ? 0 : 2);
+  }
+  if(g_iBuildingIndex[client][BUILD_DISPENSER] != -1)
+  {
+    SetEntProp(g_iBuildingIndex[client][BUILD_DISPENSER],
+      Prop_Data,
+      "m_takedamage",
+      (state) ? 0 : 2);
+  }
+  if(g_iBuildingIndex[client][BUILD_ENTRY] != -1)
+  {
+    SetEntProp(g_iBuildingIndex[client][BUILD_ENTRY],
+      Prop_Data,
+      "m_takedamage",
+      (state) ? 0 : 2);
+  }
+  if(g_iBuildingIndex[client][BUILD_EXIT] != -1)
+  {
+    SetEntProp(g_iBuildingIndex[client][BUILD_EXIT],
+      Prop_Data,
+      "m_takedamage",
+      (state) ? 0 : 2);
+  }
   return;
 }
 

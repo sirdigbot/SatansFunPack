@@ -30,24 +30,24 @@
   }
   "SM_CANHEAR_SelfTarget"
   {
-    "en" "Target 1 and Target 2 are the same."
+    "en" "Both targets are the same player."
   }
-  "SM_CANHEAR_True_Self"
+  "SM_CANHEAR_Unmuted_Self"
   {
     "#format" "{1:s}"
     "en" "{1} can hear you."
   }
-  "SM_CANHEAR_True"
+  "SM_CANHEAR_Unmuted"
   {
     "#format" "{1:s},{2:s}"
     "en" "{1} can hear {2}."
   }
-  "SM_CANHEAR_False_Self"
+  "SM_CANHEAR_Muted_Self"
   {
     "#format" "{1:s}"
     "en" "{1} has muted you."
   }
-  "SM_CANHEAR_False"
+  "SM_CANHEAR_Muted"
   {
     "#format" "{1:s},{2:s}"
     "en" "{1} has muted {2}."

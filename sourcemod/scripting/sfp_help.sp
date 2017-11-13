@@ -98,6 +98,7 @@ char      g_szPrintItemColour[7];
  * TODO Add exit-disable for inner-sections
  * TODO Move admin check in menu creation to handler
  * TODO Add spacer flag to items
+ * TODO Add sound play flag (PrepareAndEmitSound or ClientCommand?)
  */
 public Plugin myinfo =
 {

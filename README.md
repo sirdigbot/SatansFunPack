@@ -363,15 +363,18 @@ Toy Box Config Structure:
 | **sm_god**  | Grant a player immunity to damage | `sm_god <[Target] [1/0]>` |
 | **sm_buddha**  | Grant a player immunity to damage, but not damage forces | `sm_buddha <[Target] [1/0]>` |
 | **sm_mortal**  | Revoke Buddha or God Mode from a player | `sm_mortal [Target]` |
+| **sm_buildinggod** | Grant a player's buildings immunity from damage | `sm_buildinggod <[Target] [1/0]>` |
+| **sm_bgod** | *Alias for sm_buildinggod* | -- |
 
 <br/>
 
-| Overrides               | Description               |
-| ----------------------- | ------------------------- |
-| **sm_godmode_target**   | Client can target others  |
-| **sm_mortal_target**    | Client can target others  |
+| Overrides                     | Description               |
+| ----------------------------- | ------------------------- |
+| **sm_godmode_target**         | Client can target others  |
+| **sm_mortal_target**          | Client can target others  |
+| **sm_buildinggod_target**     | Client can target others  |
 
-**Note:** With both sm_buddha and sm_god, the targeting arguments are optional. However if used, both must be present.  
+**Note:** With sm_buddha, sm_buildinggod and sm_god, the targeting arguments are optional. However if used, both must be present.  
 This is to prevent chaotic flip-flopping of players that already had the mode on.  
 
 <br/>

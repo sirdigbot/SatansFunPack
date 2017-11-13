@@ -13,9 +13,9 @@
   {
     "en" "sm_buddha <[Target] [1/0]>"
   }
-  "SM_MORAL_Usage"
+  "SM_BGOD_Usage"
   {
-    "en" "sm_mortal [Target]"
+    "en" "sm_buildinggod <[Target] [1/0]>"
   }
 
   "SM_GOD_Enabled_Self"
@@ -80,6 +80,25 @@
   {
     "#format" "{1:s}"
     "en" "Made {1} mortal."
+  }
+
+  "SM_BGOD_Enabled_Self"
+  {
+    "en" "Enabled Building God Mode."
+  }
+  "SM_BGOD_Disabled_Self"
+  {
+    "en" "Disabled Building God Mode."
+  }
+  "SM_BGOD_Enabled"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled Building God Mode for {1}."
+  }
+  "SM_BGOD_Disabled"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled Building God Mode for {1}."
   }
 
   "SM_GODMODE_Note"

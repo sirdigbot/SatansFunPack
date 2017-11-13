@@ -363,16 +363,16 @@ public Action CMD_HearCheck(int client, int args)
   if(IsClientMuted(targ1, targ2))
   {
     if(targ2 == client)
-      TagReply(client, "%T", "SM_CANHEAR_True_Self", client, targ1Name);
+      TagReply(client, "%T", "SM_CANHEAR_Muted_Self", client, targ1Name);
     else
-      TagReply(client, "%T", "SM_CANHEAR_True", client, targ1Name, targ2Name);
+      TagReply(client, "%T", "SM_CANHEAR_Muted", client, targ1Name, targ2Name);
   }
   else
   {
     if(targ2 == client)
-      TagReply(client, "%T", "SM_CANHEAR_False_Self", client, targ1Name);
+      TagReply(client, "%T", "SM_CANHEAR_Unmuted_Self", client, targ1Name);
     else
-      TagReply(client, "%T", "SM_CANHEAR_False", client, targ1Name, targ2Name);
+      TagReply(client, "%T", "SM_CANHEAR_Unmuted", client, targ1Name, targ2Name);
   }
   return Plugin_Handled;
 }
