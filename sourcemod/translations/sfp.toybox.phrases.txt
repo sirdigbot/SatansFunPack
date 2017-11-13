@@ -164,6 +164,10 @@
   {
     "en" "The Taunt Menu command cannot play specific taunts. Did you mean /tauntid?"
   }
+  "SM_TAUNTMENU_BadClass"
+  {
+    "en" "You are the wrong class to use this taunt."
+  }
   "SM_TAUNTBYID_Usage"
   {
     "en" "sm_tauntid [Target] <Taunt Item Index>"

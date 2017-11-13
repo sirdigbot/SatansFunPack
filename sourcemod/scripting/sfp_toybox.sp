@@ -1522,61 +1522,8 @@ public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int para
       GetMenuItem(menu, param2, info, sizeof(info), style);
       int index = StringToInt(info); // This should never fail since it's set by loop.
 
-      if(g_TauntClass[index] == TFAllClass)
-        return style;
-
-      switch(TF2_GetPlayerClass(param1))
-      {
-        case TFClass_Scout:
-        {
-          if(g_TauntClass[index] != TFScout)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Sniper:
-        {
-          if(g_TauntClass[index] != TFSniper)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Soldier:
-        {
-          if(g_TauntClass[index] != TFSoldier)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_DemoMan:
-        {
-          if(g_TauntClass[index] != TFDemoman)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Medic:
-        {
-          if(g_TauntClass[index] != TFMedic)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Heavy:
-        {
-          if(g_TauntClass[index] != TFHeavy)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Pyro:
-        {
-          if(g_TauntClass[index] != TFPyro)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Spy:
-        {
-          if(g_TauntClass[index] != TFSpy)
-            return ITEMDRAW_IGNORE;
-        }
-        case TFClass_Engineer:
-        {
-          if(g_TauntClass[index] != TFEngie)
-            return ITEMDRAW_IGNORE;
-        }
-        default:
-        {
-          return ITEMDRAW_IGNORE; // Should never run.
-        }
-      }
+      if(!ClientClassMatchesTaunt(param1, index))
+        return ITEMDRAW_IGNORE;
     }
 
     case MenuAction_Select:
@@ -1586,12 +1533,18 @@ public int TauntMenuHandler(Handle menu, MenuAction action, int param1, int para
       GetMenuItem(menu, param2, info, sizeof(info));
       int index = StringToInt(info); // Shouldn't ever fail
 
-      switch(ExecuteTaunt(param1, g_iTauntId[index]))
+      // In case they change class after opening menu
+      if(ClientClassMatchesTaunt(param1, index))
       {
-        case -1: TagPrintChat(param1, "%T", "SM_TAUNTMENU_EntFail", param1);
-        case -2: TagPrintChat(param1, "%T", "SM_TAUNTMENU_AddressFail", param1);
-        // Don't say anything if it succeeds.
+        switch(ExecuteTaunt(param1, g_iTauntId[index]))
+        {
+          case -1: TagPrintChat(param1, "%T", "SM_TAUNTMENU_EntFail", param1);
+          case -2: TagPrintChat(param1, "%T", "SM_TAUNTMENU_AddressFail", param1);
+          // Don't say anything if it succeeds.
+        }
       }
+      else
+        TagReply(param1, "%T", "SM_TAUNTMENU_BadClass", param1);
     }
   }
   return 0;
@@ -2211,6 +2164,27 @@ stock bool LoadConfig()
 
   delete hKeys;
   return true;
+}
+
+
+stock bool ClientClassMatchesTaunt(int client, int tauntIndex)
+{
+  if(g_TauntClass[tauntIndex] == TFAllClass)
+    return true;
+
+  switch(TF2_GetPlayerClass(client))
+  {
+    case TFClass_Scout:     return (g_TauntClass[tauntIndex] != TFScout)    ? false : true;
+    case TFClass_Sniper:    return (g_TauntClass[tauntIndex] != TFSniper)   ? false : true;
+    case TFClass_Soldier:   return (g_TauntClass[tauntIndex] != TFSoldier)  ? false : true;
+    case TFClass_DemoMan:   return (g_TauntClass[tauntIndex] != TFDemoman)  ? false : true;
+    case TFClass_Medic:     return (g_TauntClass[tauntIndex] != TFMedic)    ? false : true;
+    case TFClass_Heavy:     return (g_TauntClass[tauntIndex] != TFHeavy)    ? false : true;
+    case TFClass_Pyro:      return (g_TauntClass[tauntIndex] != TFPyro)     ? false : true;
+    case TFClass_Spy:       return (g_TauntClass[tauntIndex] != TFSpy)      ? false : true;
+    case TFClass_Engineer:  return (g_TauntClass[tauntIndex] != TFEngie)    ? false : true;
+  }
+  return false;
 }
 
 
