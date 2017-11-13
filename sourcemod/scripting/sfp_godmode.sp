@@ -52,7 +52,6 @@ int     g_iBuildingIndex[MAXPLAYERS + 1][4]; // Order: Sentry, Dispenser, Entry,
  * Known Bugs
  * - Max Health still drains with the eviction notice
  * - Immortal Note can only be displayed to one person at a time.
- * - TODO Immortal Note does not display if you damage a pyro.
  */
 public Plugin myinfo =
 {
@@ -235,7 +234,7 @@ public Action TraceAttack(
   if(!g_bAllowNoteCreation || client < 1 || attacker < 1)
     return Plugin_Continue;
 
-  if(TF2_GetPlayerClass(client) == TF2_GetPlayerClass(attacker))
+  if(TF2_GetClientTeam(client) == TF2_GetClientTeam(attacker))
     return Plugin_Continue;
 
   if(GetEntProp(client, Prop_Data, "m_takedamage") != ENTPROP_MORTAL)
