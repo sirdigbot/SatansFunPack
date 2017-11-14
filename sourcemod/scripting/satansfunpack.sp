@@ -21,7 +21,7 @@
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
-char    g_szList[219] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 219 exactly, incl \0.
+char    g_szList[236] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 236 exactly, incl \0.
 
 
 public Plugin myinfo =
@@ -83,7 +83,7 @@ public void OnPluginStart()
   count += CheckFileAndCache("Targeting", "plugins/sfp_targeting.smx");
   count += CheckFileAndCache("ToyBox", "plugins/sfp_toybox.smx");
   count += CheckFileAndCache("Trails", "plugins/sfp_trails.smx");
-
+  count += CheckFileAndCache("NameColour", "plugins/sfp_namecolour.smx");
   PrintToServer("%T", "SFP_Loaded", LANG_SERVER, count);
 }
 

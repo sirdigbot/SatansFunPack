@@ -360,3 +360,15 @@ stock void TF2_SetHealth(int client, int health)
   SetEntProp(client, Prop_Data, "m_iHealth", health);
   return;
 }
+
+
+/**
+ * Kill and clear a timer
+ */
+stock void SafeClearTimer(Handle &timer)
+{
+  if(timer != null)
+    KillTimer(timer);
+  timer = null;
+  return;
+}

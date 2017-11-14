@@ -768,14 +768,6 @@ public Action CMD_BuildingGod(int client, int args)
 
 
 
-stock void SafeClearTimer(Handle &timer)
-{
-  if(timer != null)
-    KillTimer(timer);
-  timer = null;
-  return;
-}
-
 stock void SetGodActiveBuildings(int client, bool state)
 {
   if(g_iBuildingIndex[client][BUILD_SENTRY] != -1)

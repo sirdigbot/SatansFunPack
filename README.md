@@ -15,6 +15,7 @@ A collection of useful commands for TF2 Servers.
 [Dueling (sfp_duel.smx)](#duel)  
 [God Mode (sfp_godmode.smx)](#godmode)  
 [Group Manager (sfp_groupmanager.smx)](#groupmanager)  
+[Name Colour Manager (sfp_namecolour.smx)](#namecolour)  
 
 <br/>
 
@@ -376,6 +377,52 @@ Toy Box Config Structure:
 
 **Note:** With sm_buddha, sm_buildinggod and sm_god, the targeting arguments are optional. However if used, both must be present.  
 This is to prevent chaotic flip-flopping of players that already had the mode on.  
+
+<br/>
+
+<a name="namecolour"/>
+
+## Name Colour Manager (sfp_namecolour.smx)
+
+| ConVar                       | Description                            | Default |
+| ---------------------------- | -------------------------------------- | --- |
+| **sm_sfp_namecolour_update** | Should sfp_namecolour.smx Auto-Update  | `1` |
+| **sm_satansfunpack_colourconfig** | Colour List Config File | `satansfunpack_colours.cfg` |
+
+Colour Config Structure:
+```
+"SatansFunColours"
+{
+  "1"
+  {
+    "name"  "Alice Blue"
+    "hex"   "F0F8FF"
+  }
+  ...
+}
+```
+
+| Command        | Description                                              | Syntax |
+| -------------- | -------------------------------------------------------- | --- |
+| **sm_namecolour**     | Set Tag, Tag Colour, and Name Colour | `sm_namecolour` |
+| **sm_namecolor**      | *Alias for sm_namecolour*     | -- |
+| **sm_tagcolour**      | *Alias for sm_namecolour*     | -- |
+| **sm_tagcolor**       | *Alias for sm_namecolour*     | -- |
+| **sm_setnamecolour**  | Set Name Colour Directly      | `sm_setnamecolour <6-Digit Hex Colour>` |
+| **sm_setnamecolor**   | *Alias for sm_setnamecolour*  | -- |
+| **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
+| **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
+| **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
+| **sm_namecolour_reloadcfg** | Reload Colour Config    | `sm_namecolour_reloadcfg` |
+
+<br/>
+
+| Overrides                 | Description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| **sm_setnamecolour**      | Access will automatically enable `Name Colour` Menu Item  |
+| **sm_settagcolour**       | Access will automatically enable `Tag Colour` Menu Item   |
+| **sm_settag**             | Access will automatically enable `Set Tag Text` Menu Item |
+| **sm_resetcolour_access** | Client can use `sm_namecolour` Menu                       |
 
 <br/>
 

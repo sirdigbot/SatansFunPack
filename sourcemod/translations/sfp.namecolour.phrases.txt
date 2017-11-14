@@ -1,0 +1,80 @@
+"Phrases"
+{
+  "SFP_NameColourLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Name Colour"
+  }
+
+  "SM_NAMECOLOUR_ConfigLoad"
+  {
+    "#format" "{1:d},{2:d}"
+    "en" "Name Colour Menu Loaded {1} Colours, Skipped {2}."
+  }
+  "SM_NAMECOLOUR_DelayLoad"
+  {
+    "en" "Your Name and Tag Colour settings have finally loaded."
+  }
+  "SM_NAMECOLOUR_CookieFail"
+  {
+    "#format" "{1:s}"
+    "en" "Failed to load cookies for user {1}."
+  }
+
+  "SM_MAINMENU_Title"
+  {
+    "en" "Name and Tag Colour Menu"
+  }
+  "SM_COLOURMENU_Title"
+  {
+    "en" "Select Colour"
+  }
+  "SM_COLOURMENU_Reset"
+  {
+    "en" "Reset To Default"
+  }
+  "SM_NAMECOLOUR_TagRequest"
+  {
+    "en" "Please type your tag into chat (Max 16 Characters)"
+  }
+  "SM_NAMECOLOUR_ResetAll"
+  {
+    "en" "Reset Name and Tag settings to default."
+  }
+
+
+  "SM_SETNAMECOLOUR_Usage"
+  {
+    "en" "sm_setnamecolour <6-Digit Hex Colour>"
+  }
+  "SM_SETNAMECOLOUR_Done"
+  {
+    "en" "Set Name Colour."
+  }
+  "SM_SETNAMECOLOUR_Reset"
+  {
+    "en" "Reset Name Colour"
+  }
+
+  "SM_SETTAGCOLOUR_Usage"
+  {
+    "en" "sm_settagcolour <6-Digit Hex Colour>"
+  }
+  "SM_SETTAGCOLOUR_Done"
+  {
+    "en" "Set Tag Colour."
+  }
+  "SM_SETTAGCOLOUR_Reset"
+  {
+    "en" "Reset Tag Colour"
+  }
+
+  "SM_SETTAG_Usage"
+  {
+    "en" "sm_settag <Text>"
+  }
+  "SM_SETTAG_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Set Tag to '{1}'."
+  }
+}

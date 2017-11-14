@@ -17,13 +17,16 @@
 !/sourcemod/scripting/sfp_help.sp
 !/sourcemod/scripting/sfp_infoutils.sp
 !/sourcemod/scripting/sfp_mirror.sp
+!/sourcemod/scripting/sfp_namecolour.sp
 !/sourcemod/scripting/sfp_quickconditions.sp
 !/sourcemod/scripting/sfp_targeting.sp
 !/sourcemod/scripting/sfp_toybox.sp
 !/sourcemod/scripting/sfp_trails.sp
 
-# Script Output
-/scripts/TrailList.txt
+# Ignore Script Input/Outpt
+/scripts/**
+!/scripts/ParseHelpCmdList.py
+!/scripts/ParseTrails.py
 
 # Trail Materials
 /materials
