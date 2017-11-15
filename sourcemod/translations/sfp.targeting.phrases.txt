@@ -4,4 +4,13 @@
   {
     "en" "Loaded Satan's Fun Pack - Targeting"
   }
+
+  "SM_UNICODEFILTER_Applied"
+  {
+    "en" "Your name has been changed to be targetable for admins."
+  }
+  "SM_TARGETING_NoLateLoad"
+  {
+    "en" "Cannot load sfp_targeting.smx after map start. Please change maps to load the plugin."
+  }
 }

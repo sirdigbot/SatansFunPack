@@ -17,16 +17,30 @@
 #define PLUGIN_URL  "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/targeting_update.txt"
 
-// Comment out to stop the excessive random filters from compiling.
+// Comment out to stop the excessive random1-31 filters from compiling.
 #define _TARGET_RANDOM_VARIATION
 
+#define FILTERLOOP_MINIMUM  5.0
 
 //=================================
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
+bool    g_bLateLoad;
 Handle  h_iRandomBias = null;
 int     g_iRandomBias;
+
+// Unicode Filter
+Handle  h_NameCheckTimer = null;
+Handle  h_bFilterEnabled = null;
+bool    g_bFilterEnabled;
+Handle  h_bFilterNotify = null;
+bool    g_bFilterNotify;
+Handle  h_flFilterInterval = null;
+float   g_flFilterInterval;
+Handle  h_iFilterMode = null;
+int     g_iFilterMode;
+bool    g_bHasUserIDPrefix[MAXPLAYERS + 1];
 
 
 /**
@@ -34,12 +48,14 @@ int     g_iRandomBias;
  * - Random can sometimes target no-one, this returns a failed target error.
  * - RandomX did not work because MAXPLAYERS was larger than the MaxClients array.
  *   - This has probably been fixed.
+ * - Late loading causes g_bHasUserIDPrefix to reset despite prefixes being applied.
+ *   this doubles them up on the next filter loop.
  */
 public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Targeting",
   author =      "SirDigby",
-  description = "Useful Target Selectors for All Commands",
+  description = "Useful Targeting Stuff for All Commands",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -51,6 +67,7 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
 {
+  g_bLateLoad = late;
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
@@ -73,6 +90,24 @@ public void OnPluginStart()
   h_iRandomBias = CreateConVar("sm_random_target_bias", "127", "Chance bias of random target selection from 1 to 254\n(Default: 127)", FCVAR_NONE, true, 1.0, true, 254.0);
   g_iRandomBias = GetConVarInt(h_iRandomBias);
   HookConVarChange(h_iRandomBias, UpdateCvars);
+
+
+  h_bFilterEnabled = CreateConVar("sm_unicodefilter_enabled", "1", "Is Unicode Name Filtering enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bFilterEnabled = GetConVarBool(h_bFilterEnabled);
+  HookConVarChange(h_bFilterEnabled, UpdateCvars);
+
+  h_bFilterNotify = CreateConVar("sm_unicodefilter_notify", "1", "Notify when name is filtered\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bFilterNotify = GetConVarBool(h_bFilterNotify);
+  HookConVarChange(h_bFilterNotify, UpdateCvars);
+
+  h_flFilterInterval = CreateConVar("sm_unicodefilter_interval", "20.0", "Interval (in seconds) to check all names\n(Default: 20.0)", FCVAR_NONE, true, FILTERLOOP_MINIMUM);
+  g_flFilterInterval = GetConVarFloat(h_flFilterInterval);
+  HookConVarChange(h_flFilterInterval, UpdateCvars);
+
+  h_iFilterMode = CreateConVar("sm_unicodefilter_mode", "4", "Minimum Amount of ASCII charcters required in a row to not be filtered. 0 = Filter if any Unicode is in name.\n(Default: 4)", FCVAR_NONE, true, 0.0, true, 20.0);
+  g_iFilterMode = GetConVarInt(h_iFilterMode);
+  HookConVarChange(h_iFilterMode, UpdateCvars);
+
 
   AddMultiTargetFilter("@admins", Filter_Admins, "All Admins", false);
   AddMultiTargetFilter("@!admins", Filter_NotAdmins, "All Non-Admins", false);
@@ -148,13 +183,25 @@ public void OnPluginStart()
   AddMultiTargetFilter("@spies",       Filter_Spy, "All Spies", false);
   AddMultiTargetFilter("@!spies",      Filter_NotSpy, "All Non-Spies", false);
 
+
+  HookEvent("player_changename", Event_ChangeName);
+
+  if(g_bLateLoad)
+  {
+    SetFailState("%T", "SM_TARGETING_NoLateLoad", LANG_SERVER);
+    return;
+  }
+
+
   /**
    * Overrides
    * sm_targetgroup_admin
    * sm_targetgroup_mod
+   * sm_unicodefilter_ignore
    */
 
   PrintToServer("%T", "SFP_TargetingLoaded", LANG_SERVER);
+  return;
 }
 
 
@@ -168,7 +215,140 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
   }
   else if(cvar == h_iRandomBias)
     g_iRandomBias = StringToInt(newValue);
+  else if(cvar == h_bFilterEnabled)
+    g_bFilterEnabled = GetConVarBool(h_bFilterEnabled);
+  else if(cvar == h_bFilterNotify)
+    g_bFilterNotify = GetConVarBool(h_bFilterNotify);
+  else if(cvar == h_flFilterInterval)
+  {
+    g_flFilterInterval = StringToFloat(newValue);
+    if(FloatCompare(g_flFilterInterval, FILTERLOOP_MINIMUM) > -1) // Precaution
+    {
+      SafeClearTimer(h_NameCheckTimer);
+      h_NameCheckTimer = CreateTimer(
+        g_flFilterInterval,
+        Timer_NameFilter,
+        _,
+        TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    }
+  }
+  else if(cvar == h_iFilterMode)
+    g_iFilterMode = StringToInt(newValue);
   return;
+}
+
+
+public void OnMapStart()
+{
+  h_NameCheckTimer = CreateTimer(
+    g_flFilterInterval,
+    Timer_NameFilter,
+    _,
+    TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+  return;
+}
+
+public void OnMapEnd()
+{
+  SafeClearTimer(h_NameCheckTimer);
+  return;
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+  g_bHasUserIDPrefix[client] = false;
+  return;
+}
+
+// Check every player's name
+public Action Timer_NameFilter(Handle hTimer)
+{
+  if(!g_bFilterEnabled)
+    return Plugin_Continue;
+
+  for(int i = 1; i <= MaxClients; ++i)
+  {
+    if(g_bHasUserIDPrefix[i])
+      continue;
+
+    // Filter clients that wont work with CheckCommandAccess and GetClientName
+    if(!IsClientInGame(i) || IsFakeClient(i) || IsClientSourceTV(i) || IsClientReplay(i))
+      continue;
+
+    if(CheckCommandAccess(i, "sm_unicodefilter_ignore", ADMFLAG_BAN, true))
+      continue;
+
+    char nameBuff[MAX_NAME_LENGTH];
+    GetClientName(i, nameBuff, sizeof(nameBuff));
+    FilterUnicodeName(i, nameBuff);
+  }
+  return Plugin_Continue;
+}
+
+// Allow name to be re-scanned if it changes
+public Action Event_ChangeName(Event event, const char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(event.GetInt("userid"));
+  if(client > 0 && client <= MaxClients)
+    g_bHasUserIDPrefix[client] = false;
+}
+
+/**
+ * Add Client UserID prefix to a name if it has less than
+ * a certain amount of ASCII characters in a row.
+ * If g_iFilterMode is 0, Add prefix if name contains ANY non-valid-ASCII characters
+ */
+stock void FilterUnicodeName(int client, char[] name)
+{
+  int validCharsInRow = 0;
+  bool unicodeFound = false;
+
+  for(int i = 0; i < strlen(name); ++i)
+  {
+    if(IsCharTypeable(name[i]))
+      ++validCharsInRow;
+    else
+    {
+      if(g_iFilterMode == 0)
+      {
+        unicodeFound = true;
+        break;
+      }
+      else
+        validCharsInRow = 0;
+    }
+
+    // If name meets minimum, cancel filter.
+    if(g_iFilterMode > 0 && validCharsInRow == g_iFilterMode)
+      return;
+  }
+
+  // Mode 0 and no unicode, cancel filter
+  if(g_iFilterMode == 0 && !unicodeFound)
+    return;
+
+  // Name did not reach minimum, or contained unicode with mode = 0. Filter Name.
+  char nameOut[MAX_NAME_LENGTH];
+  int userId = GetClientUserId(client);
+  Format(nameOut, sizeof(nameOut), "(#%i) %s", userId, name);
+
+  SetClientName(client, nameOut);
+  g_bHasUserIDPrefix[client] = true; // Ignore client in Timer_NameFilter
+
+  if(g_bFilterNotify)
+    TagPrintChat(client, "%T", "SM_UNICODEFILTER_Applied", client);
+  return;
+}
+
+/**
+ * If character is Typeable-ASCII, not Percentage-Sign-Inivisble-Name Exploit
+ * and not SourceMod Admin Broadcast character
+ */
+stock bool IsCharTypeable(char ch)
+{
+  if(ch >= 0x20 && ch <= 0x7F && ch != '%' && ch != '@')
+    return true;
+  return false;
 }
 
 

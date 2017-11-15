@@ -368,7 +368,7 @@ stock void TF2_SetHealth(int client, int health)
 stock void SafeClearTimer(Handle &timer)
 {
   if(timer != null)
-    KillTimer(timer);
+    CloseHandle(timer);
   timer = null;
   return;
 }

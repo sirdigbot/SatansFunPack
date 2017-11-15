@@ -197,6 +197,10 @@ Help Config Structure:
 | ------------------------- | ------------------------------------------------------- | --- |
 | **sm_sfp_targeting_update** | Should sfp_targeting.smx Auto-Update                  | `1` |
 | **sm_random_target_bias** | @random Selection Threshold (255 < x > bias = selected) | `127` |
+| **sm_unicodefilter_enabled** | Is Unicode Name Filtering Enabled | `1` |
+| **sm_unicodefilter_notify** | Should the Unicode Name Filter notify the client about name changes | `1` |
+| **sm_unicodefilter_interval** | Interval (in seconds) to filter every client's name | `20.0` |
+| **sm_unicodefilter_mode** | Minimum Amount of ASCII characters required in a row for a name to not be filtered. 0 = Filter if any Unicode is in name. | `4` |
 
 <br/>
 
@@ -223,6 +227,10 @@ Help Config Structure:
 | ------------------------- | --- |
 | **sm_targetgroup_admin** | Client is considered admin to `@admins` and `@staff` target filters |
 | **sm_targetgroup_mod**    | Client is considered mod to `@mods` and `@staff` target filters |
+| **sm_unicodefilter_ignore** | Client's name will never be filtered by the Unicode Filter |
+
+**Note:** This plugin will cancel any late-loads because of a bug that treats previously-filtered names as unfiltered. With a `sm_unicodefilter_mode` setting higher than the size of the player's User ID length, the name will be prefixed twice.  
+You can just change the map to reload it which works fine.
 
 <br/>
 

@@ -50,6 +50,8 @@ Handle    h_ConnectTimers[MAXPLAYERS + 1] = {null, ...};
  * TODO Random colour option
  * TODO Admin-only tag border styles
  * TODO Add translation to main menu items
+ * TODO CVar controlled tag size limit
+ * TODO Add 'test colours' option to main menu
  */
 public Plugin myinfo =
 {
