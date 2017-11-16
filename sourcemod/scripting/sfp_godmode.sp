@@ -231,8 +231,12 @@ public Action TraceAttack(
   int hitbox,
   int hitgroup)
 {
-  if(!g_bAllowNoteCreation || client < 1 || attacker < 1)
+  if(!g_bAllowNoteCreation
+    || client < 1 || client > MaxClients
+    || attacker < 1 || attacker > MaxClients)
+  {
     return Plugin_Continue;
+  }
 
   if(TF2_GetClientTeam(client) == TF2_GetClientTeam(attacker))
     return Plugin_Continue;
