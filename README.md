@@ -1,5 +1,5 @@
 # Satan's Fun Pack
-A collection of useful commands for TF2 Servers.  
+A collection of useful commands and features for TF2 Servers.  
 ### Table of Contents
 [Core File (satansfunpack.smx)](#corefile)  
 [Admin Tools (sfp_admintools.smx)](#admintools)  
@@ -12,10 +12,9 @@ A collection of useful commands for TF2 Servers.
 [Trails (sfp_trails.smx)](#trails)  
 [Ban Database (sfp_bans.smx)](#bans)  
 [Admin Chat Vision (sfp_chatvision.smx)](#chatvision)  
-[Dueling (sfp_duel.smx)](#duel)  
 [God Mode (sfp_godmode.smx)](#godmode)  
-[Group Manager (sfp_groupmanager.smx)](#groupmanager)  
 [Name Colour Manager (sfp_namecolour.smx)](#namecolour)  
+[Miscellaneous Tweaks (sfp_misctweaks.smx)](#misctweaks)  
 
 <br/>
 
@@ -430,30 +429,18 @@ Colour Config Structure:
 | **sm_setnamecolour**      | Access will automatically enable `Name Colour` Menu Item  |
 | **sm_settagcolour**       | Access will automatically enable `Tag Colour` Menu Item   |
 | **sm_settag**             | Access will automatically enable `Set Tag Text` Menu Item |
-| **sm_resetcolour_access** | Client can use `sm_namecolour` Menu                       |
+| **sm_resetcolour_access** | Client can use Reset All on `sm_namecolour` Menu          |
 
 <br/>
 
-<a name="trails"/>
+<a name="misctweaks"/>
 
-## Trails (sfp_trails.smx)
+## Miscellaneous Tweaks (sfp_misctweaks.smx)
 
 **- Not Implemented -**
 
 <a name="bans"/>
 
 ## Bans (sfp_bans.smx)
-
-**- Not Implemented -**
-
-<a name="duel"/>
-
-## Duel (sfp_duel.smx)
-
-**- Not Implemented -**
-
-<a name="groupmanager"/>
-
-## Group Manager (sfp_groupmanager)
 
 **- Not Implemented -**

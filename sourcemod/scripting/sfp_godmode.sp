@@ -190,7 +190,7 @@ public void OnClientPutInServer(int client)
 public void OnClientDisconnect(int client)
 {
   SDKUnhook(client, SDKHook_TraceAttack, TraceAttack);
-  SafeClearTimer(h_NoteCooldownTimer[client]);
+  SafeCloseHandle(h_NoteCooldownTimer[client]);
   g_GodModeState[client]  = State_Mortal;
   g_bNoteActive[client]   = false;
   g_bBuildingGod[client]  = false;
@@ -285,7 +285,7 @@ public Action OnRoundEnd(Handle event, char[] name, bool dontBroadcast)
   g_bAllowNoteCreation = false;
   for(int i = 1; i <= MaxClients; ++i)
   {
-    SafeClearTimer(h_NoteCooldownTimer[i]);
+    SafeCloseHandle(h_NoteCooldownTimer[i]);
     g_bNoteActive[i] = false;
   }
   return Plugin_Continue;

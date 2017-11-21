@@ -224,7 +224,7 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_flFilterInterval = StringToFloat(newValue);
     if(FloatCompare(g_flFilterInterval, FILTERLOOP_MINIMUM) > -1) // Precaution
     {
-      SafeClearTimer(h_NameCheckTimer);
+      SafeCloseHandle(h_NameCheckTimer);
       h_NameCheckTimer = CreateTimer(
         g_flFilterInterval,
         Timer_NameFilter,
@@ -250,7 +250,7 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
-  SafeClearTimer(h_NameCheckTimer);
+  SafeCloseHandle(h_NameCheckTimer);
   return;
 }
 

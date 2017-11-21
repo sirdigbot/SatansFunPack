@@ -205,14 +205,14 @@ public Action Timer_DelayLoad(Handle timer, any client)
 public void OnClientDisconnect(int client)
 {
   g_bWaitingForCustomTag[client] = false;
-  SafeClearTimer(h_ConnectTimers[client]);
+  SafeCloseHandle(h_ConnectTimers[client]);
   return;
 }
 
 public Action OnRoundEnd(Handle event, char[] name, bool dontBroadcast)
 {
   for(int i = 1; i <= MaxClients; ++i)
-    SafeClearTimer(h_ConnectTimers[i]);
+    SafeCloseHandle(h_ConnectTimers[i]);
   return Plugin_Continue;
 }
 

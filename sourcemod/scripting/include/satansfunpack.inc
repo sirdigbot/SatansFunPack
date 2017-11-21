@@ -363,12 +363,12 @@ stock void TF2_SetHealth(int client, int health)
 
 
 /**
- * Kill and clear a timer
+ * Close a handle safely
  */
-stock void SafeClearTimer(Handle &timer)
+stock void SafeCloseHandle(Handle &handle)
 {
-  if(timer != null)
-    CloseHandle(timer);
-  timer = null;
+  if(handle != null)
+    CloseHandle(handle);
+  handle = null;
   return;
 }
