@@ -9,7 +9,6 @@ A collection of useful commands and features for TF2 Servers.
 [Targeting Filters (sfp_targeting.smx)](#targeting)  
 [Toybox (sfp_toybox.smx](#toybox)  
 [Mirror Damage (sfp_mirror.smx)](#mirror)  
-[Trails (sfp_trails.smx)](#trails)  
 [Ban Database (sfp_bans.smx)](#bans)  
 [Admin Chat Vision (sfp_chatvision.smx)](#chatvision)  
 [God Mode (sfp_godmode.smx)](#godmode)  
@@ -442,7 +441,9 @@ Colour Config Structure:
 | **sm_sfp_misctweaks_update** | Should sfp_misctweaks.smx Auto-Update  | `1` |
 | **sm_sfp_misctweaks_shield** | Allow The Medigun Shield               | `1` |
 | **sm_sfp_misctweaks_shield_stock** | Only Allow Stock Mediguns + Variants to create Shields | `1` |
-| **sm_sfp_misctweaks_shield_dmg** | Damage Amount Shields should deal to Players | `1.0` |
+| **sm_sfp_misctweaks_shield_dmg** | Damage amount Shields should deal to Players | `1.0` |
+| **sm_sfp_misctweaks_tauntcancel** | Allow taunt cancelling            | `1` |
+| **sm_sfp_misctweaks_tauntcancel_cooldown** | Cooldown for `sm_stoptaunt` | `5` |
 
 <br/>
 
@@ -450,16 +451,19 @@ Colour Config Structure:
 | ------------------- | ----------------------------------- | ---                     |
 | **sm_forceshield**  | Force Your Medigun Shield to Spawn  | `sm_forceshield`        |
 | **sm_filluber**     | Set a player's ubercharge to 100%   | `sm_filluber [Target]`  |
+| **sm_stoptaunt**    | Cancels any active taunt            | `sm_stoptaunt [Target]` |
 
 <br/>
 
 | Overrides                 | Description               |
 | ------------------------- | ------------------------- |
 | **sm_filluber_target**    | Client can target others  |
+| **sm_stoptaunt_target**   | Client can target others  |
 
 **Notes:**  
-Shields are created by using +attack3 with a full ubercharge.  
-MvM Uses a Shield Damage value of 1.0  
+Shields are created by using **+attack3** with a full ubercharge.  
+MvM also uses a Shield Damage value of `1.0`.  
+`sm_stoptaunt` needs a cooldown because some taunts can crash the server if spammed.  
 `sm_sfp_misctweaks_shield` values can be  
  - -1 = Disabled
  - 0  = Only `sm_forceshield` is allowed

@@ -20,7 +20,9 @@
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
 #define MAX_BUTTONS   26 // Total # of IN_ definitions in entity_prop_stocks.inc
+
 #define _INCLUDE_MEDIGUNSHIELD
+#define _INCLUDE_TAUNTCANCEL
 
 //=================================
 // Global
@@ -39,12 +41,22 @@ Handle  h_flShieldDmg = null;
 float   g_flShieldDmg;
 #endif
 
+#if defined _INCLUDE_TAUNTCANCEL
+Handle  h_SDKStopTaunt = null;
+Handle  h_bTauntCancelEnabled = null;
+bool    g_bTauntCancelEnabled;
+Handle  h_iTauntCancelCooldown = null;
+int     g_iTauntCancelCooldown;
+int     g_iLastTauntCancel[MAXPLAYERS + 1]; // Cooldown. Some taunts can spam effects.
+#endif
 
 /**
  * Known Bugs
  * TODO sm_forceshield cant actually forcibly spawn the shield.
  *  You need to either switch weapons and back, or press +attack3.
  * TODO add targeting to sm_forceshield
+ * TODO sm_stoptaunt was meant to detect a keypress while taunting,
+ *  but taunting blocks OnPlayerRunCmd button events.
  */
 public Plugin myinfo =
 {
@@ -83,6 +95,33 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
+#if defined _INCLUDE_TAUNTCANCEL
+  Handle gameData = LoadGameConfigFile("tf2.satansfunpack_misctweaks");
+  if(gameData == INVALID_HANDLE)
+  {
+    SetFailState("%T", "SFP_NoGameData", LANG_SERVER, "tf2.satansfunpack_misctweaks");
+    return;
+  }
+  StartPrepSDKCall(SDKCall_Player);
+  PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::StopTaunt");
+  h_SDKStopTaunt = EndPrepSDKCall();
+  if(h_SDKStopTaunt == INVALID_HANDLE)
+  {
+    CloseHandle(gameData);
+    SetFailState("%T", "SM_MISCTWEAKS_SDKToolsInitFail", LANG_SERVER, "CTFPlayer::StopTaunt");
+    return;
+  }
+  CloseHandle(gameData);
+
+  h_bTauntCancelEnabled = CreateConVar("sm_sfp_misctweaks_tauntcancel", "1", "Allow Taunt Cancelling\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bTauntCancelEnabled = GetConVarBool(h_bTauntCancelEnabled);
+  HookConVarChange(h_bTauntCancelEnabled, UpdateCvars);
+
+  h_iTauntCancelCooldown = CreateConVar("sm_sfp_misctweaks_tauntcancel_cooldown", "5", "Cooldown for sm_stoptaunt\n(Default: 5)", FCVAR_NONE, true, 0.0);
+  g_iTauntCancelCooldown = GetConVarInt(h_iTauntCancelCooldown);
+  HookConVarChange(h_iTauntCancelCooldown, UpdateCvars);
+#endif
+
 #if defined _INCLUDE_MEDIGUNSHIELD
   h_iShieldEnabled = CreateConVar("sm_sfp_misctweaks_shield", "1", "Allow The Medigun Shield\n-1 = Disabled\n0 = sm_forceshield Only\n1 = Enabled\n(Default: 1)", FCVAR_NONE, true, -1.0, true, 1.0);
   g_iShieldEnabled = GetConVarInt(h_iShieldEnabled);
@@ -97,10 +136,15 @@ public void OnPluginStart()
   HookConVarChange(h_flShieldDmg, UpdateCvars);
 #endif
 
+
 #if defined _INCLUDE_MEDIGUNSHIELD
   RegAdminCmd("sm_forceshield", CMD_ForceShield,  ADMFLAG_BAN,  "Force Medic's Medigun Shield");
   RegAdminCmd("sm_filluber",    CMD_FillUber,     ADMFLAG_SLAY, "Give a Player Max Ubercharge");
 #endif
+#if defined _INCLUDE_TAUNTCANCEL
+  RegConsoleCmd("sm_stoptaunt", CMD_TauntCancel, "Cancel Any Active Taunt");
+#endif
+
 
 #if defined _INCLUDE_MEDIGUNSHIELD
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Post);
@@ -126,6 +170,7 @@ public void OnPluginStart()
   /**
    * Overrides
    * sm_filluber_target - Can target with sm_filluber
+   * sm_stoptaunt_target - "  "  sm_stoptaunt
    */
 
   PrintToServer("%T", "SFP_MiscTweaksLoaded", LANG_SERVER);
@@ -148,6 +193,12 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_flShieldDmg = GetConVarFloat(h_flShieldDmg);
   else if(cvar == h_bShieldStockOnly)
     g_bShieldStockOnly = GetConVarBool(h_bShieldStockOnly);
+#endif
+#if defined _INCLUDE_TAUNTCANCEL
+  else if(cvar == h_bTauntCancelEnabled)
+    g_bTauntCancelEnabled = GetConVarBool(h_bTauntCancelEnabled);
+  else if(cvar == h_iTauntCancelCooldown)
+    g_iTauntCancelCooldown = StringToInt(newValue);
 #endif
   return;
 }
@@ -225,9 +276,9 @@ public Action OnPlayerRunCmd(
  */
 stock void OnButtonPress(int client, int button)
 {
-#if defined _INCLUDE_MEDIGUNSHIELD
   if(button == IN_ATTACK3)
   {
+#if defined _INCLUDE_MEDIGUNSHIELD
     if(g_iShieldEnabled != 1)
       return;
 
@@ -259,8 +310,8 @@ stock void OnButtonPress(int client, int button)
       return;
 
     StartMedigunShield(client, weaponEnt);
-  }
 #endif
+  }
   return;
 }
 
@@ -269,6 +320,7 @@ stock void OnButtonRelease(int client, int button)
 {
   return;
 }
+
 
 
 /**
@@ -423,6 +475,94 @@ public Action CMD_FillUber(int client, int args)
   }
 
   TagActivity(client, "%T", "SM_FILLUBER_Done", LANG_SERVER, targ_name);
+  return Plugin_Handled;
+}
+#endif
+
+
+
+/**
+ * Stop any active taunt.
+ *
+ * sm_stoptaunt [Target]
+ * or stoptaunt [Target]
+ */
+#if defined _INCLUDE_TAUNTCANCEL
+public Action CMD_TauntCancel(int client, int args)
+{
+  if(!g_bTauntCancelEnabled)
+  {
+    TagReply(client, "%T", "SM_TAUNTCANCEL_Disabled", client);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+  {
+    // Self Target
+    if(!IsClientPlaying(client))
+    {
+      TagReply(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    int now = GetTime();
+    int remaining = (g_iTauntCancelCooldown - now) + g_iLastTauntCancel[client];
+    if(remaining > 0)
+    {
+      TagReply(client, "%T", "SM_TAUNTCANCEL_Cooldown", client, remaining);
+      return Plugin_Handled;
+    }
+
+    // Apply
+    if(TF2_IsPlayerInCondition(client, TFCond_Taunting))
+    {
+      SDKCall(h_SDKStopTaunt, client);
+      g_iLastTauntCancel[client] = now;
+      TagReply(client, "%T", "SM_TAUNTCANCEL_Done_Self", client);
+    }
+    // Don't say anything if taunt wasnt stopped.
+    // This makes the command friendlier to bind.
+    return Plugin_Handled;
+  }
+
+  // Non-self target
+  if(!CheckCommandAccess(client, "sm_stoptaunt_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i]))
+    {
+      if(TF2_IsPlayerInCondition(targ_list[i], TFCond_Taunting))
+        SDKCall(h_SDKStopTaunt, targ_list[i]);
+    }
+  }
+
+  TagActivity(client, "%T", "SM_TAUNTCANCEL_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 #endif

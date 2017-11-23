@@ -36,4 +36,23 @@
     "#format" "{1:s}"
     "en" "Set ÜberCharge for {1} to 100%."
   }
+
+  "SM_TAUNTCANCEL_Disabled"
+  {
+    "en" "sm_stoptaunt is Disabled Server-wide."
+  }
+  "SM_TAUNTCANCEL_Done_Self"
+  {
+    "en" "Stopped Taunting."
+  }
+  "SM_TAUNTCANCEL_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Stopped {1} Taunting."
+  }
+  "SM_TAUNTCANCEL_Cooldown"
+  {
+    "#format" "{1:d}"
+    "en" "You must wait {1}s before using sm_stoptaunt."
+  }
 }

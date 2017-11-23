@@ -97,7 +97,7 @@ int     g_iPitch[MAXPLAYERS + 1] = {PITCH_DEFAULT, ...}; // Value is a percentag
 #endif
 
 #if defined _INCLUDE_TAUNTS
-Handle  h_PlayTauntScene = null;
+Handle  h_SDKPlayTauntScene = null;
 char    g_szTauntName[MAX_TAUNTS][32];
 int     g_iTauntId[MAX_TAUNTS];
 enum TFClasses // Need an addittional All-Class option so dont use TFClassType
@@ -183,8 +183,8 @@ public void OnPluginStart()
   PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::PlayTauntSceneFromItem");
   PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
   PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
-  h_PlayTauntScene = EndPrepSDKCall();
-  if (h_PlayTauntScene == INVALID_HANDLE)
+  h_SDKPlayTauntScene = EndPrepSDKCall();
+  if(h_SDKPlayTauntScene == INVALID_HANDLE)
   {
     CloseHandle(gameData);
     SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
@@ -1575,7 +1575,7 @@ stock int ExecuteTaunt(int client, int tauntIndex)
   if(pEconItemView == Address_Null)
     return -2;
 
-  SDKCall(h_PlayTauntScene, client, pEconItemView);
+  SDKCall(h_SDKPlayTauntScene, client, pEconItemView);
   AcceptEntityInput(ent, "Kill");
   return 0;
 }

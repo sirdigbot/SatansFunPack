@@ -15,6 +15,7 @@
   {
     "Plugin" "Path_SM/plugins/sfp_misctweaks.smx"
     "Plugin" "Path_SM/translations/sfp.misctweaks.phrases.txt"
+    "Plugin" "Path_SM/gamedata/tf2.satansfunpack_misctweaks.txt"
 
     "Source" "Path_SM/scripting/sfp_misctweaks.sp"
   }
