@@ -89,6 +89,8 @@ public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
   LoadTranslations("sfp.misctweaks.phrases");
+  LoadTranslations("common.phrases");
+  LoadTranslations("core.phrases.txt");
 
 
   h_bUpdate = CreateConVar("sm_sfp_misctweaks_update", "1", "Update Satan's Fun Pack - Miscellaneous Tweaks Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
