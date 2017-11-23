@@ -21,7 +21,7 @@
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
-char    g_szList[236] = "MODULE - INSTALLED(Y/N)\n--------\n"; // 236 exactly, incl \0.
+char    g_szList[236] = "MODULE - INSTALLED(Y/N)\n--------\n";
 
 
 public Plugin myinfo =
@@ -73,17 +73,15 @@ public void OnPluginStart()
   count += CheckFileAndCache("AdminTools", "plugins/sfp_admintools.smx");
   count += CheckFileAndCache("Bans", "plugins/sfp_bans.smx");
   count += CheckFileAndCache("ChatVision", "plugins/sfp_chatvision.smx");
-  count += CheckFileAndCache("Duel", "plugins/sfp_duel.smx");
   count += CheckFileAndCache("GodMode", "plugins/sfp_godmode.smx");
-  count += CheckFileAndCache("GroupManager", "plugins/sfp_groupmanager.smx");
   count += CheckFileAndCache("HelpMenu", "plugins/sfp_help.smx");
   count += CheckFileAndCache("InfoUtils", "plugins/sfp_infoutils.smx");
   count += CheckFileAndCache("Mirror", "plugins/sfp_mirror.smx");
+  count += CheckFileAndCache("MiscTweaks", "plugins/sfp_misctweaks.smx");
+  count += CheckFileAndCache("NameColour", "plugins/sfp_namecolour.smx");
   count += CheckFileAndCache("QuickConditions", "plugins/sfp_quickconditions.smx");
   count += CheckFileAndCache("Targeting", "plugins/sfp_targeting.smx");
   count += CheckFileAndCache("ToyBox", "plugins/sfp_toybox.smx");
-  count += CheckFileAndCache("Trails", "plugins/sfp_trails.smx");
-  count += CheckFileAndCache("NameColour", "plugins/sfp_namecolour.smx");
   PrintToServer("%T", "SFP_Loaded", LANG_SERVER, count);
 }
 
