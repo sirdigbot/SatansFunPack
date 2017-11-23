@@ -174,7 +174,7 @@ public void OnPluginStart()
   // Thank you to FlaminSarge for the sdktools code.
   #if defined _INCLUDE_TAUNTS
   Handle gameData = LoadGameConfigFile("tf2.satansfunpack_toybox");
-  if (gameData == INVALID_HANDLE)
+  if(gameData == INVALID_HANDLE)
   {
     SetFailState("%T", "SFP_NoGameData", LANG_SERVER, "tf2.satansfunpack_toybox");
     return;
@@ -186,8 +186,8 @@ public void OnPluginStart()
   h_PlayTauntScene = EndPrepSDKCall();
   if (h_PlayTauntScene == INVALID_HANDLE)
   {
-    SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
     CloseHandle(gameData);
+    SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
     return;
   }
   CloseHandle(gameData);

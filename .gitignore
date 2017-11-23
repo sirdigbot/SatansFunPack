@@ -11,22 +11,16 @@
 !/sourcemod/scripting/sfp_admintools.sp
 !/sourcemod/scripting/sfp_bans.sp
 !/sourcemod/scripting/sfp_chatvision.sp
-!/sourcemod/scripting/sfp_duel.sp
 !/sourcemod/scripting/sfp_godmode.sp
-!/sourcemod/scripting/sfp_groupmanager.sp
 !/sourcemod/scripting/sfp_help.sp
 !/sourcemod/scripting/sfp_infoutils.sp
 !/sourcemod/scripting/sfp_mirror.sp
+!/sourcemod/scripting/sfp_misctweaks.sp
 !/sourcemod/scripting/sfp_namecolour.sp
 !/sourcemod/scripting/sfp_quickconditions.sp
 !/sourcemod/scripting/sfp_targeting.sp
 !/sourcemod/scripting/sfp_toybox.sp
-!/sourcemod/scripting/sfp_trails.sp
 
 # Ignore Script Input/Outpt
 /scripts/**
 !/scripts/ParseHelpCmdList.py
-!/scripts/ParseTrails.py
-
-# Trail Materials
-/materials

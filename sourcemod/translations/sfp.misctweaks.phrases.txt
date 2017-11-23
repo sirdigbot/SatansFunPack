@@ -1,0 +1,39 @@
+"Phrases"
+{
+  "SFP_MiscTweaksLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Miscellaneous Tweaks"
+  }
+
+  "SM_MISCTWEAKS_SDKToolsInitFail"
+  {
+    "#format" "{1:s}"
+    "en" "Could not initialize call to {1}"
+  }
+  "SM_MISCTWEAKS_MedicOnly"
+  {
+    "en" "You must be a Medic to use this command."
+  }
+  "SM_MISCTWEAKS_MedigunOnly"
+  {
+    "en" "You must be wielding a Medigun to use this command."
+  }
+  "SM_FORCESHIELD_Disabled"
+  {
+    "en" "Medic Shields are disabled Server-wide."
+  }
+  "SM_FORCESHIELD_Deployed"
+  {
+    "en" "Medigun Shield has been deployed."
+  }
+
+  "SM_FILLUBER_Done_Self"
+  {
+    "en" "Set ÜberCharge to 100%."
+  }
+  "SM_FILLUBER_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Set ÜberCharge for {1} to 100%."
+  }
+}

@@ -1,0 +1,21 @@
+"Updater"
+{
+  "Information"
+  {
+    "Version"
+    {
+      "Latest" "1.0.0"
+      "Previous" "0.0.0"
+    }
+
+    "Notes" "Initial Release"
+  }
+
+  "Files"
+  {
+    "Plugin" "Path_SM/plugins/sfp_misctweaks.smx"
+    "Plugin" "Path_SM/translations/sfp.misctweaks.phrases.txt"
+
+    "Source" "Path_SM/scripting/sfp_misctweaks.sp"
+  }
+}
