@@ -19,10 +19,16 @@
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
-#define MAX_BUTTONS   26 // Total # of IN_ definitions in entity_prop_stocks.inc
+#define MAX_BUTTONS         26 // Total # of IN_ definitions in entity_prop_stocks.inc
+#define TEMP_PARTICLE_TIME  5.0
+#define KNIFE_YER_ID        225
+
+#define HEADSHOT_LEVEL      SNDLEVEL_SCREAMING
+#define BACKSTAB_LEVEL      SNDLEVEL_DISHWASHER
 
 #define _INCLUDE_MEDIGUNSHIELD
 #define _INCLUDE_TAUNTCANCEL
+#define _INCLUDE_KILLEFFECT
 
 //=================================
 // Global
@@ -50,6 +56,23 @@ int     g_iTauntCancelCooldown;
 int     g_iLastTauntCancel[MAXPLAYERS + 1]; // Cooldown. Some taunts can spam effects.
 #endif
 
+#if defined _INCLUDE_KILLEFFECT
+enum KillEffects
+{
+  Effect_Headshot = 0,
+  Effect_Backstab,
+  Effect_Max
+};
+Handle  h_szConfig = null;
+char    g_szConfig[PLATFORM_MAX_PATH];
+char    g_szKillEffectSound[Effect_Max][PLATFORM_MAX_PATH];
+char    g_szKillEffectParticle[Effect_Max][50];           // Longest is 47 chars I think
+Handle  h_iKillEffectSoundMode = null;
+int     g_iKillEffectSoundMode;
+Handle  h_bKillEffectParticleMode = null;
+int     g_bKillEffectParticleMode;
+#endif
+
 /**
  * Known Bugs
  * TODO sm_forceshield cant actually forcibly spawn the shield.
@@ -57,6 +80,14 @@ int     g_iLastTauntCancel[MAXPLAYERS + 1]; // Cooldown. Some taunts can spam ef
  * TODO add targeting to sm_forceshield
  * TODO sm_stoptaunt was meant to detect a keypress while taunting,
  *  but taunting blocks OnPlayerRunCmd button events.
+ * Bonk Drink causes a lot of 'miss' texts which might cause lag/a crash if too many fire.
+ * TODO More options in the kill effect config:
+ *  - Flag to play sound to attacker/victim/all
+ *  - Volume Control
+ *  - Pitch Control
+ *  - Effect Scaling
+ *  - Multiple sounds and particles
+ *  - TODO SoundLevel control
  */
 public Plugin myinfo =
 {
@@ -138,6 +169,27 @@ public void OnPluginStart()
   HookConVarChange(h_flShieldDmg, UpdateCvars);
 #endif
 
+#if defined _INCLUDE_KILLEFFECT
+  h_iKillEffectSoundMode = CreateConVar("sm_sfp_misctweaks_killeffect_sound", "2", "Kill Effect Sound Mode\n0 - No Sound\n1 - Enabled (Sound to Killer)\n2 - Enabled (Sound to All)\n(Default: 2)", FCVAR_NONE, true, 0.0, true, 2.0);
+  g_iKillEffectSoundMode = GetConVarInt(h_iKillEffectSoundMode);
+  HookConVarChange(h_iKillEffectSoundMode, UpdateCvars);
+
+  h_bKillEffectParticleMode = CreateConVar("sm_sfp_misctweaks_killeffect_particle", "1", "Kill Effect Particle Mode\n0 - Disabled\n1 - Enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bKillEffectParticleMode = GetConVarBool(h_bKillEffectParticleMode);
+  HookConVarChange(h_bKillEffectParticleMode, UpdateCvars);
+
+  h_szConfig = CreateConVar("sm_satansfunpack_tweakconfig", "satansfunpack_tweaks.cfg", "Config File used for Satan's Fun Pack Misc. Tweaks (Relative to Sourcemod/Configs)\n(Default: satansfunpack_tweaks.cfg)", FCVAR_SPONLY);
+
+  char cvarBuffer[PLATFORM_MAX_PATH], pathBuffer[CONFIG_SIZE];
+  GetConVarString(h_szConfig, cvarBuffer, sizeof(cvarBuffer));
+  Format(pathBuffer, sizeof(pathBuffer), "configs/%s", cvarBuffer);
+  BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+  HookConVarChange(h_szConfig, UpdateCvars);
+
+  LoadConfig();
+  // Call PrecacheKillSounds() in OnMapStart(). Happens after OnPluginStart()
+#endif
+
 
 #if defined _INCLUDE_MEDIGUNSHIELD
   RegAdminCmd("sm_forceshield", CMD_ForceShield,  ADMFLAG_BAN,  "Force Medic's Medigun Shield");
@@ -146,12 +198,17 @@ public void OnPluginStart()
 #if defined _INCLUDE_TAUNTCANCEL
   RegConsoleCmd("sm_stoptaunt", CMD_TauntCancel, "Cancel Any Active Taunt");
 #endif
+#if defined _INCLUDE_KILLEFFECT
+RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Miscellaneous Tweaks");
+#endif
 
 
 #if defined _INCLUDE_MEDIGUNSHIELD
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Post);
 #endif
-
+#if defined _INCLUDE_KILLEFFECT
+  HookEvent("player_death", OnPlayerDeath, EventHookMode_Pre);
+#endif
 
   /*** Handle Lateloads ***/
   if(g_bLateLoad)
@@ -179,6 +236,13 @@ public void OnPluginStart()
   return;
 }
 
+#if defined _INCLUDE_KILLEFFECT
+public void OnMapStart() // Also called on lateload
+{
+  PrecacheKillSounds();
+  return;
+}
+#endif
 
 
 public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValue)
@@ -202,8 +266,53 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
   else if(cvar == h_iTauntCancelCooldown)
     g_iTauntCancelCooldown = StringToInt(newValue);
 #endif
+#if defined _INCLUDE_KILLEFFECT
+  else if(cvar == h_szConfig)
+  {
+    char pathBuffer[CONFIG_SIZE];
+    Format(pathBuffer, sizeof(pathBuffer), "configs/%s", newValue);
+    BuildPath(Path_SM, g_szConfig, sizeof(g_szConfig), pathBuffer);
+    LoadConfig();
+    PrecacheKillSounds();
+  }
+  else if(cvar == h_bKillEffectParticleMode)
+    g_bKillEffectParticleMode = GetConVarBool(h_bKillEffectParticleMode);
+  else if(cvar == h_iKillEffectSoundMode)
+    g_iKillEffectSoundMode = StringToInt(newValue);
+#endif
   return;
 }
+
+
+
+/**
+ * Create Kill Effects under correct conditions
+ */
+#if defined _INCLUDE_KILLEFFECT
+public Action OnPlayerDeath(Handle event, char[] name, bool dontBroadcast)
+{
+  int victim    = GetClientOfUserId(GetEventInt(event, "userid", 0));
+  int attacker  = GetClientOfUserId(GetEventInt(event, "attacker", 0));
+  if(victim > 0 && attacker > 0) // GetClientOfUserId returns 0 on fail
+  {
+    switch(GetEventInt(event, "customkill", -1))
+    {
+      case TF_CUSTOM_HEADSHOT, TF_CUSTOM_HEADSHOT_DECAPITATION:
+        CreateKillEffect(attacker, victim, view_as<int>(Effect_Headshot), HEADSHOT_LEVEL);
+      case TF_CUSTOM_BACKSTAB:
+      {
+        int weaponEnt = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
+        if(weaponEnt > MaxClients && IsValidEntity(weaponEnt))
+        {
+          if(GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex") == KNIFE_YER_ID)
+            CreateKillEffect(attacker, victim, view_as<int>(Effect_Backstab), BACKSTAB_LEVEL);
+        }
+      }
+    }
+  }
+  return Plugin_Continue;
+}
+#endif
 
 
 public void OnClientPutInServer(int client)
@@ -350,6 +459,7 @@ public Action OnTakeDamage(
   }
   return Plugin_Continue;
 }
+
 
 
 
@@ -570,6 +680,203 @@ public Action CMD_TauntCancel(int client, int args)
 #endif
 
 
+
+
+/**
+ * Reload the config file manually
+ *
+ * sm_misctweaks_reloadcfg
+ */
+#if defined _INCLUDE_KILLEFFECT
+public Action CMD_ConfigReload(int client, int args)
+{
+  bool result = LoadConfig();
+  if(result)
+  {
+    PrecacheKillSounds();
+    TagReply(client, "%T", "SFP_ConfigReload_Success", client);
+  }
+  else
+    TagReply(client, "%T", "SFP_ConfigReload_Fail", client, "sfp_misctweaks");
+  return Plugin_Handled;
+}
+
+stock bool LoadConfig()
+{
+  if(!FileExists(g_szConfig))
+  {
+    SetFailState("%T", "SFP_NoConfig", LANG_SERVER, g_szConfig);
+    return false;
+  }
+
+  // Create and check KeyValues
+  KeyValues hKeys = CreateKeyValues("SatansKillEffects");
+  if(!FileToKeyValues(hKeys, g_szConfig))
+  {
+    delete hKeys;
+    SetFailState("%T", "SFP_BadConfig", LANG_SERVER, g_szConfig);
+    return false;
+  }
+
+  if(!hKeys.GotoFirstSubKey())
+  {
+    delete hKeys;
+    SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER, g_szConfig);
+    return false;
+  }
+
+  hKeys.Rewind();
+
+  for(int i = 0; i < view_as<int>(Effect_Max); ++i)
+  {
+    g_szKillEffectSound[i] = "";
+    g_szKillEffectParticle[i] = "";
+  }
+  int count = 0, skipCount = 0;
+
+  char buff[PLATFORM_MAX_PATH], fullPath[PLATFORM_MAX_PATH + 7];
+  if(hKeys.JumpToKey("Headshot", false))
+  {
+    hKeys.GetString("sound", buff, sizeof(buff), "");
+    Format(fullPath, sizeof(fullPath), "sound/%s", buff);
+    if(FileExists(fullPath, true, NULL_STRING))
+      g_szKillEffectSound[Effect_Headshot] = buff;
+    else
+      g_szKillEffectSound[Effect_Headshot] = "";
+
+    hKeys.GetString("particle",
+      g_szKillEffectParticle[Effect_Headshot],
+      sizeof(g_szKillEffectParticle[]),
+      "");
+    ++count;
+    buff = "";
+    hKeys.Rewind();
+  }
+  else
+    ++skipCount;
+
+  if(hKeys.JumpToKey("StealthBackstab", false))
+  {
+    hKeys.GetString("sound", buff, sizeof(buff), "");
+    Format(fullPath, sizeof(fullPath), "sound/%s", buff);
+    if(FileExists(fullPath, true, NULL_STRING))
+      g_szKillEffectSound[Effect_Backstab] = buff;
+    else
+      g_szKillEffectSound[Effect_Backstab] = "";
+
+    hKeys.GetString("particle",
+      g_szKillEffectParticle[Effect_Backstab],
+      sizeof(g_szKillEffectParticle[]),
+      "");
+    ++count;
+    buff = "";
+    hKeys.Rewind();
+  }
+  else
+    ++skipCount;
+
+  PrintToServer("%T", "SM_KILLEFFECTS_ConfigLoad", LANG_SERVER, count, skipCount);
+  delete hKeys;
+  return true;
+}
+
+stock void PrecacheKillSounds()
+{
+  for(int i = 0; i < view_as<int>(Effect_Max); ++i)
+  {
+    char fullPath[PLATFORM_MAX_PATH + 7];
+    Format(fullPath, sizeof(fullPath), "sound/%s", g_szKillEffectSound[i]);
+
+    // String is only not-empty if file exists (LoadConfig())
+    if(!StrEqual(g_szKillEffectSound[i], "", true))
+    {
+      PrecacheSound(g_szKillEffectSound[i], true);
+      AddFileToDownloadsTable(fullPath); // TODO Do built-in sounds cause issues here?
+    }
+  }
+  return;
+}
+
+// Credit to TheUnderTaker on AlliedModders
+stock void CreateKillEffect(int attacker, int victim, int effectIndex, int soundLevel)
+{
+  if(!StrEqual(g_szKillEffectParticle[effectIndex], "", true)
+    && g_bKillEffectParticleMode)
+  {
+    CreateTempParticle(victim, effectIndex);
+  }
+
+  // If g_iKillEffectSoundMode is 0 the switch will do nothing.
+  if(!StrEqual(g_szKillEffectSound[effectIndex], "", true))
+    PlayKillEffectSound(attacker, victim, effectIndex, soundLevel);
+  return;
+}
+
+stock void PlayKillEffectSound(int attacker, int victim, int effectIndex, int soundLevel)
+{
+  switch(g_iKillEffectSoundMode)
+  {
+    case 1:
+    {
+      EmitSoundToClient(
+        attacker,
+        g_szKillEffectSound[effectIndex],
+        SOUND_FROM_PLAYER,
+        SNDCHAN_AUTO,
+        SNDLEVEL_NORMAL);
+    }
+    case 2:
+    {
+      EmitSoundToAll(
+        g_szKillEffectSound[effectIndex],
+        victim,
+        SNDCHAN_AUTO,
+        soundLevel); // Defaults are SNDLEVEL_SCREAMING for Headshot, DISHWASHER for backstab
+    }
+  }
+  return;
+}
+
+stock void CreateTempParticle(int client, int effectIndex)
+{
+  int particle = CreateEntityByName("info_particle_system");
+
+  if(IsValidEdict(particle))
+  {
+    float position[3];
+    //GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
+    GetClientEyePosition(client, position);
+    TeleportEntity(particle, position, NULL_VECTOR, NULL_VECTOR);
+
+    char name[MAX_NAME_LENGTH];
+    GetEntPropString(client, Prop_Data, "m_iName", name, sizeof(name));
+    DispatchKeyValue(particle, "targetname", "tf2particle");
+    DispatchKeyValue(particle, "parentname", name);
+    DispatchKeyValue(particle, "effect_name", g_szKillEffectParticle[effectIndex]);
+    DispatchSpawn(particle);
+
+    SetVariantString(name);
+    AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+    ActivateEntity(particle);
+    AcceptEntityInput(particle, "start");
+
+    CreateTimer(TEMP_PARTICLE_TIME, DeleteParticle, particle);
+  }
+  return;
+}
+
+public Action DeleteParticle(Handle timer, any particle)
+{
+  if(IsValidEdict(particle))
+  {
+    char classname[32];
+    GetEntityClassname(particle, classname, sizeof(classname));
+    if(StrEqual(classname, "info_particle_system", true))
+      RemoveEdict(particle);
+  }
+  return Plugin_Stop;
+}
+#endif
 
 
 /**
