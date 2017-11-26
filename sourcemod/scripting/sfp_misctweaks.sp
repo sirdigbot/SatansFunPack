@@ -23,9 +23,6 @@
 #define TEMP_PARTICLE_TIME  5.0
 #define KNIFE_YER_ID        225
 
-#define HEADSHOT_LEVEL      SNDLEVEL_SCREAMING
-#define BACKSTAB_LEVEL      SNDLEVEL_DISHWASHER
-
 #define _INCLUDE_MEDIGUNSHIELD
 #define _INCLUDE_TAUNTCANCEL
 #define _INCLUDE_KILLEFFECT
@@ -63,14 +60,24 @@ enum KillEffects
   Effect_Backstab,
   Effect_Max
 };
+enum SoundPlayMode
+{
+  Play_All = 0,
+  Play_Victim,
+  Play_Killer,
+  Play_Both
+};
 Handle  h_szConfig = null;
 char    g_szConfig[PLATFORM_MAX_PATH];
+Handle  h_bKillEffectSoundMode = null;
+bool    g_bKillEffectSoundMode;
+Handle  h_bKillEffectParticleMode = null;
+bool    g_bKillEffectParticleMode;
+
 char    g_szKillEffectSound[Effect_Max][PLATFORM_MAX_PATH];
 char    g_szKillEffectParticle[Effect_Max][50];           // Longest is 47 chars I think
-Handle  h_iKillEffectSoundMode = null;
-int     g_iKillEffectSoundMode;
-Handle  h_bKillEffectParticleMode = null;
-int     g_bKillEffectParticleMode;
+int     g_iKillEffectSndLevel[Effect_Max];
+SoundPlayMode g_iKillEffectPlayMode[Effect_Max];
 #endif
 
 /**
@@ -82,12 +89,10 @@ int     g_bKillEffectParticleMode;
  *  but taunting blocks OnPlayerRunCmd button events.
  * Bonk Drink causes a lot of 'miss' texts which might cause lag/a crash if too many fire.
  * TODO More options in the kill effect config:
- *  - Flag to play sound to attacker/victim/all
  *  - Volume Control
  *  - Pitch Control
  *  - Effect Scaling
- *  - Multiple sounds and particles
- *  - TODO SoundLevel control
+ *  - Multiple sounds and particles (random selection)
  */
 public Plugin myinfo =
 {
@@ -156,25 +161,25 @@ public void OnPluginStart()
 #endif
 
 #if defined _INCLUDE_MEDIGUNSHIELD
-  h_iShieldEnabled = CreateConVar("sm_sfp_misctweaks_shield", "1", "Allow The Medigun Shield\n-1 = Disabled\n0 = sm_forceshield Only\n1 = Enabled\n(Default: 1)", FCVAR_NONE, true, -1.0, true, 1.0);
+  h_iShieldEnabled = CreateConVar("sm_sfp_misctweaks_shield", "1", "Allow the Medigun Shield\n-1 = Disabled\n0 = sm_forceshield Only\n1 = Enabled\n(Default: 1)", FCVAR_NONE, true, -1.0, true, 1.0);
   g_iShieldEnabled = GetConVarInt(h_iShieldEnabled);
   HookConVarChange(h_iShieldEnabled, UpdateCvars);
 
-  h_bShieldStockOnly = CreateConVar("sm_sfp_misctweaks_shield_stock", "1", "Only Allow Stock Mediguns (and variants) to create Shields\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  h_bShieldStockOnly = CreateConVar("sm_sfp_misctweaks_shield_stock", "1", "Only allow Stock Mediguns (and reskins) to create Shields\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bShieldStockOnly = GetConVarBool(h_bShieldStockOnly);
   HookConVarChange(h_bShieldStockOnly, UpdateCvars);
 
-  h_flShieldDmg = CreateConVar("sm_sfp_misctweaks_shield_dmg", "1.0", "Damage Amount For Contact with Medigun Shield Per Frame\n(Default: 1.0)", FCVAR_NONE, true, 0.0, true, 99999.0);
+  h_flShieldDmg = CreateConVar("sm_sfp_misctweaks_shield_dmg", "1.0", "Damage amount from contact with Medigun Shield (Per damage frame)\n(Default: 1.0)", FCVAR_NONE, true, 0.0, true, 99999.0);
   g_flShieldDmg = GetConVarFloat(h_flShieldDmg);
   HookConVarChange(h_flShieldDmg, UpdateCvars);
 #endif
 
 #if defined _INCLUDE_KILLEFFECT
-  h_iKillEffectSoundMode = CreateConVar("sm_sfp_misctweaks_killeffect_sound", "2", "Kill Effect Sound Mode\n0 - No Sound\n1 - Enabled (Sound to Killer)\n2 - Enabled (Sound to All)\n(Default: 2)", FCVAR_NONE, true, 0.0, true, 2.0);
-  g_iKillEffectSoundMode = GetConVarInt(h_iKillEffectSoundMode);
-  HookConVarChange(h_iKillEffectSoundMode, UpdateCvars);
+  h_bKillEffectSoundMode = CreateConVar("sm_sfp_misctweaks_killeffect_sound", "1", "Are Kill Effect sounds enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  g_bKillEffectSoundMode = GetConVarBool(h_bKillEffectSoundMode);
+  HookConVarChange(h_bKillEffectSoundMode, UpdateCvars);
 
-  h_bKillEffectParticleMode = CreateConVar("sm_sfp_misctweaks_killeffect_particle", "1", "Kill Effect Particle Mode\n0 - Disabled\n1 - Enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  h_bKillEffectParticleMode = CreateConVar("sm_sfp_misctweaks_killeffect_particle", "1", "Are Kill Effect particles enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bKillEffectParticleMode = GetConVarBool(h_bKillEffectParticleMode);
   HookConVarChange(h_bKillEffectParticleMode, UpdateCvars);
 
@@ -207,7 +212,7 @@ RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload C
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Post);
 #endif
 #if defined _INCLUDE_KILLEFFECT
-  HookEvent("player_death", OnPlayerDeath, EventHookMode_Pre);
+  HookEvent("player_death", OnPlayerDeath_Pre, EventHookMode_Pre);
 #endif
 
   /*** Handle Lateloads ***/
@@ -217,10 +222,10 @@ RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload C
     {
       if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
       {
+        SDKHook(i, SDKHook_OnTakeDamage, OnTakeDamage);
 #if defined _INCLUDE_MEDIGUNSHIELD
         if(TF2_GetPlayerClass(i) == TFClass_Medic)
           ResetShieldMeter(i); // This doesn't really need to be handled in lateload
-        SDKHook(i, SDKHook_OnTakeDamage, OnTakeDamage);
 #endif
       }
     }
@@ -277,42 +282,11 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
   }
   else if(cvar == h_bKillEffectParticleMode)
     g_bKillEffectParticleMode = GetConVarBool(h_bKillEffectParticleMode);
-  else if(cvar == h_iKillEffectSoundMode)
-    g_iKillEffectSoundMode = StringToInt(newValue);
+  else if(cvar == h_bKillEffectSoundMode)
+    g_bKillEffectSoundMode = GetConVarBool(h_bKillEffectSoundMode);
 #endif
   return;
 }
-
-
-
-/**
- * Create Kill Effects under correct conditions
- */
-#if defined _INCLUDE_KILLEFFECT
-public Action OnPlayerDeath(Handle event, char[] name, bool dontBroadcast)
-{
-  int victim    = GetClientOfUserId(GetEventInt(event, "userid", 0));
-  int attacker  = GetClientOfUserId(GetEventInt(event, "attacker", 0));
-  if(victim > 0 && attacker > 0) // GetClientOfUserId returns 0 on fail
-  {
-    switch(GetEventInt(event, "customkill", -1))
-    {
-      case TF_CUSTOM_HEADSHOT, TF_CUSTOM_HEADSHOT_DECAPITATION:
-        CreateKillEffect(attacker, victim, view_as<int>(Effect_Headshot), HEADSHOT_LEVEL);
-      case TF_CUSTOM_BACKSTAB:
-      {
-        int weaponEnt = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
-        if(weaponEnt > MaxClients && IsValidEntity(weaponEnt))
-        {
-          if(GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex") == KNIFE_YER_ID)
-            CreateKillEffect(attacker, victim, view_as<int>(Effect_Backstab), BACKSTAB_LEVEL);
-        }
-      }
-    }
-  }
-  return Plugin_Continue;
-}
-#endif
 
 
 public void OnClientPutInServer(int client)
@@ -342,6 +316,41 @@ public void OnClientDisconnect_Post(int client)
   g_fbLastButtons[client] = 0;
   return;
 }
+
+
+
+/**
+ * Create Kill Effects under correct conditions
+ * Effect_Headshot and Effect_Backstab
+ */
+#if defined _INCLUDE_KILLEFFECT
+public Action OnPlayerDeath_Pre(Handle event, char[] name, bool dontBroadcast)
+{
+  int victim    = GetClientOfUserId(GetEventInt(event, "userid", 0));
+  int attacker  = GetClientOfUserId(GetEventInt(event, "attacker", 0));
+  if(victim == 0 || attacker == 0) // GetClientOfUserId returns 0 on fail
+    return Plugin_Continue;
+
+  switch(GetEventInt(event, "customkill", -1))
+  {
+    case TF_CUSTOM_HEADSHOT, TF_CUSTOM_HEADSHOT_DECAPITATION:
+      ExecuteKillEffect(attacker, victim, view_as<int>(Effect_Headshot));
+    case TF_CUSTOM_BACKSTAB:
+    {
+      int weaponIdx = GetEventInt(event, "weapon_def_index", -1);
+      if(weaponIdx == KNIFE_YER_ID)
+        ExecuteKillEffect(attacker, victim, view_as<int>(Effect_Backstab));
+    }
+
+    //default:
+    //{
+      // All other death events go here to prevent stacking.
+    //}
+  }
+  return Plugin_Continue;
+}
+#endif
+
 
 
 /**
@@ -403,7 +412,7 @@ stock void OnButtonPress(int client, int button)
       return;
 
     int weaponEnt = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-    if(weaponEnt < MaxClients+1 || !IsValidEntity(weaponEnt))
+    if(!IsValidEdict(weaponEnt))
       return;
 
     if(g_bShieldStockOnly && !IsStockMedigun(weaponEnt))
@@ -450,6 +459,7 @@ public Action OnTakeDamage(
   if(!IsValidEntity(inflictor))
     return Plugin_Continue;
 
+#if defined _INCLUDE_MEDIGUNSHIELD
   char classname[22];
   GetEdictClassname(inflictor, classname, sizeof(classname));
   if(StrEqual(classname, "entity_medigun_shield", true))
@@ -457,9 +467,9 @@ public Action OnTakeDamage(
     damage = g_flShieldDmg;
     return Plugin_Changed;
   }
+#endif
   return Plugin_Continue;
 }
-
 
 
 
@@ -492,7 +502,7 @@ public Action CMD_ForceShield(int client, int args)
   }
 
   int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-  if(weapon < MaxClients+1 || !IsValidEntity(weapon))
+  if(!IsValidEdict(weapon))
   {
     TagReply(client, "%T", "SM_MISCTWEAKS_MedigunOnly", client);
     return Plugin_Handled;
@@ -536,7 +546,7 @@ public Action CMD_FillUber(int client, int args)
     }
 
     int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-    if(medigun < MaxClients+1 || !IsValidEntity(medigun))
+    if(!IsValidEdict(medigun))
     {
       TagReply(client, "%T", "SM_MISCTWEAKS_MedigunOnly", client);
       return Plugin_Handled;
@@ -581,7 +591,7 @@ public Action CMD_FillUber(int client, int args)
     if(IsClientPlaying(targ_list[i]) && TF2_GetPlayerClass(targ_list[i]) == TFClass_Medic)
     {
       int medigun = GetPlayerWeaponSlot(targ_list[i], TFWeaponSlot_Secondary);
-      if(medigun > MaxClients && IsValidEntity(medigun))
+      if(IsValidEdict(medigun))
         SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", 1.0);
     }
   }
@@ -597,7 +607,6 @@ public Action CMD_FillUber(int client, int args)
  * Stop any active taunt.
  *
  * sm_stoptaunt [Target]
- * or stoptaunt [Target]
  */
 #if defined _INCLUDE_TAUNTCANCEL
 public Action CMD_TauntCancel(int client, int args)
@@ -727,57 +736,62 @@ stock bool LoadConfig()
 
   hKeys.Rewind();
 
-  for(int i = 0; i < view_as<int>(Effect_Max); ++i)
-  {
-    g_szKillEffectSound[i] = "";
-    g_szKillEffectParticle[i] = "";
-  }
-  int count = 0, skipCount = 0;
+  // Don't need to zero out because KeyValue Get methods can apply defaults.
+  int count = 0;
 
-  char buff[PLATFORM_MAX_PATH], fullPath[PLATFORM_MAX_PATH + 7];
+  // Get Each Fixed Section
   if(hKeys.JumpToKey("Headshot", false))
   {
-    hKeys.GetString("sound", buff, sizeof(buff), "");
-    Format(fullPath, sizeof(fullPath), "sound/%s", buff);
-    if(FileExists(fullPath, true, NULL_STRING))
-      g_szKillEffectSound[Effect_Headshot] = buff;
-    else
-      g_szKillEffectSound[Effect_Headshot] = "";
-
-    hKeys.GetString("particle",
-      g_szKillEffectParticle[Effect_Headshot],
-      sizeof(g_szKillEffectParticle[]),
-      "");
+    GetKeyValueSection(hKeys, view_as<int>(Effect_Headshot));
     ++count;
-    buff = "";
     hKeys.Rewind();
   }
-  else
-    ++skipCount;
 
   if(hKeys.JumpToKey("StealthBackstab", false))
   {
-    hKeys.GetString("sound", buff, sizeof(buff), "");
-    Format(fullPath, sizeof(fullPath), "sound/%s", buff);
-    if(FileExists(fullPath, true, NULL_STRING))
-      g_szKillEffectSound[Effect_Backstab] = buff;
-    else
-      g_szKillEffectSound[Effect_Backstab] = "";
-
-    hKeys.GetString("particle",
-      g_szKillEffectParticle[Effect_Backstab],
-      sizeof(g_szKillEffectParticle[]),
-      "");
+    GetKeyValueSection(hKeys, view_as<int>(Effect_Backstab));
     ++count;
-    buff = "";
     hKeys.Rewind();
   }
-  else
-    ++skipCount;
 
-  PrintToServer("%T", "SM_KILLEFFECTS_ConfigLoad", LANG_SERVER, count, skipCount);
+  PrintToServer("%T", "SM_KILLEFFECTS_ConfigLoad", LANG_SERVER, count, 2); // 2 = Total Effects
   delete hKeys;
   return true;
+}
+
+stock void GetKeyValueSection(KeyValues &hKeys, int effectIndex)
+{
+  char buff[PLATFORM_MAX_PATH], fullPath[PLATFORM_MAX_PATH + 7];
+
+  // Sound File
+  hKeys.GetString("sound", buff, sizeof(buff), "");
+  Format(fullPath, sizeof(fullPath), "sound/%s", buff);
+  if(FileExists(fullPath, true, NULL_STRING))
+    g_szKillEffectSound[effectIndex] = buff;
+  else
+    g_szKillEffectSound[effectIndex] = "";
+
+  // Particle. No easy way to verify, go straight to global
+  hKeys.GetString("particle",
+    g_szKillEffectParticle[effectIndex],
+    sizeof(g_szKillEffectParticle[]),
+    "");
+
+  // Sound Level
+  g_iKillEffectSndLevel[effectIndex] = hKeys.GetNum("sndlevel", 0);
+  ClampInt(g_iKillEffectSndLevel[effectIndex], SNDLEVEL_NONE, SNDLEVEL_ROCKET);
+
+  // Play Mode
+  hKeys.GetString("playmode", buff, sizeof(buff), "");
+  if(StrEqual(buff, "VICTIM", true))
+    g_iKillEffectPlayMode[effectIndex] = Play_Victim;
+  else if(StrEqual(buff, "KILLER", true))
+    g_iKillEffectPlayMode[effectIndex] = Play_Killer;
+  else if(StrEqual(buff, "BOTH", true))
+    g_iKillEffectPlayMode[effectIndex] = Play_Both;
+  else
+    g_iKillEffectPlayMode[effectIndex] = Play_All;
+  return;
 }
 
 stock void PrecacheKillSounds()
@@ -797,8 +811,10 @@ stock void PrecacheKillSounds()
   return;
 }
 
+
+
 // Credit to TheUnderTaker on AlliedModders
-stock void CreateKillEffect(int attacker, int victim, int effectIndex, int soundLevel)
+stock void ExecuteKillEffect(int attacker, int victim, int effectIndex)
 {
   if(!StrEqual(g_szKillEffectParticle[effectIndex], "", true)
     && g_bKillEffectParticleMode)
@@ -806,37 +822,67 @@ stock void CreateKillEffect(int attacker, int victim, int effectIndex, int sound
     CreateTempParticle(victim, effectIndex);
   }
 
-  // If g_iKillEffectSoundMode is 0 the switch will do nothing.
-  if(!StrEqual(g_szKillEffectSound[effectIndex], "", true))
-    PlayKillEffectSound(attacker, victim, effectIndex, soundLevel);
+  if(!StrEqual(g_szKillEffectSound[effectIndex], "", true)
+   && g_bKillEffectSoundMode)
+  {
+    PlayKillEffectSound(attacker, victim, effectIndex);
+  }
   return;
 }
 
-stock void PlayKillEffectSound(int attacker, int victim, int effectIndex, int soundLevel)
+/**
+ * Kill Effect Sound Emit
+ */
+stock void PlayKillEffectSound(int attacker, int victim, int effectIndex)
 {
-  switch(g_iKillEffectSoundMode)
+  switch(g_iKillEffectPlayMode[effectIndex])
   {
-    case 1:
-    {
-      EmitSoundToClient(
-        attacker,
-        g_szKillEffectSound[effectIndex],
-        SOUND_FROM_PLAYER,
-        SNDCHAN_AUTO,
-        SNDLEVEL_NORMAL);
-    }
-    case 2:
+    case Play_All:
     {
       EmitSoundToAll(
         g_szKillEffectSound[effectIndex],
         victim,
         SNDCHAN_AUTO,
-        soundLevel); // Defaults are SNDLEVEL_SCREAMING for Headshot, DISHWASHER for backstab
+        g_iKillEffectSndLevel[effectIndex]);
+    }
+
+    case Play_Victim:
+    {
+      if(!IsFakeClient(victim))
+        EmitSoundEffectToClient(victim, effectIndex);
+    }
+
+    case Play_Killer:
+    {
+      if(!IsFakeClient(attacker))
+        EmitSoundEffectToClient(attacker, effectIndex);
+    }
+
+    case Play_Both:
+    {
+      if(!IsFakeClient(victim))
+        EmitSoundEffectToClient(victim, effectIndex);
+      if(!IsFakeClient(attacker))
+        EmitSoundEffectToClient(attacker, effectIndex);
     }
   }
   return;
 }
 
+stock void EmitSoundEffectToClient(int client, int effectIndex)
+{
+  EmitSoundToClient(
+    client,
+    g_szKillEffectSound[effectIndex],
+    SOUND_FROM_PLAYER,
+    SNDCHAN_AUTO,
+    SNDLEVEL_NORMAL); // SOUND_FROM_PLAYER has weird issues with different sound levels
+  return;
+}
+
+/**
+ * Kill Effect Particle Create/Delete
+ */
 stock void CreateTempParticle(int client, int effectIndex)
 {
   int particle = CreateEntityByName("info_particle_system");
@@ -884,8 +930,7 @@ public Action DeleteParticle(Handle timer, any particle)
  */
 stock bool IsStockMedigun(int entity)
 {
-  int itemIndex = GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex");
-  switch(itemIndex)
+  switch(GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex"))
   {
     // Every Stock Medigun Skin as of 23/11/2017
     case 29, 211, 663, 796, 805, 885, 894, 903, 912, 961, 970, 15008, 15010, 15025, 15039, 15050, 15078, 15097, 15121, 15122, 15123, 15145, 15146:
@@ -914,6 +959,7 @@ stock void ResetShieldMeter(int client)
   SetEntPropFloat(client, Prop_Send, "m_flRageMeter", 0.0);
   return;
 }
+
 
 
 //=================================

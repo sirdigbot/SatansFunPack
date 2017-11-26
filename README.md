@@ -445,8 +445,8 @@ Colour Config Structure:
 | **sm_sfp_misctweaks_shield_dmg** | Damage amount Shields should deal to Players | `1.0` |
 | **sm_sfp_misctweaks_tauntcancel** | Allow taunt cancelling            | `1` |
 | **sm_sfp_misctweaks_tauntcancel_cooldown** | Cooldown for `sm_stoptaunt` | `5` |
-| **sm_sfp_misctweaks_killeffect_sound** | Kill Effect Sound Mode | `2` |
-| **sm_sfp_misctweaks_killeffect_particle** | Are Kill Effect Particles Enabled | `1` |
+| **sm_sfp_misctweaks_killeffect_sound** | Are Kill Effect sounds enabled | `1` |
+| **sm_sfp_misctweaks_killeffect_particle** | Are Kill Effect particles enabled | `1` |
 
 <br/>
 
@@ -465,7 +465,7 @@ Colour Config Structure:
 | **sm_stoptaunt_target**   | Client can target others  |
 
 **Notes:**  
-Kill Effects apply either from any **Headshot Kill**, or a **Backstab** with the Your Eternal Reward.  
+Kill Effects apply either from any **Headshot Kill**, or a **Backstab with the 'Your Eternal Reward'**.  
 
 Shields are created by using **+attack3** with a full ubercharge.  
 MvM also uses a Shield Damage value of `1.0`.  
@@ -474,11 +474,6 @@ MvM also uses a Shield Damage value of `1.0`.
  - -1 = Disabled
  - 0  = Only `sm_forceshield` is allowed
  - 1  = Enabled  
-
-`sm_sfp_misctweaks_killeffect_sound` values can be
- - 0 - No Sound
- - 1 - Enabled (Play Sound to Killer)
- - 2 - Enabled (Play Sound to All)
 
 <br/>
 

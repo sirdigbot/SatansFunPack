@@ -364,11 +364,23 @@ stock void TF2_SetHealth(int client, int health)
 
 /**
  * Close a handle safely
+ *
+ * @param handle    Handle to close and null
  */
 stock void SafeCloseHandle(Handle &handle)
 {
   if(handle != null)
     CloseHandle(handle);
   handle = null;
+  return;
+}
+
+
+stock void ClampInt(int &val, int min, int max)
+{
+  if(val < min)
+    val = min;
+  else if(val > max)
+    val = max;
   return;
 }

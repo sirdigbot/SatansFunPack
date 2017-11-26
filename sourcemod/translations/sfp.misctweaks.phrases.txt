@@ -59,6 +59,6 @@
   "SM_KILLEFFECTS_ConfigLoad"
   {
     "#format" "{1:d},{2:d}"
-    "en" "Kill Effects Loaded {1} Effects, Skipped {2}."
+    "en" "Kill Effects Loaded {1}/{2} Effects."
   }
 }
