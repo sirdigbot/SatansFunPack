@@ -486,7 +486,7 @@ public Action CMD_AddCond(int client, int args)
     }
 
     // Check arg1, arg2/duration can be negative.
-    if(iArg1 < 0)
+    if(iArg1 < 1) // StringToInt returns 0 on fail so condition 0 has to be blocked.
     {
       TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
       return Plugin_Handled;
