@@ -376,6 +376,12 @@ stock void SafeCloseHandle(Handle &handle)
 }
 
 
+/**
+ * Limit an integer between a minimum and a maximum
+ * @param val       Value to limit
+ * @param min       Lower bound of limit
+ * @param max       Upper bound of limit
+ */
 stock void ClampInt(int &val, int min, int max)
 {
   if(val < min)

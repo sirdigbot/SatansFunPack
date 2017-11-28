@@ -22,10 +22,12 @@
 #define MAX_BUTTONS         26 // Total # of IN_ definitions in entity_prop_stocks.inc
 #define TEMP_PARTICLE_TIME  5.0
 #define KNIFE_YER_ID        225
+#define BOTTLE_ID           1
 
 #define _INCLUDE_MEDIGUNSHIELD
 #define _INCLUDE_TAUNTCANCEL
 #define _INCLUDE_KILLEFFECT
+#define _INCLUDE_BOTTLEBREAK
 
 //=================================
 // Global
@@ -204,7 +206,7 @@ public void OnPluginStart()
   RegConsoleCmd("sm_stoptaunt", CMD_TauntCancel, "Cancel Any Active Taunt");
 #endif
 #if defined _INCLUDE_KILLEFFECT
-RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Miscellaneous Tweaks");
+  RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Miscellaneous Tweaks");
 #endif
 
 
@@ -213,6 +215,9 @@ RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload C
 #endif
 #if defined _INCLUDE_KILLEFFECT
   HookEvent("player_death", OnPlayerDeath_Pre, EventHookMode_Pre);
+#endif
+#if defined _INCLUDE_BOTTLEBREAK
+  HookEvent("post_inventory_application", OnSupplyItems_Post, EventHookMode_Post);
 #endif
 
   /*** Handle Lateloads ***/
@@ -353,6 +358,28 @@ public Action OnPlayerDeath_Pre(Handle event, char[] name, bool dontBroadcast)
 
 
 
+#if defined _INCLUDE_BOTTLEBREAK
+public Action OnSupplyItems_Post(Handle event, char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(GetEventInt(event, "userid", 0));
+  if(client == 0)
+    return Plugin_Continue;
+
+  if(TF2_GetPlayerClass(client) == TFClass_DemoMan)
+  {
+    int melee = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+    if(IsValidEdict(melee)
+     && GetEntProp(melee, Prop_Send, "m_iItemDefinitionIndex") == BOTTLE_ID)
+    {
+      SetBrokenBottle(melee, false);
+    }
+  }
+  return Plugin_Continue;
+}
+#endif
+
+
+
 /**
  * Create KeyPress/KeyRelease Events
  */
@@ -459,15 +486,26 @@ public Action OnTakeDamage(
   if(!IsValidEntity(inflictor))
     return Plugin_Continue;
 
-#if defined _INCLUDE_MEDIGUNSHIELD
   char classname[22];
   GetEdictClassname(inflictor, classname, sizeof(classname));
+
   if(StrEqual(classname, "entity_medigun_shield", true))
   {
+#if defined _INCLUDE_MEDIGUNSHIELD
     damage = g_flShieldDmg;
     return Plugin_Changed;
-  }
 #endif
+  }
+  else if(StrEqual(classname, "tf_weapon_bottle", true))
+  {
+#if defined _INCLUDE_BOTTLEBREAK
+    if(GetEntProp(inflictor, Prop_Send, "m_iItemDefinitionIndex") == BOTTLE_ID
+      && damagetype & DMG_CRIT)
+    {
+      SetBrokenBottle(inflictor, true);
+    }
+#endif
+  }
   return Plugin_Continue;
 }
 
@@ -960,6 +998,14 @@ stock void ResetShieldMeter(int client)
   return;
 }
 
+/**
+ * Descriptive wrapper for bottle break setting
+ */
+stock void SetBrokenBottle(int entity, bool state)
+{
+  SetEntProp(entity, Prop_Send, "m_bBroken", state);
+  return;
+}
 
 
 //=================================
