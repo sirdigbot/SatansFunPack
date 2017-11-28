@@ -27,6 +27,9 @@
 #define BUILD_ENTRY     2
 #define BUILD_EXIT      3
 
+#define ANNOTATION_OFFSET 66600 // Arbitrary offset to prevent IDs clashing with other plugins
+#define NOTE_COOLDOWN     1     // Time in seconds to limit annotation creation per attacker
+
 enum GodMode
 {
   State_Mortal = 0,
@@ -41,8 +44,7 @@ bool    g_bUpdate;
 bool    g_bLateLoad;
 bool    g_bAllowNoteCreation;
 GodMode g_GodModeState[MAXPLAYERS + 1] = {State_Mortal, ...};
-bool    g_bNoteActive[MAXPLAYERS + 1];
-Handle  h_NoteCooldownTimer[MAXPLAYERS + 1] = {null, ...};
+int     g_LastNoteTime[MAXPLAYERS + 1]; // To prevent notes being spammed
 
 bool    g_bBuildingGod[MAXPLAYERS + 1];
 int     g_iBuildingIndex[MAXPLAYERS + 1][4]; // Order: Sentry, Dispenser, Entry, Exit
@@ -51,7 +53,6 @@ int     g_iBuildingIndex[MAXPLAYERS + 1][4]; // Order: Sentry, Dispenser, Entry,
 /**
  * Known Bugs
  * - Max Health still drains with the eviction notice
- * - Immortal Note can only be displayed to one person at a time.
  */
 public Plugin myinfo =
 {
@@ -119,7 +120,7 @@ public void OnPluginStart()
   {
     for(int i = 1; i <= MaxClients; ++i)
     {
-      if(IsClientInGame(i) && !IsFakeClient(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
+      if(IsClientInGame(i) && !IsClientReplay(i) && !IsClientSourceTV(i))
         SDKHook(i, SDKHook_TraceAttack, TraceAttack);
     }
 
@@ -182,7 +183,7 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
 
 public void OnClientPutInServer(int client)
 {
-  if(!IsFakeClient(client) && !IsClientReplay(client) && !IsClientSourceTV(client))
+  if(!IsClientReplay(client) && !IsClientSourceTV(client))
     SDKHook(client, SDKHook_TraceAttack, TraceAttack);
   return;
 }
@@ -190,10 +191,9 @@ public void OnClientPutInServer(int client)
 public void OnClientDisconnect(int client)
 {
   SDKUnhook(client, SDKHook_TraceAttack, TraceAttack);
-  SafeCloseHandle(h_NoteCooldownTimer[client]);
   g_GodModeState[client]  = State_Mortal;
-  g_bNoteActive[client]   = false;
   g_bBuildingGod[client]  = false;
+  g_LastNoteTime[client]  = 0;
   for(int i = 0; i < 4; ++i)
     g_iBuildingIndex[client][i] = -1;
   return;
@@ -238,40 +238,39 @@ public Action TraceAttack(
     return Plugin_Continue;
   }
 
+  if(!IsClientInGame(attacker) || IsFakeClient(attacker))
+    return Plugin_Continue;
+
   if(TF2_GetClientTeam(client) == TF2_GetClientTeam(attacker))
+    return Plugin_Continue;
+
+  int now = GetTime();
+  if(now - g_LastNoteTime[attacker] < NOTE_COOLDOWN)
     return Plugin_Continue;
 
   if(GetEntProp(client, Prop_Data, "m_takedamage") != ENTPROP_MORTAL)
   {
-    if(!g_bNoteActive[attacker] && IsClientInGame(attacker) && !IsFakeClient(attacker))
+    g_LastNoteTime[attacker] = now;
+
+    char noteText[32];
+    Format(noteText, sizeof(noteText), "%T", "SM_GODMODE_Note", attacker);
+
+    // Create new annotation
+    // ID limits annotations to exactly 1 per attacker per victim.
+    Handle event = CreateEvent("show_annotation");
+    if(event != null)
     {
-      char noteText[32];
-      Format(noteText, sizeof(noteText), "%T", "SM_GODMODE_Note", attacker);
-
-      Handle event = CreateEvent("show_annotation", false);
-      if(event != null)
-      {
-        SetEventInt(event,    "follow_entindex",    client);
-        SetEventInt(event,    "visibilityBitfield", (1 << attacker));
-        SetEventFloat(event,  "lifetime",           1.1);
-        SetEventString(event, "play_sound",         "misc/null.wav");
-        SetEventString(event, "text",               noteText);
-        FireEvent(event, false); // FireEvent deletes handle. TODO What does broadcast do?
-
-        g_bNoteActive[attacker]       = true;
-        h_NoteCooldownTimer[attacker] = CreateTimer(2.5, Timer_ResetGlobals, attacker);
-        // Dont put nomapchange flag on one-time timers.
-      }
+      SetEventInt(event,    "id",                 attacker + client + ANNOTATION_OFFSET);
+      SetEventInt(event,    "follow_entindex",    client);
+      SetEventInt(event,    "visibilityBitfield", (1 << attacker));
+      SetEventFloat(event,  "lifetime",           2.0);
+      SetEventString(event, "play_sound",         "misc/null.wav");
+      SetEventString(event, "text",               noteText);
+      SetEventBool(event,   "show_effect",        true);
+      FireEvent(event);
     }
   }
   return Plugin_Continue;
-}
-
-public Action Timer_ResetGlobals(Handle timer, any client)
-{
-  g_bNoteActive[client]       = false;
-  h_NoteCooldownTimer[client] = null;
-  return Plugin_Stop;
 }
 
 public Action OnRoundStart(Handle event, char[] name, bool dontBroadcast)
@@ -283,11 +282,6 @@ public Action OnRoundStart(Handle event, char[] name, bool dontBroadcast)
 public Action OnRoundEnd(Handle event, char[] name, bool dontBroadcast)
 {
   g_bAllowNoteCreation = false;
-  for(int i = 1; i <= MaxClients; ++i)
-  {
-    SafeCloseHandle(h_NoteCooldownTimer[i]);
-    g_bNoteActive[i] = false;
-  }
   return Plugin_Continue;
 }
 

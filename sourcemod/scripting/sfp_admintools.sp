@@ -585,7 +585,7 @@ public Action CMD_RemCond(int client, int args)
     // Check arg
     if(iArg1 < 0)
     {
-      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client);
+      TagReply(client, "%T", "SM_ADDCOND_BadCondition", client); // Shared translation
       return Plugin_Handled;
     }
 
