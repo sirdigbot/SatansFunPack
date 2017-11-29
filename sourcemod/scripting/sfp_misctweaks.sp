@@ -26,6 +26,7 @@
 #define _INCLUDE_MEDIGUNSHIELD
 #define _INCLUDE_TAUNTCANCEL
 #define _INCLUDE_KILLEFFECT
+#define _INCLUDE_MAXVOICESPEAKFIX
 
 //=================================
 // Global
@@ -213,6 +214,13 @@ public void OnPluginStart()
 #endif
 #if defined _INCLUDE_KILLEFFECT
   HookEvent("player_death", OnPlayerDeath_Pre, EventHookMode_Pre);
+#endif
+
+#if defined _INCLUDE_MAXVOICESPEAKFIX
+  Handle maxVoiceSpeakCvar = FindConVar("tf_max_voice_speak_delay");
+  if(maxVoiceSpeakCvar != null)
+    SetConVarBounds(maxVoiceSpeakCvar, ConVarBound_Lower, true, -1.0);
+  SafeCloseHandle(maxVoiceSpeakCvar);
 #endif
 
   /*** Handle Lateloads ***/
