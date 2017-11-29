@@ -9,24 +9,24 @@
 
   "SM_AMIMUTED_MuteGag"
   {
-    "en" "You are Muted and Gagged (No Microphone or Text Chat)."
+    "en" "You are {olive}Muted and Gagged{default} (No Microphone or Text Chat)."
   }
   "SM_AMIMUTED_Mute"
   {
-    "en" "You are Muted, but not Gagged. (No Microphone)."
+    "en" "You are {olive}Muted{default}, but not {olive}Gagged{default}. (No Microphone)."
   }
   "SM_AMIMUTED_Gag"
   {
-    "en" "You are Gagged, but not Muted (No Text Chat)."
+    "en" "You are {olive}Gagged{default}, but not {olive}Muted{default} (No Text Chat)."
   }
   "SM_AMIMUTED_None"
   {
-    "en" "You are not Muted or Gagged."
+    "en" "You are not {olive}Muted{default} or {olive}Gagged{default}."
   }
 
   "SM_CANHEAR_Usage"
   {
-    "en" "sm_canplayerhear <Target 1> [Target 2]"
+    "en" "sm_canplayerhear {darkorange}<Target 1> {steelblue}[Target 2]"
   }
   "SM_CANHEAR_SelfTarget"
   {
@@ -35,27 +35,27 @@
   "SM_CANHEAR_Unmuted_Self"
   {
     "#format" "{1:s}"
-    "en" "{1} can hear you."
+    "en" "{olive}{1}{default} can hear you."
   }
   "SM_CANHEAR_Unmuted"
   {
     "#format" "{1:s},{2:s}"
-    "en" "{1} can hear {2}."
+    "en" "{olive}{1}{default} can hear {olive}{2}{default}."
   }
   "SM_CANHEAR_Muted_Self"
   {
     "#format" "{1:s}"
-    "en" "{1} has muted you."
+    "en" "{olive}{1}{default} has muted you."
   }
   "SM_CANHEAR_Muted"
   {
     "#format" "{1:s},{2:s}"
-    "en" "{1} has muted {2}."
+    "en" "{olive}{1}{default} has muted {olive}{2}{default}."
   }
 
   "SM_LOCATE_Usage"
   {
-    "en" "sm_locateip <Target>"
+    "en" "sm_locateip {darkorange}<Target>"
   }
   "SM_LOCATE_IPFail"
   {
@@ -68,31 +68,31 @@
   "SM_LOCATE_Done"
   {
     "#format" "{1:s},{2:s}"
-    "en" "{1}'s Country is {2}."
+    "en" "{olive}{1}{default}'s Country is {gold}{2}{default}."
   }
 
   "SM_PLAYERID_Usage"
   {
-    "en" "sm_id <Target> [ID Type 1-4]"
+    "en" "sm_id {darkorange}<Target> {steelblue}[ID Type 1-4]"
   }
   "SM_PLAYERID_Found"
   {
     "#format" "{1:s},{2:s},{3:s}"
-    "en" "{1}'s {2} is: {3}"
+    "en" "{olive}{1}{default}'s {olive}{2}{default} is: {gold}{3}{default}"
   }
 
   "SM_PROFILE_Usage"
   {
-    "en" "sm_profile <Target>"
+    "en" "sm_profile {darkorange}<Target>"
   }
   "SM_GETPROFILE_Usage"
   {
-    "en" "sm_getprofile <Target>"
+    "en" "sm_getprofile {darkorange}<Target>"
   }
   "SM_GETPROFILE_Done"
   {
     "#format" "{1:s},{2:s}"
-    "en" "{1}'s Steam Profile is: {2}"
+    "en" "{olive}{1}{default}'s Steam Profile is: {gold}{2}{default}"
   }
 
   "SM_CHECKRESTART_True"

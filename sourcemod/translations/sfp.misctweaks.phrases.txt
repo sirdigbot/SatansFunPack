@@ -12,19 +12,19 @@
   }
   "SM_MISCTWEAKS_MedicOnly"
   {
-    "en" "You must be a Medic to use this command."
+    "en" "You must be a {olive}Medic{default} to use this command."
   }
   "SM_MISCTWEAKS_MedigunOnly"
   {
-    "en" "You must be wielding a Medigun to use this command."
+    "en" "You must be wielding a {olive}Medigun{default} to use this command."
   }
   "SM_FORCESHIELD_Disabled"
   {
-    "en" "Medic Shields are disabled Server-wide."
+    "en" "{olive}Medigun Shields{default} are disabled Server-wide."
   }
   "SM_FORCESHIELD_Deployed"
   {
-    "en" "Medigun Shield has been deployed."
+    "en" "{olive}Medigun Shield{default} has been deployed."
   }
 
   "SM_FILLUBER_Done_Self"
@@ -34,12 +34,12 @@
   "SM_FILLUBER_Done"
   {
     "#format" "{1:s}"
-    "en" "Set ÜberCharge for {1} to 100%."
+    "en" "Set ÜberCharge for {olive}{1}{default} to 100%."
   }
 
   "SM_TAUNTCANCEL_Disabled"
   {
-    "en" "sm_stoptaunt is Disabled Server-wide."
+    "en" "{olive}sm_stoptaunt{default} is Disabled Server-wide."
   }
   "SM_TAUNTCANCEL_Done_Self"
   {
@@ -48,12 +48,12 @@
   "SM_TAUNTCANCEL_Done"
   {
     "#format" "{1:s}"
-    "en" "Stopped {1} Taunting."
+    "en" "Stopped {olive}{1}{default} Taunting."
   }
   "SM_TAUNTCANCEL_Cooldown"
   {
     "#format" "{1:d}"
-    "en" "You must wait {1}s before using sm_stoptaunt."
+    "en" "You must wait {olive}{1}s{default} before using sm_stoptaunt."
   }
 
   "SM_KILLEFFECTS_ConfigLoad"

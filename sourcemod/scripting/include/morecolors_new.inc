@@ -13,10 +13,10 @@
 #define MAX_MESSAGE_LENGTH		256
 #define MAX_BUFFER_LENGTH     (MAX_MESSAGE_LENGTH * 4)
 
-#define COLOR_RED         0xFF4040
-#define COLOR_BLUE				0x99CCFF
-#define COLOR_GRAY				0xCCCCCC
-#define COLOR_GREEN				0x3EFF3E
+#define MC_COLOR_RED      0xFF4040
+#define MC_COLOR_BLUE			0x99CCFF
+#define MC_COLOR_GRAY		  0xCCCCCC
+#define MC_COLOR_GREEN    0x3EFF3E // Clashes with CCC without the prefix
 
 #define GAME_DODS				  0
 
@@ -481,16 +481,16 @@ stock int CGetTeamColor(int client) {
   int value;
   switch(GetClientTeam(client)) {
     case 1: {
-      value = COLOR_GRAY;
+      value = MC_COLOR_GRAY;
     }
     case 2: {
-      value = COLOR_RED;
+      value = MC_COLOR_RED;
     }
     case 3: {
-      value = COLOR_BLUE;
+      value = MC_COLOR_BLUE;
     }
     default: {
-      value = COLOR_GREEN;
+      value = MC_COLOR_GREEN;
     }
   }
   return value;

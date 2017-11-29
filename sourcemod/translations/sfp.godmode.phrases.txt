@@ -7,69 +7,69 @@
 
   "SM_GOD_Usage"
   {
-    "en" "sm_god <[Target] [1/0]>"
+    "en" "sm_god {darkorange}<{steelblue}[Target] [1/0]{darkorange}>"
   }
   "SM_BUDDHA_Usage"
   {
-    "en" "sm_buddha <[Target] [1/0]>"
+    "en" "sm_buddha {darkorange}<{steelblue}[Target] [1/0]{darkorange}>"
   }
   "SM_BGOD_Usage"
   {
-    "en" "sm_buildinggod <[Target] [1/0]>"
+    "en" "sm_buildinggod {darkorange}<{steelblue}[Target] [1/0]{darkorange}>"
   }
 
   "SM_GOD_Enabled_Self"
   {
-    "en" "Enabled God Mode."
+    "en" "Enabled {unique}God Mode{default}."
   }
   "SM_GOD_Switched_Self"
   {
-    "en" "Switched from Buddha Mode to God Mode."
+    "en" "Switched from {immortal}Buddha Mode{default} to {unique}God Mode{default}."
   }
   "SM_GOD_Disabled_Self"
   {
-    "en" "Disabled God Mode."
+    "en" "Disabled {unique}God Mode{default}."
   }
   "SM_GOD_Enabled"
   {
     "#format" "{1:s}"
-    "en" "Enabled God Mode for {1}."
+    "en" "Enabled {unique}God Mode{default} for {olive}{1}{default}."
   }
   "SM_GOD_Disabled"
   {
     "#format" "{1:s}"
-    "en" "Disabled God Mode for {1}."
+    "en" "Disabled {unique}God Mode{default} for {olive}{1}{default}."
   }
   "SM_GOD_Spawn"
   {
-    "en" "You have spawned with God Mode on."
+    "en" "You have spawned with {unique}God Mode{default} on."
   }
 
   "SM_BUDDHA_Enabled_Self"
   {
-    "en" "Enabled Buddha Mode."
+    "en" "Enabled {immortal}Buddha Mode{default}."
   }
   "SM_BUDDHA_Switched_Self"
   {
-    "en" "Switched from God Mode to Buddha Mode."
+    "en" "Switched from {unique}God Mode{default} to {immortal}Buddha Mode{default}."
   }
   "SM_BUDDHA_Disabled_Self"
   {
-    "en" "Disabled Buddha Mode."
+    "en" "Disabled {immortal}Buddha Mode{default}."
   }
   "SM_BUDDHA_Enabled"
   {
     "#format" "{1:s}"
-    "en" "Enabled Buddha Mode for {1}."
+    "en" "Enabled {immortal}Buddha Mode{default} for {olive}{1}{default}."
   }
   "SM_BUDDHA_Disabled"
   {
     "#format" "{1:s}"
-    "en" "Disabled Buddha Mode for {1}."
+    "en" "Disabled {immortal}Buddha Mode{default} for {olive}{1}{default}."
   }
   "SM_BUDDHA_Spawn"
   {
-    "en" "You have spawned with Buddha Mode on."
+    "en" "You have spawned with {immortal}Buddha Mode{default} on."
   }
 
   "SM_MORTAL_Done_Self"
@@ -79,26 +79,26 @@
   "SM_MORTAL_Done"
   {
     "#format" "{1:s}"
-    "en" "Made {1} mortal."
+    "en" "Made {olive}{1}{default} mortal."
   }
 
   "SM_BGOD_Enabled_Self"
   {
-    "en" "Enabled Building God Mode."
+    "en" "Enabled {forestgreen}Building God Mode{default}."
   }
   "SM_BGOD_Disabled_Self"
   {
-    "en" "Disabled Building God Mode."
+    "en" "Disabled {forestgreen}Building God Mode{default}."
   }
   "SM_BGOD_Enabled"
   {
     "#format" "{1:s}"
-    "en" "Enabled Building God Mode for {1}."
+    "en" "Enabled {forestgreen}Building God Mode{default} for {olive}{1}{default}."
   }
   "SM_BGOD_Disabled"
   {
     "#format" "{1:s}"
-    "en" "Disabled Building God Mode for {1}."
+    "en" "Disabled {forestgreen}Building God Mode{default} for {olive}{1}{default}."
   }
 
   "SM_GODMODE_Note"

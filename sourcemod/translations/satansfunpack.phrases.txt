@@ -68,7 +68,11 @@
   "SFP_CmdDisabled"
   {
     "#format" "{1:s}"
-    "en" "{1} is Disabled Server-wide."
+    "en" "{olive}{1}{default} is disabled server-wide."
+  }
+  "SFP_CmdConsoleOnly"
+  {
+    "en" "This command can only be used from the console."
   }
   "SFP_BadHexColour"
   {

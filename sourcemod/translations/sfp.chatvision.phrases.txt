@@ -26,16 +26,16 @@
 
   "SM_CHATADMIN_Usage"
   {
-    "en" "sm_ischatadmin <Target>"
+    "en" "sm_ischatadmin {darkorange}<Target>"
   }
   "SM_CHATADMIN_True"
   {
     "#format" "{1:s}"
-    "en" "{1} can see enemy team chat."
+    "en" "{olive}{1}{default} can see enemy team chat."
   }
   "SM_CHATADMIN_False"
   {
     "#format" "{1:s}"
-    "en" "{1} cannot see enemy team chat."
+    "en" "{olive}{1}{default} cannot see enemy team chat."
   }
 }

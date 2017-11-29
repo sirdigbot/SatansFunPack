@@ -1,6 +1,7 @@
 # Satan's Fun Pack
 A collection of useful commands and features for TF2 Servers.  
 ### Table of Contents
+[Plugin Conventions](#conventions)  
 [Core File (satansfunpack.smx)](#corefile)  
 [Admin Tools (sfp_admintools.smx)](#admintools)  
 [Help Menu (sfp_helpmenu.smx)](#helpmenu)  
@@ -14,6 +15,30 @@ A collection of useful commands and features for TF2 Servers.
 [God Mode (sfp_godmode.smx)](#godmode)  
 [Name Colour Manager (sfp_namecolour.smx)](#namecolour)  
 [Miscellaneous Tweaks (sfp_misctweaks.smx)](#misctweaks)  
+
+<br/>
+
+<a name="conventions"/>
+
+## Plugin Conventions
+
+The syntax for commands have the following conventions:  
+ - `<Argument>` means the argument is required.  
+ - `[Argument]` means it is optional.  
+ - `<[Argument1] [Argument2]>` means that both arguments are optional, but can only be used if both are present.  
+
+Translation Files have a colour coding system.  
+Care must be taken to only use colours on text used for in-game chat text.  
+
+| Category                                  | Colour          | Example       |
+| ----------------------------------------- | --------------- | ---           |
+| **Required Arguments**                    | `{darkorange}`  | **\<Target>**  |
+| **Optional Arguments**                    | `{steelblue}`   | **[Target]**  |
+| **Target Names and Generic Emphasis**     | `{olive}`       | Slapped **all players** <br/>*or*<br/> **sm_slap** is disabled |
+| **Generic Punishment Command Names**      | `{firebrick}`   | Disabled **Dance Mode** |
+| **Generic Powerup/Reward Command Names**  | `{forestgreen}` | Enabled **Boing Mode**  |
+
+Colours are from a Sourcemod 1.7+ version of [MoreColors](https://forums.alliedmods.net/showthread.php?t=185016).  
 
 <br/>
 

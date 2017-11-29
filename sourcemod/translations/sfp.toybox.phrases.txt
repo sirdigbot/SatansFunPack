@@ -9,7 +9,7 @@
 
   "SM_COLWEAPON_Usage"
   {
-    "en" "sm_colourweapon [Target] <Slot (1/2/3/All)> <Hex/RGB Colour>"
+    "en" "sm_colourweapon {steelblue}[Target] {darkorange}<Slot (1/2/3/All)> <Hex/RGB Colour>"
   }
   "SM_COLWEAPON_Done"
   {
@@ -19,18 +19,17 @@
   "SM_COLWEAPON_Done_Server" // TODO: Improve the wording of this.
   {
     "#format" "{1:s},{2:d},{3:d},{4:d}"
-    "en" "Set Colour of {1} Weapon[s] to: {2} {3} {4}"
+    "en" "Set Colour of {olive}{1}{default} Weapon[s] to: {2} {3} {4}"
   }
 
   "SM_SIZEWEAPON_Usage"
   {
-    "en" "sm_resizeweapon [Target] <Slot (1/2/3/All)> <Scale>"
+    "en" "sm_resizeweapon {steelblue}[Target] {darkorange}<Slot (1/2/3/All)> <Scale>"
   }
   "SM_SIZEWEAPON_Scale"
   {
     "#format" "{1:.1f},{2:.1f}"
     "en" "Scale is out of range. Use a number between {1} and {2}."
-    // TODO do these floats display right?
   }
   "SM_SIZEWEAPON_Done"
   {
@@ -40,99 +39,99 @@
   "SM_SIZEWEAPON_Done_Server" // TODO: Improve the wording of this.
   {
     "#format" "{1:s},{2:.1f}"
-    "en" "Set Size of {1} Weapon[s] to {2}x"
+    "en" "Set Size of {olive}{1}{default} Weapon[s] to {2}x"
   }
 
   "SM_FOV_Usage"
   {
     "#format" "{1:d},{2:d}"
-    "en" "sm_fov [Target] <{1} to {2} or Reset/Default>"
+    "en" "sm_fov {steelblue}[Target] {darkorange}<{1} to {2} or Reset/Default>"
   }
   "SM_FOV_Range"
   {
     "#format" "{1:d},{2:d}"
-    "en" "FOV is out of range. Use a number between {1} and {2}."
+    "en" "FOV is out of range. Use a number between {olive}{1}{default} and {olive}{2}{default}."
   }
   "SM_FOV_Done"
   {
     "#format" "{1:d}"
-    "en" "Set FOV to {1}."
+    "en" "Set FOV to {olive}{1}{default}."
   }
   "SM_FOV_Done_Default"
   {
-  "en" "Reset FOV to default."
+  "en" "Reset FOV to {olive}default{default}."
   }
   "SM_FOV_Done_Server"
   {
     "#format" "{1:s},{2:d}"
-    "en" "Set {1} FOV to {2}."
+    "en" "Set {olive}{1}{default} FOV to {olive}{2}{default}."
   }
   "SM_FOV_Done_Server_Default"
   {
     "#format" "{1:s}"
-    "en" "Reset {1} FOV to default."
+    "en" "Reset {olive}{1}{default} FOV to {olive}default{default}."
   }
 
   "SM_SCREAM_Disabled"
   {
-    "en" "sm_scream is currently disabled."
+    "en" "{olive}sm_scream{default} is currently disabled."
   }
   "SM_SCREAMTOGGLE_Usage"
   {
-    "en" "sm_screamtoggle [1/0]"
+    "en" "sm_screamtoggle {steelblue}[1/0]"
   }
   "SM_SCREAMTOGGLE_Enable"
   {
-    "en" "sm_scream has been Enabled."
+    "en" "{olive}sm_scream{default} has been {forestgreen}Enabled{default}."
   }
   "SM_SCREAMTOGGLE_Disable"
   {
-    "en" "sm_scream has been Disabled."
+    "en" "{olive}sm_scream{default} has been {firebrick}Disabled{default}."
   }
 
   "SM_PITCH_Usage"
   {
     "#format" "{1:d},{2:d}"
-    "en" "sm_pitch [Target] <{1} to {2} or Reset/Default>"
+    "en" "sm_pitch {steelblue}[Target] {darkorange}<{1} to {2} or Reset/Default>"
   }
   "SM_PITCH_Disabled"
   {
-    "en" "sm_pitch is currently disabled."
+    "en" "{olive}sm_pitch{default} is currently disabled."
   }
   "SM_PITCH_Limit"
   {
-    "en" "Pitch must be between 1 and 255."
+    "en" "Pitch must be between {olive}1{default} and {olive}255{default}."
   }
   "SM_PITCH_Done"
   {
     "#format" "{1:d}"
-    "en" "Set Pitch to {1}%."
+    "en" "Set Pitch to {olive}{1}%{default}."
   }
   "SM_PITCH_Done_Default"
   {
-  "en" "Reset Pitch to default."
+  "en" "Reset Pitch to {olive}default{default}."
   }
   "SM_PITCH_Done_Server"
   {
     "#format" "{1:s},{2:d}"
-    "en" "Set {1} Pitch to {2}%."
+    "en" "Set {olive}{1}{default} Pitch to {olive}{2}%{default}."
   }
   "SM_PITCH_Done_Server_Default"
   {
     "#format" "{1:s}"
-    "en" "Reset {1} Pitch to default."
+    "en" "Reset {olive}{1}{default} Pitch to {olive}default{default}."
   }
   "SM_PITCHTOGGLE_Usage"
   {
-    "en" "sm_pitchtoggle [1/0]"
+    "en" "sm_pitchtoggle {steelblue}[1/0]"
   }
   "SM_PITCHTOGGLE_Enable"
   {
-    "en" "sm_pitch has been Enabled."
+    "en" "{olive}sm_pitch{default} has been {forestgreen}Enabled{default}."
   }
   "SM_PITCHTOGGLE_Disable"
   {
-    "en" "sm_pitch has been Disabled."
+    "en" "{olive}sm_pitch{default} has been {firebrick}Disabled{default}."
   }
 
   "SM_TAUNTMENU_BadGameData"
@@ -162,7 +161,7 @@
   }
   "SM_TAUNTMENU_TryTauntID"
   {
-    "en" "The Taunt Menu command cannot play specific taunts. Did you mean /tauntid?"
+    "en" "The Taunt Menu command cannot play specific taunts. Did you mean {unique}/tauntid{default}?"
   }
   "SM_TAUNTMENU_BadClass"
   {
@@ -170,68 +169,68 @@
   }
   "SM_TAUNTBYID_Usage"
   {
-    "en" "sm_tauntid [Target] <Taunt Item Index>"
+    "en" "sm_tauntid {steelblue}[Target] {darkorange}<Taunt Item Index>"
   }
   "SM_TAUNTBYID_Invalid"
   {
     "#format" "{1:d}"
-    "en" "{1} is not a valid Taunt Item Index."
+    "en" "{olive}{1}{default} is not a valid Taunt Item Index."
   }
   "SM_TAUNTBYID_Done"
   {
     "#format" "{1:s},{2:s},{3:d}"
-    "en" "Forced {1} to perform taunt '{2}' ({3})."
+    "en" "Forced {olive}{1}{default} to perform taunt '{forestgreen}{2}{default}' ({3})."
   }
   "SM_TAUNTBYID_Done_Self"
   {
     "#format" "{1:s},{2:d}"
-    "en" "Performed Taunt '{1}' ({2})."
+    "en" "Performed Taunt '{forestgreen}{1}{default}' ({2})."
   }
   "SM_TAUNTBYID_Scout"
   {
-    "en" "You must be a Scout to perform this taunt."
+    "en" "You must be a {olive}Scout{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Soldier"
   {
-    "en" "You must be a Soldier to perform this taunt."
+    "en" "You must be a {olive}Soldier{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Pyro"
   {
-    "en" "You must be a Pyro to perform this taunt."
+    "en" "You must be a {olive}Pyro{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Demoman"
   {
-    "en" "You must be a Demoman to perform this taunt."
+    "en" "You must be a {olive}Demoman{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Heavy"
   {
-    "en" "You must be a Heavy to perform this taunt."
+    "en" "You must be a {olive}Heavy{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Engineer"
   {
-    "en" "You must be a Engineer to perform this taunt."
+    "en" "You must be a {olive}Engineer{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Medic"
   {
-    "en" "You must be a Medic to perform this taunt."
+    "en" "You must be a {olive}Medic{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Sniper"
   {
-    "en" "You must be a Sniper to perform this taunt."
+    "en" "You must be a {olive}Sniper{default} to perform this taunt."
   }
   "SM_TAUNTBYID_Spy"
   {
-    "en" "You must be a Spy to perform this taunt."
+    "en" "You must be a {olive}Spy{default} to perform this taunt."
   }
 
   "SM_SPLAY_Usage"
   {
-    "en" "sm_splay <Target> <File Path>"
+    "en" "sm_splay {darkorange}<Target> <File Path>"
   }
 
   "SM_COLOURSELF_Usage"
   {
-    "en" "sm_colour [Target] <8-Digit Hex/RGBA Colour>"
+    "en" "sm_colour {steelblue}[Target] {darkorange}<8-Digit Hex/RGBA Colour>"
   }
   "SM_COLOURSELF_Done"
   {
@@ -246,29 +245,29 @@
 
   "SM_FRIENDSENTRY_Usage"
   {
-    "en" "sm_friendlysentry [Target] <1/0>"
+    "en" "sm_friendlysentry {steelblue}[Target] {darkorange}<1/0>"
   }
   "SM_FRIENDSENTRY_Enable"
   {
     "#format" "{1:s}"
-    "en" "Enabled Friendly-Sentry for {1}."
+    "en" "Enabled {forestgreen}Friendly-Sentry{default} for {olive}{1}{default}."
   }
   "SM_FRIENDSENTRY_Enable_Self"
   {
-    "en" "Enabled Friendly-Sentry."
+    "en" "Enabled {forestgreen}Friendly-Sentry{default}."
   }
   "SM_FRIENDSENTRY_Disable"
   {
     "#format" "{1:s}"
-    "en" "Disabled Friendly-Sentry for {1}."
+    "en" "Disabled {forestgreen}Friendly-Sentry{default} for {olive}{1}{default}."
   }
   "SM_FRIENDSENTRY_Disable_Self"
   {
-    "en" "Disabled Friendly-Sentry."
+    "en" "Disabled {forestgreen}Friendly-Sentry{default}."
   }
 
   "SM_CSLAP_Usage"
   {
-    "en" "sm_clsap <Target>"
+    "en" "sm_clsap {darkorange}<Target>"
   }
 }

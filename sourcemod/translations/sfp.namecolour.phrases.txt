@@ -34,7 +34,7 @@
   }
   "SM_NAMECOLOUR_TagRequest"
   {
-    "en" "Please type your tag into chat (Max 16 Characters)"
+    "en" "Please type your tag into chat ({darkorange}Max 16 Characters{default})"
   }
   "SM_NAMECOLOUR_ResetAll"
   {
@@ -44,7 +44,7 @@
 
   "SM_SETNAMECOLOUR_Usage"
   {
-    "en" "sm_setnamecolour <6-Digit Hex Colour>"
+    "en" "sm_setnamecolour {darkorange}<6-Digit Hex Colour>"
   }
   "SM_SETNAMECOLOUR_Done"
   {
@@ -57,7 +57,7 @@
 
   "SM_SETTAGCOLOUR_Usage"
   {
-    "en" "sm_settagcolour <6-Digit Hex Colour>"
+    "en" "sm_settagcolour {darkorange}<6-Digit Hex Colour>"
   }
   "SM_SETTAGCOLOUR_Done"
   {
@@ -70,11 +70,11 @@
 
   "SM_SETTAG_Usage"
   {
-    "en" "sm_settag <Text>"
+    "en" "sm_settag {darkorange}<Text>"
   }
   "SM_SETTAG_Done"
   {
     "#format" "{1:s}"
-    "en" "Set Tag to '{1}'."
+    "en" "Set Tag Text to '{1}'."
   }
 }

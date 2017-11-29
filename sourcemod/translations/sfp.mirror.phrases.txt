@@ -9,16 +9,16 @@
 
   "SM_MIRROR_Usage"
   {
-    "en" "sm_mirror <Target> <1/0>"
+    "en" "sm_mirror {darkorange}<Target> <1/0>"
   }
   "SM_MIRROR_Enable"
   {
     "#format" "{1:s}"
-    "en" "Enabled Mirror Damage for {1}."
+    "en" "Enabled Mirror Damage for {olive}{1}{default}."
   }
   "SM_MIRROR_Disable"
   {
     "#format" "{1:s}"
-    "en" "Disabled Mirror Damage for {1}."
+    "en" "Disabled Mirror Damage for {olive}{1}{default}."
   }
 }
