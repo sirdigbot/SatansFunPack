@@ -9,6 +9,7 @@
 #define CONFIG_SIZE PLATFORM_MAX_PATH+13  // 13 = "configs/" + ".cfg" + \0
 
 #include <tf2_stocks>
+#include <morecolors_new> // Updated to use newdecls. Otherwise it spams errors.
 
 enum TF_Slot_Index // Because tf2_stocks has no invalid option.
 {
@@ -34,12 +35,13 @@ enum TF_Slot_Index // Because tf2_stocks has no invalid option.
  */
 stock void TagReplyUsage(int client, const char[] msg, any ...)
 {
+  SetGlobalTransTarget(client);
+
   int len = strlen(msg) + 255;
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  ReplyToCommand(client, "\x04[SM]\x05 Usage\x01: %s", outStr);
-  // FIXME Does this process translation?
+  CReplyToCommandEx(client, client, "\x04[SM]\x05 Usage\x01: %s", outStr);
   return;
 }
 
@@ -53,11 +55,13 @@ stock void TagReplyUsage(int client, const char[] msg, any ...)
  */
 stock void TagReply(int client, const char[] msg, any...)
 {
+  SetGlobalTransTarget(client);
+
   int len = strlen(msg) + 255;
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  ReplyToCommand(client, "%s%s", STANDARD_TAG, outStr);
+  CReplyToCommandEx(client, client, "%s%s", STANDARD_TAG, outStr);
   return;
 }
 
@@ -71,11 +75,13 @@ stock void TagReply(int client, const char[] msg, any...)
  */
 stock void TagPrintChat(int client, const char[] msg, any...)
 {
+  SetGlobalTransTarget(client);
+
   int len = strlen(msg) + 255;
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  PrintToChat(client, "%s%s", STANDARD_TAG, outStr);
+  CPrintToChatEx(client, client, "%s%s", STANDARD_TAG, outStr);
   return;
 }
 
@@ -89,11 +95,13 @@ stock void TagPrintChat(int client, const char[] msg, any...)
  */
 stock void TagActivity(int client, const char[] msg, any ...)
 {
+  SetGlobalTransTarget(LANG_SERVER); // TODO Is this correct?
+
   int len = strlen(msg) + 255;
   char[] outStr = new char[len];
   VFormat(outStr, len, msg, 3);
 
-  ShowActivity2(client, STANDARD_TAG, "%s", outStr);
+  CShowActivity2(client, STANDARD_TAG, "%s", outStr);
   return;
 }
 
