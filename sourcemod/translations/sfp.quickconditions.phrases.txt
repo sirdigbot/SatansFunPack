@@ -9,27 +9,54 @@
 
   "SM_BOING_Usage"
   {
-    "en" "sm_boing [Target] <1/0>"
+    "en" "sm_boing {steelblue}[Target] {darkorange}<1/0>"
   }
   "SM_BOING_On"
   {
-    "en" "Boing Mode Activated"
+    "en" "Enabled {legendary}Boing Mode"
   }
   "SM_BOING_Off"
   {
-    "en" "Boing Mode Deactivated"
+    "en" "Disabled {legendary}Boing Mode"
   }
 
   "SM_DANCE_Usage"
   {
-    "en" "sm_dancemonkey <Target> <Duration/0/Stop/End/Off>"
+    "en" "sm_dancemonkey {darkorange}<Target> <Duration/0/Stop/End/Off>"
   }
   "SM_DANCE_On"
   {
-    "en" "DANCE MONKEY, DANCE!"
+    "en" "{darkred}DANCE, MONKEY. DANCE!"
   }
   "SM_DANCE_Off"
   {
-    "en" "Dance Mode Deactivated"
+    "en" "Disabled {firebrick}Dance Mode"
+  }
+
+  "SM_GHOST_Usage"
+  {
+    "en" "sm_ghost {darkorange}<{steelblue}[Target] [1/0]{darkorange}>"
+  }
+  "SM_GHOST_Enabled_Self"
+  {
+    "en" "Enabled {haunted}Ghost Mode"
+  }
+  "SM_GHOST_Disabled_Self"
+  {
+    "en" "Disabled {haunted}Ghost Mode"
+  }
+  "SM_GHOST_Enabled"
+  {
+    "#format" "{1:s}"
+    "en" "Enabled {haunted}Ghost Mode{default} for {olive}{1}"
+  }
+  "SM_GHOST_Disabled"
+  {
+    "#format" "{1:s}"
+    "en" "Disabled {haunted}Ghost Mode{default} for {olive}{1}"
+  }
+  "SM_GHOST_TauntCancelTip"
+  {
+    "en" "Call For Medic to Disable Ghost Mode"
   }
 }

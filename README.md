@@ -184,6 +184,16 @@ Help Config Structure:
 | ------------------- | -------------------- | --- |
 | **sm_boing**        | Toggles Condition 72 | `sm_boing [Target] <1/0>` |
 | **sm_dancemonkey**  | Adds Condition 54    | `sm_dancemonkey <Target> <Duration/0/Stop/End/Off>` |
+| **sm_ghost**        | Toggles Condition 77 | `sm_ghost <[Target] [1/0]>` |
+
+<br/>
+
+| Overrides           | Description |
+| ------------------- | --- |
+| **sm_ghost_target** | Client can target others |
+
+**Note:** With sm_ghost the targeting arguments are optional. However if used, both must be present.  
+This is to prevent chaotic flip-flopping of players that already had the mode on.  
 
 <br/>
 

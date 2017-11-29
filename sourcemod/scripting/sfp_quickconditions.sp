@@ -22,7 +22,32 @@
 enum CommandNames {
   ComBOING,
   ComDANCEMONKEY,
+  ComGHOSTMODE,
   ComTOTAL
+};
+
+static const char c_GhostModels[][40] = {
+	"models/props_halloween/ghost.mdl",
+	"models/props_halloween/ghost_no_hat.mdl"
+};
+
+static const char c_GhostSounds[][26] = {
+	"vo/halloween_moan1.mp3",
+	"vo/halloween_moan2.mp3",
+	"vo/halloween_moan3.mp3",
+	"vo/halloween_moan4.mp3",
+	"vo/halloween_boo1.mp3",
+	"vo/halloween_boo2.mp3",
+	"vo/halloween_boo3.mp3",
+	"vo/halloween_boo4.mp3",
+	"vo/halloween_boo5.mp3",
+	"vo/halloween_boo6.mp3",
+	"vo/halloween_boo7.mp3",
+	"vo/halloween_haunted1.mp3",
+	"vo/halloween_haunted2.mp3",
+	"vo/halloween_haunted3.mp3",
+	"vo/halloween_haunted4.mp3",
+	"vo/halloween_haunted5mp3v"
 };
 
 
@@ -32,6 +57,8 @@ Handle  h_bUpdate = null;
 bool    g_bUpdate;
 Handle  h_bDisabledCmds = null;
 bool    g_bDisabledCmds[ComTOTAL];
+
+bool    g_bGhostMode[MAXPLAYERS + 1];
 
 /**
  * Known Bugs
@@ -74,12 +101,20 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_bDisabledCmds = CreateConVar("sm_quickcond_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- Boing\n- DanceMonkey", FCVAR_SPONLY|FCVAR_REPLICATED);
+  h_bDisabledCmds = CreateConVar("sm_quickcond_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- Boing\n- DanceMonkey\n- Ghost", FCVAR_SPONLY|FCVAR_REPLICATED);
   ProcessDisabledCmds();
   HookConVarChange(h_bDisabledCmds, UpdateCvars);
 
   RegAdminCmd("sm_boing", CMD_Boing, ADMFLAG_BAN, "Bouncy + Pew Pew");
   RegAdminCmd("sm_dancemonkey", CMD_Dance, ADMFLAG_BAN, "Use this before shooting near a player's feet");
+  RegAdminCmd("sm_ghost", CMD_GhostMode, ADMFLAG_BAN, "I'll give you 3 guesses");
+
+  AddCommandListener(Listener_Voicemenu, "voicemenu");
+
+  /**
+   * Overrides
+   * sm_ghost_target - Can target others
+   */
 
   PrintToServer("%T", "SFP_QuickConditionsLoaded", LANG_SERVER);
 }
@@ -111,9 +146,44 @@ void ProcessDisabledCmds()
 
   if(StrContains(buffer, "DanceMonkey", true) != -1)
     g_bDisabledCmds[ComDANCEMONKEY] = true;
+
+  if(StrContains(buffer, "Ghost", true) != -1)
+    g_bDisabledCmds[ComGHOSTMODE] = true;
   return;
 }
 
+
+public void OnMapStart()
+{
+  for(int i = 0; i < sizeof(c_GhostModels); ++i)
+    PrecacheModel(c_GhostModels[i], true);
+
+  for(int i = 0; i < sizeof(c_GhostSounds); ++i)
+    PrecacheSound(c_GhostSounds[i], true);
+  return;
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+  g_bGhostMode[client] = false;
+  return;
+}
+
+
+public Action Listener_Voicemenu(int client, char[] command, int args)
+{
+  if(client < 1 || client > MaxClients || !IsClientInGame(client))
+    return Plugin_Continue;
+
+  if(g_bGhostMode[client])
+  {
+    SetGhostMode(client, false); // Handles g_bGhostMode
+    if(!IsFakeClient(client))
+      TagPrintChat(client, "%T", "SM_GHOST_Disabled_Self", client);
+    return Plugin_Handled; // Doesn't matter if this successfully blocks or not
+  }
+  return Plugin_Continue;
+}
 
 
 /**
@@ -296,6 +366,120 @@ public Action CMD_Dance(int client, int args)
     TagReplyUsage(client, "%T", "SM_DANCE_Usage", client);
 
   return Plugin_Handled;
+}
+
+
+
+/**
+ * Turn into a ghost
+ * (Cond 77/TFCond_HalloweenGhostMode)
+ *
+ * sm_ghost <[Target] [1/0]>
+ */
+public Action CMD_GhostMode(int client, int args)
+{
+  if(args == 0)
+  {
+    if(!IsClientPlaying(client))
+    {
+      TagReply(client, "%T", "SFP_InGameOnly", client);
+      return Plugin_Handled;
+    }
+
+    if(g_bGhostMode[client])
+    {
+      SetGhostMode(client, false);
+      TagReply(client, "%T", "SM_GHOST_Disabled_Self", client);
+    }
+    else
+    {
+      SetGhostMode(client, true);
+      TagReply(client, "%T", "SM_GHOST_Enabled_Self", client);
+    }
+    return Plugin_Handled;
+  }
+
+  // To prevent annoying flip-flop situations, both args are mandatory at once.
+  if(args == 1)
+  {
+    TagReplyUsage(client, "%T", "SM_GHOST_Usage", client);
+    return Plugin_Handled;
+  }
+
+  if(!CheckCommandAccess(client, "sm_ghost_target", ADMFLAG_BAN, true))
+  {
+    TagReply(client, "%T", "SFP_NoTargeting", client);
+    return Plugin_Handled;
+  }
+
+  char arg1[MAX_NAME_LENGTH], arg2[MAX_BOOLSTRING_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  GetCmdArg(2, arg2, sizeof(arg2));
+
+  // Get Target
+  char targ_name[MAX_TARGET_LENGTH];
+  int targ_list[MAXPLAYERS], targ_count;
+  bool tn_is_ml;
+
+  if ((targ_count = ProcessTargetString(
+    arg1,
+    client,
+    targ_list,
+    MAXPLAYERS,
+    COMMAND_FILTER_ALIVE,
+    targ_name,
+    sizeof(targ_name),
+    tn_is_ml)) <= 0)
+  {
+    ReplyToTargetError(client, targ_count);
+    return Plugin_Handled;
+  }
+
+
+  // Get State
+  int state = GetStringBool(arg2, false, true, true, true);
+  if(state == -1)
+  {
+    TagReplyUsage(client, "%T", "SM_GHOST_Usage", client);
+    return Plugin_Handled;
+  }
+
+  // Apply
+  for(int i = 0; i < targ_count; ++i)
+  {
+    if(IsClientPlaying(targ_list[i])) // Only alive players
+      SetGhostMode(targ_list[i], view_as<bool>(state));
+  }
+
+  if(state)
+    TagActivity(client, "%T", "SM_GHOST_Enabled", LANG_SERVER, targ_name);
+  else
+    TagActivity(client, "%T", "SM_GHOST_Disabled", LANG_SERVER, targ_name);
+  return Plugin_Handled;
+}
+
+stock void SetGhostMode(int client, bool state)
+{
+  if(state)
+  {
+    g_bGhostMode[client] = true;
+    TF2_AddCondition(client, TFCond_HalloweenGhostMode, TFCondDuration_Infinite, 0);
+    if(!IsFakeClient(client))
+      ShowGhostCancelTip(client);
+  }
+  else
+  {
+    g_bGhostMode[client] = false;
+    TF2_RemoveCondition(client, TFCond_HalloweenGhostMode);
+  }
+  return;
+}
+
+stock void ShowGhostCancelTip(int client)
+{
+  SetHudTextParams(-1.0, 0.87, 4.0, 255, 255, 255, 255); // TODO Add colour cvar
+  ShowHudText(client, -1, "%T", "SM_GHOST_TauntCancelTip", client);
+  return;
 }
 
 
