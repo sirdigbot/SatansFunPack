@@ -477,7 +477,30 @@ stock void SetGhostMode(int client, bool state)
 
 stock void ShowGhostCancelTip(int client)
 {
-  SetHudTextParams(-1.0, 0.87, 4.0, 255, 255, 255, 255); // TODO Add colour cvar
+  int red, green, blue;
+  switch(TF2_GetClientTeam(client))
+  {
+    case TFTeam_Red:
+    {
+      red   = 255;
+      green = 0;
+      blue  = 0;
+    }
+    case TFTeam_Blue:
+    {
+      red   = 0;
+      green = 0;
+      blue  = 255;
+    }
+    default:
+    {
+      red   = 255;
+      green = 255;
+      blue  = 255;
+    }
+  }
+
+  SetHudTextParams(-1.0, 0.75, 4.0, red, green, blue, 255);
   ShowHudText(client, -1, "%T", "SM_GHOST_TauntCancelTip", client);
   return;
 }

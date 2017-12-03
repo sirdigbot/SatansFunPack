@@ -477,7 +477,7 @@ public Action CMD_PlayerID(int client, int args)
       case 1:
       {
         idType = AuthId_Engine;
-        idTypeStr = "EngineID";
+        idTypeStr = "EngineID"; // TODO Translation for all instances of id names
       }
       case 2:
       {
