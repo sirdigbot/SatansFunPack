@@ -4,7 +4,8 @@
 #define _sfp_shared_included
 
 #define MAX_BOOLSTRING_LENGTH 8           // "disable" + \0
-#define STANDARD_TAG "\x04[SM]\x01 "
+#define STANDARD_TAG          "\x04[SM]\x01 "
+#define CONSOLE_TAG           "[SM] "
 #define MAX_SLOTSTRING_LENGTH 10          // "secondary" + \0
 #define CONFIG_SIZE PLATFORM_MAX_PATH+13  // 13 = "configs/" + ".cfg" + \0
 
@@ -53,7 +54,7 @@ stock void TagReplyUsage(int client, const char[] msg, any ...)
  * @param msg	    String to print
  * @param ...   	Optional. Format-Class Function
  */
-stock void TagReply(int client, const char[] msg, any...)
+stock void TagReply(int client, const char[] msg, any ...)
 {
   SetGlobalTransTarget(client);
 
@@ -73,7 +74,7 @@ stock void TagReply(int client, const char[] msg, any...)
  * @param msg	    String to print
  * @param ...   	Optional. Format-Class Function
  */
-stock void TagPrintChat(int client, const char[] msg, any...)
+stock void TagPrintChat(int client, const char[] msg, any ...)
 {
   SetGlobalTransTarget(client);
 
@@ -102,6 +103,48 @@ stock void TagActivity(int client, const char[] msg, any ...)
   VFormat(outStr, len, msg, 3);
 
   CShowActivity2(client, STANDARD_TAG, "%s", outStr);
+  return;
+}
+
+
+/**
+ * Wraps PrintToServer with the standard tag.
+ *
+ * @param msg	    String to print
+ * @param ...   	Optional. Format-Class Function
+ */
+stock void TagPrintServer(const char[] msg, any ...)
+{
+  SetGlobalTransTarget(LANG_SERVER);
+
+  int len = strlen(msg) + 255;
+  char[] outStr = new char[len];
+  VFormat(outStr, len, msg, 3);
+
+  PrintToServer("%s%s", CONSOLE_TAG, outStr);
+  return;
+}
+
+
+/**
+ * Print a message to a client when you dont have a known ReplySource
+ *
+ * @param client	Client who issued command
+ * @param msg	    String to print
+ * @param ...   	Optional. Format-Class Function
+ */
+stock void TagPrintToClient(int client, const char[] msg, any ...)
+{
+  SetGlobalTransTarget((client == 0) ? LANG_SERVER : client);
+
+  int len = strlen(msg) + 255;
+  char[] outStr = new char[len];
+  VFormat(outStr, len, msg, 3);
+
+  if(client == 0)
+    PrintToServer("%s%s", CONSOLE_TAG, outStr);                   // TagPrintServer
+  else if(client > 0 && client <= MaxClients)
+    CPrintToChatEx(client, client, "%s%s", STANDARD_TAG, outStr); // TagPrintChat
   return;
 }
 

@@ -4,4 +4,212 @@
   {
     "en" "Loaded Satan's Fun Pack - Bans"
   }
+
+  "SM_BANS_LogDelete"
+  {
+    "#format" "{1:s}"
+    "en" "Deleted Log File: {1}"
+  }
+  "SM_BANS_LogDeleteFail"
+  {
+    "#format" "{1:s}"
+    "en" "Failed to delete log file: {1}"
+  }
+  "SM_BANS_LogStart"
+  {
+    "en" "Logging Started"
+  }
+  "SM_BANS_DBConnectFail"
+  {
+    "#format" "{1:s}"
+    "en" "Failed to connect to SQLite Database 'SatansBanDB'. Error: {1}"
+  }
+  "SM_BANS_DBConnectSuccess"
+  {
+    "en" "Successfully Connected to 'SatansBanDB'."
+  }
+  "SM_BANS_RegexFail"
+  {
+    "en" "Failed to Compile Regular Expressions."
+  }
+  "SM_BANS_SQL_PrepareFail"
+  {
+    "#format" "{1:s}"
+    "en" "Failed to prepare SQL statement: {1}"
+  }
+  "SM_BANS_InvalidId"
+  {
+    "en" "Invalid SteamID or IP Address."
+  }
+  "SM_BANS_FetchFail"
+  {
+    "#format" "{1:s},{2:d}"
+    "en" "Failed to fetch value from result set. Func:{1} Field:{2}"
+  }
+
+  "SM_CLEANBANS_Cleaned"
+  {
+    "en" "Cleared all expired bans from the database."
+  }
+
+  "SM_EDITBAN_Usage" // Console-only. Must have quotes around args
+  {
+    "en" "sm_editban \"<SteamID/IP Address>\" \"<Duration/'SKIP'>\" \"<Reason/'SKIP'>\" \"<Note/'SKIP'>\""
+  }
+  "SM_EDITBAN_InvalidDuration"
+  {
+    "#format" "{1:d}"
+    "en" "Invalid Duration. Must be between 0 and {1}."
+  }
+  "SM_EDITBAN_Console"
+  {
+    "en" "CONSOLE"
+  }
+  "SM_EDITBAN_Querying"
+  {
+    "#format" "{1:s}"
+    "en" "Editing ban for {1}."
+  }
+  "SM_EDITBAN_Changes"
+  {
+    "#format" "{1:s},{2:s},{3:s},{4:d},{5:s},{6:s}"
+    "en" "{1}<{2}> Edited Ban for {3}: Duration: {4}, Reason: {5}, Note: {6}"
+  }
+  "SM_EDITBAN_Done"
+  {
+    "en" "Ban Successfully Edited."
+  }
+  "SM_EDITBAN_SkipAll"
+  {
+    "en" "Ban Editing Skipped."
+  }
+
+  "SM_ISBANNED_Usage"
+  {
+    "en" "sm_isbanned <SteamID/IP Address>"
+  }
+  "SM_ISBANNED_Invalid"
+  {
+    "en" "Invalid SteamID or IP Address"
+  }
+  "SM_ISBANNED_Querying"
+  {
+    "#format" "{1:s}"
+    "en" "Checking if {1} is banned."
+  }
+  "SM_ISBANNED_NotFound"
+  {
+    "en" "Player is not banned."
+  }
+  "SM_ISBANNED_Found"
+  {
+    "#format" "{1:d}"
+    "en" "Player is banned for another {1} minutes." // TODO Add reason?
+  }
+
+  "SM_CLEANLOGS_Done"
+  {
+    "#format" "{1:d}"
+    "en" "Deleted all log files older than {1} days."
+  }
+
+  "SM_FULLRESET_InUse"
+  {
+    "en" "Full Reset is currently in use."
+  }
+  "SM_FULLRESET_Repeat"
+  {
+    "#format" "{1:d}"
+    "en" "This command will COMPLETELY reset the ban database. Type 'sm_sfp_bans_full_reset {1}' to confirm."
+  }
+  "SM_FULLRESET_BadArgs"
+  {
+    "en" "When prompted to confirm, you must type 'sm_sfp_bans_full_reset <Number>'. Database Reset was canceled."
+  }
+  "SM_FULLRESET_Invalid"
+  {
+    "en" "Number did not match up. Database will not reset."
+  }
+  "SM_FULLRESET_Canceled"
+  {
+    "en" "Database Reset was canceled."
+  }
+  "SM_FULLRESET_Done"
+  {
+    "en" "Ban Database has been fully reset. ALL BANS HAVE BEEN ERASED."
+  }
+
+  "SM_ONBAN_RetrieveFail"
+  {
+    "#format" "{1:s},{2:s},{3:s},{4:s},{5:s}"
+    "en" "Failed to retrieve {1} for client {2} (2:{3}, 3:{4}, IP:{5})"
+  }
+  "SM_ONBAN_NotBanned"
+  {
+    "en" "WARNING: BAN WAS NOT STORED IN DATABASE!"
+  }
+  "SM_ONBAN_Unknown"
+  {
+    "en" "UNKNOWN"
+  }
+  "SM_ONBAN_Querying"
+  {
+    "#format" "{1:s}"
+    "en" "Adding {1} to Ban Database"
+  }
+  "SM_ONBAN_Querying_Full"
+  {
+    "#format" "{1:s},{2:s},{3:d},{4:s},{5:s}"
+    "en" "{1}<{2}> Banned Player (By IP?: {3}). Adding {4}<{5}> to Ban Database"
+  }
+  "SM_ONBAN_Done"
+  {
+    "en" "Ban was Successfully Added to Database"
+  }
+  "SM_ONBAN_IdentityFail"
+  {
+    "#format" "{1:d}"
+    "en" "OnBanIdentity Failed. Identity is Invalid (ID: {1})"
+  }
+
+  "SM_ONJOIN_AuthFail"
+  {
+    "#format" "{1:s},{2:s},{3:s}"
+    "en" "Invalid AuthID during OnClientAuthorized: Name:{1}, IP:{3}, Auth:{2}"
+  }
+  "SM_ONJOIN_ClientInvalid"
+  {
+    "#format" "{1:d}"
+    "en" "Client Index became invalid before Callback_OnClientAuth. Client (#{1}) Ban Status Unknown!"
+  }
+  "SM_ONJOIN_NullResult"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Database Result was null in Callback_OnClientAuth. Client (#{1}, {2}) Ban Status Unknown!"
+  }
+  "SM_ONJOIN_Duplicate"
+  {
+    "#format" "{1:d},{2:d},{3:s}"
+    "en" "{1} Identical Rows found in Callback_OnClientAuth. Client (#{2}, {3}) Ban Status Unknown!"
+  }
+  "SM_ONJOIN_Kick"
+  {
+    "#format" "{1:s},{2:s},{3:s}"
+    "en" "Banned Until {1}.{2}Reason: {3}"
+  }
+
+  "SM_ONREMOVE_IdentityFail"
+  {
+    "#format" "{1:s}"
+    "en" "OnRemoveBan Failed. Identity is Invalid (ID: {1})"
+  }
+  "SM_ONREMOVE_Removing"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Removing ban from database matching {1}:{2}"
+  }
+  "SM_ONREMOVE_Done"
+  {
+    "en" "Ban was removed from database."
+  }
 }
