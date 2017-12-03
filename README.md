@@ -4,17 +4,17 @@ A collection of useful commands and features for TF2 Servers.
 [Plugin Conventions](#conventions)  
 [Core File (satansfunpack.smx)](#corefile)  
 [Admin Tools (sfp_admintools.smx)](#admintools)  
-[Help Menu (sfp_helpmenu.smx)](#helpmenu)  
-[Info Utilities (sfp_infoutils.smx)](#infoutils)  
-[Quick Conditions (sfp_quickconditions.smx)](#quickconds)  
-[Targeting Filters (sfp_targeting.smx)](#targeting)  
-[Toybox (sfp_toybox.smx](#toybox)  
-[Mirror Damage (sfp_mirror.smx)](#mirror)  
 [Ban Database (sfp_bans.smx)](#bans)  
 [Admin Chat Vision (sfp_chatvision.smx)](#chatvision)  
 [God Mode (sfp_godmode.smx)](#godmode)  
-[Name Colour Manager (sfp_namecolour.smx)](#namecolour)  
+[Help Menu (sfp_helpmenu.smx)](#helpmenu)  
+[Info Utilities (sfp_infoutils.smx)](#infoutils)  
+[Mirror Damage (sfp_mirror.smx)](#mirror)  
 [Miscellaneous Tweaks (sfp_misctweaks.smx)](#misctweaks)  
+[Name Colour Manager (sfp_namecolour.smx)](#namecolour) - ***(Requires [Custom Chat Colors](https://forums.alliedmods.net/showthread.php?p=1721580))***  
+[Quick Conditions (sfp_quickconditions.smx)](#quickconds)  
+[Targeting Filters (sfp_targeting.smx)](#targeting)  
+[Toybox (sfp_toybox.smx)](#toybox) - ***(Requires [TF2Items](https://forums.alliedmods.net/showthread.php?t=115100))***  
 
 <br/>
 
@@ -28,7 +28,7 @@ The syntax for commands have the following conventions:
  - `<[Argument1] [Argument2]>` means that both arguments are optional, but can only be used if both are present.  
 
 Translation Files have a colour coding system.  
-Care must be taken to only use colours on text used for in-game chat text.  
+Care must be taken to only use colours on text used for in-game chat text, or it can display weirdly in console.  
 
 | Category                                  | Colour          | Example       |
 | ----------------------------------------- | --------------- | ---           |
@@ -38,13 +38,15 @@ Care must be taken to only use colours on text used for in-game chat text.
 | **Generic Punishment Command Names**      | `{firebrick}`   | Disabled **Dance Mode** |
 | **Generic Powerup/Reward Command Names**  | `{forestgreen}` | Enabled **Boing Mode**  |
 
-Colours are from a Sourcemod 1.7+ version of [MoreColors](https://forums.alliedmods.net/showthread.php?t=185016).  
+*Colours are from an included Sourcemod 1.7+ version of [MoreColors](https://forums.alliedmods.net/showthread.php?t=185016).*  
 
 <br/>
 
 <a name="corefile"/>
 
 ## Core File (satansfunpack.smx)
+
+The main file. Doesn't do a lot.  
 
 | ConVar                      | Description                         | Default |
 | --------------------------- |------------------------------------ | --- |
@@ -62,6 +64,8 @@ Colours are from a Sourcemod 1.7+ version of [MoreColors](https://forums.alliedm
 <a name="admintools"/>
 
 ## Admin Tools (sfp_admintools.smx)
+
+A collection of commands intended for admin use/abuse.  
 
 | ConVar                         | Description                            | Default |
 | ------------------------------ | -------------------------------------- | --- |
@@ -107,15 +111,103 @@ Colours are from a Sourcemod 1.7+ version of [MoreColors](https://forums.alliedm
 | **sm_sethealth_target** | Client can target others |
 | **sm_respawn_target**   | Client can target others |
 
-**Important Note:** sm_forceclass lock will *very* likely cause a crash if used with a class-limit.  
+**Important Note:** Locking with `sm_forceclass` will *very* likely cause a crash if used with a class-limit.  
 
 **Not as important Note:** Disabling sm_forceclass will also disable sm_unlockclass.  
+
+<br/>
+
+<a name="bans"/>
+
+## Bans (sfp_bans.smx)
+
+Passively manages a SQLite database of all bans issued that use the OnBanClient and OnBanIdentity forwards.  
+Also contains a few commands to easily read and modify the database from within TF2.  
+
+| ConVar                    | Description                                         | Default |
+| ------------------------- | --------------------------------------------------- | ----- |
+| **sm_sfp_bans_update**    | Should sfp_bans Auto-Update                         | `1`   |
+| **sm_sfp_bans_logdays**   | How many days log files are kept for *(0 = Forever)* | `14`  |
+| **sm_sfp_bans_ipban_max** | How many days are IP Bans kept for                  | `1`   |
+
+<br/>
+
+| Command                     | Description                         | Syntax |
+| --------------------------- | ----------------------------------- | --- |
+| **sm_cleanbanlogs**         | Manually delete log files older than `sm_sfp_bans_logdays` | `sm_cleanbanlogs` |
+| **sm_cleanbans**            | Remove all expired bans              | `sm_cleanbans` |
+| **sm_editban**              | Edit an existing ban in the database *Console-Only* | `sm_editban "<SteamID/IP Address>" "<Duration/'SKIP'>" "<Reason/'SKIP'>" "<Note/'SKIP'>"` |
+| **sm_isbanned**             | Check if a player is banned         | `sm_isbanned <SteamID/IP Address>` |
+| **sm_browsebans**           | Browse active bans in the database  | `sm_browsebans` |
+| **sm_sfp_bans_full_reset**  | Delete the bannedusers table and create a new one | `sm_sfp_bans_full_reset <Unknown Integer>` |
+| **sm_sfp_bans_runtests**    | Run a series of tests *Disabled by default* | `sm_sfp_bans_runtests` |
+
+<br/>
+
+<a name="chatvision"/>
+
+## Chat Vision (sfp_chatvision.smx)
+
+Echos all teamchat messages to Chat-Admins (players with access to `sm_chatvision_access`)  
+
+| ConVar                    | Description                                          | Default |
+| ------------------------- | ---------------------------------------------------- | --- |
+| **sm_sfp_chatvision_update**        | Should sfp_chatvision.smx Auto-Update      | `1` |
+| **sm_chatvision_enabled** | Toggle Chat Vision Output (it will still run everything else) | `1` |
+
+<br/>
+
+| Command                   | Description                                              | Syntax |
+| ------------------------- | -------------------------------------------------------- | --- |
+| **sm_chatvision_reload**  | Reloads the list of Chat-Admins (who can see enemy chat) | `sm_chatvision_reload` |
+| **sm_ischatadmin**        | Check if a player is a Chat-Admin | `sm_ischatadmin <Target>` |
+
+<br/>
+
+| Overrides                 | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| **sm_chatvision_access**  | Client is considered admin and will see enemy chat  |
+
+<br/>
+
+<a name="godmode"/>
+
+## God Mode (sfp_godmode.smx)
+
+Grants players immunity from damage.  
+
+| ConVar                    | Description                        | Default |
+| ------------------------- | ---------------------------------- | --- |
+| **sm_sfp_godmode_update** | Should sfp_godmode.smx Auto-Update | `1` |
+
+<br/>
+
+| Command        | Description                                              | Syntax |
+| -------------- | -------------------------------------------------------- | --- |
+| **sm_god**  | Grant a player immunity to damage | `sm_god <[Target] [1/0]>` |
+| **sm_buddha**  | Grant a player immunity to damage, but not damage forces | `sm_buddha <[Target] [1/0]>` |
+| **sm_mortal**  | Revoke Buddha or God Mode from a player | `sm_mortal [Target]` |
+| **sm_buildinggod** | Grant a player's buildings immunity from damage | `sm_buildinggod <[Target] [1/0]>` |
+| **sm_bgod** | *Alias for sm_buildinggod* | -- |
+
+<br/>
+
+| Overrides                     | Description               |
+| ----------------------------- | ------------------------- |
+| **sm_godmode_target**         | Client can target others  |
+| **sm_mortal_target**          | Client can target others  |
+| **sm_buildinggod_target**     | Client can target others  |
+
+**Note:** With sm_buddha, sm_buildinggod and sm_god, the targeting arguments are optional. However if used, both must be present.  
+This is to prevent chaotic flip-flopping of players that already had the mode on.  
 
 <br/>
 
 <a name="helpmenu"/>
 
 ## Help Menu (sfp_helpmenu.smx)
+
+A highly customisable help menu plugin.  
 
 | ConVar                          | Description            | Default                  |
 | ------------------------------- | ---------------------- | ------------------------ |
@@ -169,6 +261,8 @@ Help Config Structure:
 
 ## Info Utilities (sfp_infoutils.smx)
 
+A set of commands that get information about other players.  
+
 | ConVar                              | Description                            | Default |
 | ----------------------------------- | -------------------------------------- | --- |
 | **sm_sfp_infoutils_update**          | Should sfp_infoutils.smx Auto-Update  | `1` |
@@ -194,9 +288,124 @@ Help Config Structure:
 
 <br/>
 
+<a name="mirror"/>
+
+## Mirror (sfp_mirror.smx)
+
+A command that sets a player to revert all damage dealt back to the themself.  
+
+| ConVar                          | Description                            | Default |
+| ------------------------------- | -------------------------------------- | --- |
+| **sm_sfp_mirror_update**        | Should sfp_mirror.smx Auto-Update      | `1` |
+
+<br/>
+
+| Command       | Description                            | Syntax                     |
+| ------------- | -------------------------------------- | -------------------------- |
+| **sm_mirror** | Redirect a player's damage to themself | `sm_mirror <Target> <1/0>` |
+
+<br/>
+
+<a name="misctweaks"/>
+
+## Miscellaneous Tweaks (sfp_misctweaks.smx)
+
+A set of fun or interesting game tweaks that don't belong in any other plugin.  
+
+| ConVar                       | Description                            | Default |
+| ---------------------------- | -------------------------------------- | --- |
+| **sm_sfp_misctweaks_update** | Should sfp_misctweaks.smx Auto-Update  | `1` |
+| **sm_satansfunpack_tweakconfig** | Config file for sfp_misctweaks.smx | `satansfunpack_tweaks.cfg` |
+| **sm_sfp_misctweaks_shield** | Allow The Medigun Shield               | `1` |
+| **sm_sfp_misctweaks_shield_stock** | Only Allow Stock Mediguns + Variants to create Shields | `1` |
+| **sm_sfp_misctweaks_shield_dmg** | Damage amount Shields should deal to Players | `1.0` |
+| **sm_sfp_misctweaks_tauntcancel** | Allow taunt cancelling            | `1` |
+| **sm_sfp_misctweaks_tauntcancel_cooldown** | Cooldown for `sm_stoptaunt` | `5` |
+| **sm_sfp_misctweaks_killeffect_sound** | Are Kill Effect sounds enabled | `1` |
+| **sm_sfp_misctweaks_killeffect_particle** | Are Kill Effect particles enabled | `1` |
+
+<br/>
+
+| Command             | Description                         | Syntax                    |
+| ------------------- | ----------------------------------- | ---                       |
+| **sm_misctweaks_reloadcfg** | Reload Misc. Tweaks Config  | `sm_misctweaks_reloadcfg` |
+| **sm_forceshield**  | Force Your Medigun Shield to Spawn  | `sm_forceshield`          |
+| **sm_filluber**     | Set a player's ubercharge to 100%   | `sm_filluber [Target]`    |
+| **sm_stoptaunt**    | Cancels any active taunt            | `sm_stoptaunt [Target]`   |
+
+<br/>
+
+| Overrides                 | Description               |
+| ------------------------- | ------------------------- |
+| **sm_filluber_target**    | Client can target others  |
+| **sm_stoptaunt_target**   | Client can target others  |
+
+**Notes:**  
+Kill Effects apply either from any **Headshot Kill**, or a **Backstab with the 'Your Eternal Reward'**.  
+
+Shields are created by using **+attack3** with a full ubercharge.  
+MvM also uses a Shield Damage value of `1.0`.  
+`sm_stoptaunt` needs a cooldown because some taunts can crash the server if spammed.  
+`sm_sfp_misctweaks_shield` values can be  
+ - -1 = Disabled
+ - 0  = Only `sm_forceshield` is allowed
+ - 1  = Enabled  
+
+<br/>
+
+<a name="namecolour"/>
+
+## Name Colour Manager (sfp_namecolour.smx)
+
+A menu and set of commands that let players modify their Tag, Tag colour and Name colour.  
+
+| ConVar                       | Description                            | Default |
+| ---------------------------- | -------------------------------------- | --- |
+| **sm_sfp_namecolour_update** | Should sfp_namecolour.smx Auto-Update  | `1` |
+| **sm_satansfunpack_colourconfig** | Colour List Config File | `satansfunpack_colours.cfg` |
+
+Colour Config Structure:
+```
+"SatansFunColours"
+{
+  "1"
+  {
+    "name"  "Alice Blue"
+    "hex"   "F0F8FF"
+  }
+  ...
+}
+```
+
+| Command        | Description                                              | Syntax |
+| -------------- | -------------------------------------------------------- | --- |
+| **sm_namecolour**     | Set Tag, Tag Colour, and Name Colour | `sm_namecolour` |
+| **sm_namecolor**      | *Alias for sm_namecolour*     | -- |
+| **sm_tagcolour**      | *Alias for sm_namecolour*     | -- |
+| **sm_tagcolor**       | *Alias for sm_namecolour*     | -- |
+| **sm_setnamecolour**  | Set Name Colour Directly      | `sm_setnamecolour <6-Digit Hex Colour>` |
+| **sm_setnamecolor**   | *Alias for sm_setnamecolour*  | -- |
+| **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
+| **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
+| **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
+| **sm_namecolour_reloadcfg** | Reload Colour Config    | `sm_namecolour_reloadcfg` |
+
+<br/>
+
+| Overrides                 | Description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| **sm_setnamecolour**      | Access will automatically enable `Name Colour` Menu Item  |
+| **sm_settagcolour**       | Access will automatically enable `Tag Colour` Menu Item   |
+| **sm_settag**             | Access will automatically enable `Set Tag Text` Menu Item |
+| **sm_resetcolour_access** | Client can use Reset All on `sm_namecolour` Menu          |
+
+<br/>
+
 <a name="quickconds"/>
 
 ## Quick Conditions (sfp_quickconditions.smx)
+
+A small selection of short-hands for adding TF2 Conditions.  
 
 | ConVar                        | Description                            | Default |
 | ----------------------------- | -------------------------------------- | --- |
@@ -225,6 +434,8 @@ This is to prevent chaotic flip-flopping of players that already had the mode on
 <a name="targeting"/>
 
 ## Targeting (sfp_targeting.smx)
+
+A large group of player targeting filters for all commands.  
 
 | ConVar                    | Description                                             | Default |
 | ------------------------- | ------------------------------------------------------- | --- |
@@ -270,6 +481,8 @@ You can just change the map to reload it which works fine.
 <a name="toybox"/>
 
 ## Toy Box (sfp_toybox.smx)
+
+A collection of fun or interesting commands, not necessarily intended for admins only.  
 
 | ConVar                          | Description                            | Default |
 | ------------------------------- | -------------------------------------- | --- |
@@ -345,175 +558,3 @@ Toy Box Config Structure:
 | **sm_colour_target**          | Client can target others |
 | **sm_friendlysentry_target**  | Client can target others |
 | **sm_tauntid_target**         | Client can target others |
-
-<br/>
-
-<a name="mirror"/>
-
-## Mirror (sfp_mirror.smx)
-
-| ConVar                          | Description                            | Default |
-| ------------------------------- | -------------------------------------- | --- |
-| **sm_sfp_mirror_update**        | Should sfp_mirror.smx Auto-Update      | `1` |
-
-<br/>
-
-| Command       | Description                            | Syntax                     |
-| ------------- | -------------------------------------- | -------------------------- |
-| **sm_mirror** | Redirect a player's damage to themself | `sm_mirror <Target> <1/0>` |
-
-<br/>
-
-<a name="chatvision"/>
-
-## Chat Vision (sfp_chatvision.smx)
-
-**Passive** Echos all teamchat messages to Chat-Admins (players with access to `sm_chatvision_access`)  
-
-| ConVar                    | Description                                          | Default |
-| ------------------------- | ---------------------------------------------------- | --- |
-| **sm_sfp_chatvision_update**        | Should sfp_chatvision.smx Auto-Update      | `1` |
-| **sm_chatvision_enabled** | Toggle Chat Vision Output (it will still run everything else) | `1` |
-
-<br/>
-
-| Command                   | Description                                              | Syntax |
-| ------------------------- | -------------------------------------------------------- | --- |
-| **sm_chatvision_reload**  | Reloads the list of Chat-Admins (who can see enemy chat) | `sm_chatvision_reload` |
-| **sm_ischatadmin**        | Check if a player is a Chat-Admin | `sm_ischatadmin <Target>` |
-
-<br/>
-
-| Overrides                 | Description                                         |
-| ------------------------- | --------------------------------------------------- |
-| **sm_chatvision_access**  | Client is considered admin and will see enemy chat  |
-
-<br/>
-
-<a name="godmode"/>
-
-## God Mode (sfp_godmode.smx)
-
-| ConVar                    | Description                        | Default |
-| ------------------------- | ---------------------------------- | --- |
-| **sm_sfp_godmode_update** | Should sfp_godmode.smx Auto-Update | `1` |
-
-<br/>
-
-| Command        | Description                                              | Syntax |
-| -------------- | -------------------------------------------------------- | --- |
-| **sm_god**  | Grant a player immunity to damage | `sm_god <[Target] [1/0]>` |
-| **sm_buddha**  | Grant a player immunity to damage, but not damage forces | `sm_buddha <[Target] [1/0]>` |
-| **sm_mortal**  | Revoke Buddha or God Mode from a player | `sm_mortal [Target]` |
-| **sm_buildinggod** | Grant a player's buildings immunity from damage | `sm_buildinggod <[Target] [1/0]>` |
-| **sm_bgod** | *Alias for sm_buildinggod* | -- |
-
-<br/>
-
-| Overrides                     | Description               |
-| ----------------------------- | ------------------------- |
-| **sm_godmode_target**         | Client can target others  |
-| **sm_mortal_target**          | Client can target others  |
-| **sm_buildinggod_target**     | Client can target others  |
-
-**Note:** With sm_buddha, sm_buildinggod and sm_god, the targeting arguments are optional. However if used, both must be present.  
-This is to prevent chaotic flip-flopping of players that already had the mode on.  
-
-<br/>
-
-<a name="namecolour"/>
-
-## Name Colour Manager (sfp_namecolour.smx)
-
-| ConVar                       | Description                            | Default |
-| ---------------------------- | -------------------------------------- | --- |
-| **sm_sfp_namecolour_update** | Should sfp_namecolour.smx Auto-Update  | `1` |
-| **sm_satansfunpack_colourconfig** | Colour List Config File | `satansfunpack_colours.cfg` |
-
-Colour Config Structure:
-```
-"SatansFunColours"
-{
-  "1"
-  {
-    "name"  "Alice Blue"
-    "hex"   "F0F8FF"
-  }
-  ...
-}
-```
-
-| Command        | Description                                              | Syntax |
-| -------------- | -------------------------------------------------------- | --- |
-| **sm_namecolour**     | Set Tag, Tag Colour, and Name Colour | `sm_namecolour` |
-| **sm_namecolor**      | *Alias for sm_namecolour*     | -- |
-| **sm_tagcolour**      | *Alias for sm_namecolour*     | -- |
-| **sm_tagcolor**       | *Alias for sm_namecolour*     | -- |
-| **sm_setnamecolour**  | Set Name Colour Directly      | `sm_setnamecolour <6-Digit Hex Colour>` |
-| **sm_setnamecolor**   | *Alias for sm_setnamecolour*  | -- |
-| **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
-| **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
-| **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
-| **sm_namecolour_reloadcfg** | Reload Colour Config    | `sm_namecolour_reloadcfg` |
-
-<br/>
-
-| Overrides                 | Description                                               |
-| ------------------------- | --------------------------------------------------------- |
-| **sm_setnamecolour**      | Access will automatically enable `Name Colour` Menu Item  |
-| **sm_settagcolour**       | Access will automatically enable `Tag Colour` Menu Item   |
-| **sm_settag**             | Access will automatically enable `Set Tag Text` Menu Item |
-| **sm_resetcolour_access** | Client can use Reset All on `sm_namecolour` Menu          |
-
-<br/>
-
-<a name="misctweaks"/>
-
-## Miscellaneous Tweaks (sfp_misctweaks.smx)
-
-| ConVar                       | Description                            | Default |
-| ---------------------------- | -------------------------------------- | --- |
-| **sm_sfp_misctweaks_update** | Should sfp_misctweaks.smx Auto-Update  | `1` |
-| **sm_satansfunpack_tweakconfig** | Config file for sfp_misctweaks.smx | `satansfunpack_tweaks.cfg` |
-| **sm_sfp_misctweaks_shield** | Allow The Medigun Shield               | `1` |
-| **sm_sfp_misctweaks_shield_stock** | Only Allow Stock Mediguns + Variants to create Shields | `1` |
-| **sm_sfp_misctweaks_shield_dmg** | Damage amount Shields should deal to Players | `1.0` |
-| **sm_sfp_misctweaks_tauntcancel** | Allow taunt cancelling            | `1` |
-| **sm_sfp_misctweaks_tauntcancel_cooldown** | Cooldown for `sm_stoptaunt` | `5` |
-| **sm_sfp_misctweaks_killeffect_sound** | Are Kill Effect sounds enabled | `1` |
-| **sm_sfp_misctweaks_killeffect_particle** | Are Kill Effect particles enabled | `1` |
-
-<br/>
-
-| Command             | Description                         | Syntax                    |
-| ------------------- | ----------------------------------- | ---                       |
-| **sm_misctweaks_reloadcfg** | Reload Misc. Tweaks Config  | `sm_misctweaks_reloadcfg` |
-| **sm_forceshield**  | Force Your Medigun Shield to Spawn  | `sm_forceshield`          |
-| **sm_filluber**     | Set a player's ubercharge to 100%   | `sm_filluber [Target]`    |
-| **sm_stoptaunt**    | Cancels any active taunt            | `sm_stoptaunt [Target]`   |
-
-<br/>
-
-| Overrides                 | Description               |
-| ------------------------- | ------------------------- |
-| **sm_filluber_target**    | Client can target others  |
-| **sm_stoptaunt_target**   | Client can target others  |
-
-**Notes:**  
-Kill Effects apply either from any **Headshot Kill**, or a **Backstab with the 'Your Eternal Reward'**.  
-
-Shields are created by using **+attack3** with a full ubercharge.  
-MvM also uses a Shield Damage value of `1.0`.  
-`sm_stoptaunt` needs a cooldown because some taunts can crash the server if spammed.  
-`sm_sfp_misctweaks_shield` values can be  
- - -1 = Disabled
- - 0  = Only `sm_forceshield` is allowed
- - 1  = Enabled  
-
-<br/>
-
-<a name="bans"/>
-
-## Bans (sfp_bans.smx)
-
-**- Not Implemented -**
