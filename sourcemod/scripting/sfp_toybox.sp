@@ -295,7 +295,7 @@ public void OnPluginStart()
   RegAdminCmd("sm_friendlysentry",  CMD_FriendlySentry, ADMFLAG_GENERIC, "Load Your Sentry Full of Friendliness Pellets");
   #endif
   #if defined _INCLUDE_CUSTOMSLAP
-  RegAdminCmd("sm_cslap",           CMD_CustomSlap, ADMFLAG_GENERIC, "A Customiseable Slap");
+  RegAdminCmd("sm_cslap",           CMD_CustomSlap, ADMFLAG_GENERIC, "A Customisable Slap");
   #endif
 
   /**
