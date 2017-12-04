@@ -187,11 +187,6 @@
     "#format" "{1:d},{2:s}"
     "en" "Database Result was null in Callback_OnClientAuth. Client (#{1}, {2}) Ban Status Unknown!"
   }
-  "SM_ONJOIN_Duplicate"
-  {
-    "#format" "{1:d},{2:d},{3:s}"
-    "en" "{1} Identical Rows found in Callback_OnClientAuth. Client (#{2}, {3}) Ban Status Unknown!"
-  }
   "SM_ONJOIN_Kick"
   {
     "#format" "{1:s},{2:s},{3:s}"
@@ -211,5 +206,90 @@
   "SM_ONREMOVE_Done"
   {
     "en" "Ban was removed from database."
+  }
+
+  "SM_BROWSEBANS_Main_Title"
+  {
+    "en" "Browse Bans"
+  }
+  "SM_BROWSEBANS_Main_ID"
+  {
+    "en" "SteamID Bans"
+  }
+  "SM_BROWSEBANS_Main_IP"
+  {
+    "en" "IP Bans"
+  }
+  "SM_BROWSEBANS_Details_Title"
+  {
+    "en" "Ban Details"
+  }
+  "SM_BROWSEBANS_ID_Null"
+  {
+    "#format" "{1:d},{2:d},{3:s}"
+    "en" "Database Result was null in Callback_BrowseBans ({1}). Client (#{2}, {3})"
+  }
+  "SM_BROWSEBANS_NoneFound"
+  {
+    "en" "There are no active bans of that type in the database"
+  }
+  "SM_BROWSEBANS_InvalidBanId"
+  {
+    "#format" "{1:s}"
+    "en" "Menu Selection contained an invalid Ban ID: {1}"
+  }
+  "SM_BROWSEDETAILS_ID_Null"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Database Result was null in Callback_BrowseDetails. Client (#{1}, {2})"
+  }
+  "SM_BROWSEDETAILS_NullBanId"
+  {
+    "#format" "{1:d},{2:s}"
+    "en" "Tried to display ban details for non-existing ban to client #{1}, {2}"
+  }
+  "SM_BROWSEDETAILS_BanIdInvalid"
+  {
+    "en" "Ban no longer exists"
+  }
+  "SM_BROWSEDETAILS_SteamId"
+  {
+    "en" "SteamID"
+  }
+  "SM_BROWSEDETAILS_IP"
+  {
+    "en" "IP"
+  }
+  "SM_BROWSEDETAILS_BanType"
+  {
+    "en" "Ban Type"
+  }
+  "SM_BROWSEDETAILS_Duration"
+  {
+    "en" "Duration (mins)"
+  }
+  "SM_BROWSEDETAILS_Reason"
+  {
+    "en" "Reason"
+  }
+  "SM_BROWSEDETAILS_TimeIssued"
+  {
+    "en" "Issued"
+  }
+  "SM_BROWSEDETAILS_BannedBy"
+  {
+    "en" "Banned By"
+  }
+  "SM_BROWSEDETAILS_Note"
+  {
+    "en" "Note"
+  }
+  "SM_BROWSEDETAILS_TimeModified"
+  {
+    "en" "Last Modified"
+  }
+  "SM_BROWSEDETAILS_ModifiedBy"
+  {
+    "en" "Modified By"
   }
 }

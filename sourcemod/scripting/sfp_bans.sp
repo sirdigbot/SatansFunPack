@@ -45,7 +45,7 @@ enum IDType
   Ip_Addr
 };
 
-#define ADDBANQUERY       "REPLACE INTO bannedusers (steamid3, steamid2, ip_address, ban_type, player_name, utc_issued, duration_sec, reason, admin_id3, admin_name, last_modified, modifier_id, modifier_name) VALUES ('%s', '%s', '%s', %i, '%s', CAST(strftime('%%s', 'now') AS INTEGER), %i, '%s', '%s', '%s', CAST(strftime('%%s', 'now') AS INTEGER), '%s', '%s');"
+#define ADDBANQUERY       "REPLACE INTO bannedusers (steamid3, steamid2, ip_address, ban_type, player_name, utc_issued, duration_sec, reason, admin_id3, admin_name, last_modified, modifier_id, modifier_name) VALUES (%s, %s, %s, %i, '%s', CAST(strftime('%%s', 'now') AS INTEGER), %i, '%s', '%s', '%s', CAST(strftime('%%s', 'now') AS INTEGER), '%s', '%s');"
 #define ADDBANQUERY_SIZE  (5*AUTH_SANITISE) + (4*INT_LENGTH) + (3*NAME_SANITISE) + MSG_SANITISE + 334  // Max Size of Inputs + strlen(ADDBANQUERY) + \0
 #define ADDBANQUERY_LOG   181 // Start Index in ADDBANQUERY for Logging (Log Line Length is 318)
 
@@ -54,9 +54,11 @@ enum IDType
 #define CLEANQUERY_SIZE   INT_LENGTH + 187
 
 // Select bans that haven't expired by steamid, or ip (only if ban_type is Ban_IPAddress)
-#define JOINQUERY         "SELECT utc_issued, duration_sec, reason FROM bannedusers WHERE ((%s='%s') OR (ban_type=1 AND ip_address='%s')) AND ((utc_issued + duration_sec >= CAST(strftime('%%s', 'now') AS INTEGER)) OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued <= (%i*86400)));"
-#define JOINQUERY_SIZE    10 + AUTH_SANITISE + AUTH_SANITISE + INT_LENGTH + 276 // 10="ip_address"
-
+// For ip bans, only select if ban was also issued < g_iMaxIPBanDays ago
+// In case of both IP and ID ban existing, order by latest expire date
+#define JOINQUERY         "SELECT utc_issued, duration_sec, reason FROM bannedusers WHERE ((ban_type=0 AND %s='%s') OR (ban_type=1 AND ip_address='%s')) AND ((utc_issued + duration_sec >= CAST(strftime('%%s', 'now') AS INTEGER)) AND (ban_type=0 OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued < (%i*86400)))) ORDER BY utc_issued + duration_sec DESC;"
+#define JOINQUERY_SIZE    10 + AUTH_SANITISE + AUTH_SANITISE + INT_LENGTH + 347 // 10="ip_address"
+#define JOINQUERY_LOG     80
 
 //=================================
 // Global
@@ -78,6 +80,8 @@ bool    g_bFullResetInUse       = false;  // Used to disable full-reset between 
 int     g_iFullResetClient;
 int     g_iFullResetPendingNum  = -1;     // Number needed to confirm database reset. (<0 = invalid)
 
+BanType g_iBrowseMenuType[MAXPLAYERS + 1]; // To display the correct text in sm_browsebans' menu
+
 /**
  * Known Bugs
  * - TagReply cant be used with console/rcon due to GetClientUserId and PrintToChat
@@ -86,6 +90,10 @@ int     g_iFullResetPendingNum  = -1;     // Number needed to confirm database r
  * - sm_editban will reply that the ban has been successfully edited, even if it doesn't exist
  * - MSG_MAX is likely excessively higher than what sm_ban, sm_addban and sm_banip can type ingame
  * - No way to undo ban removals/full reset. There should be a sm_restoreban command or something
+ * - TODO Add quick-unban or quick-edit buttons to browse menu
+ *
+ * - None of the non-displayed/math-only strftime occurences use 'localtime' modifier.
+ *   It's not needed as long as they are all consistent.
  */
 public Plugin myinfo =
 {
@@ -214,8 +222,8 @@ public Action OnRoundStart(Handle event, char[] name, bool dontBroadcast)
 
 public Action OnRoundEnd(Handle event, char[] name, bool dontBroadcast)
 {
-  g_bFullResetInUse = true;
-  SafeCloseHandle(h_iFullResetTimer);
+  ClearFullReset();
+  g_bFullResetInUse = true; // Will make fullreset unusable as client idx is reset to -1
   return Plugin_Continue;
 }
 
@@ -258,9 +266,9 @@ void CreateDatabaseTable()
   SQL_FastQuery(h_Database,
     "CREATE TABLE IF NOT EXISTS `bannedusers` \
     (`banid` INTEGER, \
-      `steamid3` TEXT NOT NULL UNIQUE, \
-      `steamid2` TEXT NOT NULL UNIQUE, \
-      `ip_address` TEXT NOT NULL, \
+      `steamid3` TEXT UNIQUE, \
+      `steamid2` TEXT UNIQUE, \
+      `ip_address` TEXT UNIQUE, \
       `ban_type` INTEGER NOT NULL, \
       `player_name` TEXT NOT NULL, \
       `utc_issued` INTEGER NOT NULL, \
@@ -445,11 +453,28 @@ public Action OnBanClient(
   SQL_EscapeString(h_Database, admin_steamId3,  adminId3_san,   sizeof(adminId3_san));
   SQL_EscapeString(h_Database, admin_name,      adminName_san,  sizeof(adminName_san));
 
+
+  // Pre-buffer ID/IP Values (Unknown values must be set to null not 'null')
+  // NOTE Keep IDs and IP mutually exclusive for cleaner safety.
+  char id3_out[AUTH_SANITISE + 2], id2_out[AUTH_SANITISE + 2], ip_out[AUTH_SANITISE + 2];
+  if(type == Ban_SteamId)
+  {
+    Format(id3_out, sizeof(id3_out), "'%s'", id3_san);
+    Format(id2_out, sizeof(id2_out), "'%s'", id2_san);
+    ip_out = "null";
+  }
+  else
+  {
+    Format(ip_out, sizeof(ip_out), "'%s'", ip_san);
+    id3_out = "null";
+    id2_out = "null";
+  }
+
   // Create Query
   char query[ADDBANQUERY_SIZE];
   Format(query, sizeof(query),
     ADDBANQUERY,
-    id3_san, id2_san, ip_san, view_as<int>(type),
+    id3_out, id2_out, ip_out, view_as<int>(type),
     name_san, time*60, reason_san, // Convert time to seconds
     adminId3_san, adminName_san, adminId3_san, adminName_san); // Original Modifier is Admin
 
@@ -560,14 +585,34 @@ public Action OnBanIdentity(
   SQL_EscapeString(h_Database, admin_name,      adminName_san,  sizeof(adminName_san));
 
 
+
+  // Pre-buffer ID/IP Values (Unknown values must be set to null not 'null')
+  // NOTE Keep IDs and IP mutually exclusive for cleaner safety.
+  char id3_out[AUTH_SANITISE + 2], id2_out[AUTH_SANITISE + 2], ip_out[AUTH_SANITISE + 2];
+  if(banType == Ban_SteamId)
+  {
+    Format(id3_out, sizeof(id3_out), "'%s'", id3_san);
+    Format(id2_out, sizeof(id2_out), "'%s'", id2_san);
+    ip_out = "null";
+  }
+  else
+  {
+    Format(ip_out, sizeof(ip_out), "'%s'", ip_san);
+    id3_out = "null";
+    id2_out = "null";
+  }
+
+
   // Create Query
   char query[ADDBANQUERY_SIZE];
   Format(query, sizeof(query),
     ADDBANQUERY,
-    id3_san, id2_san, ip_san, view_as<int>(banType),
+    id3_out, id2_out, ip_out, view_as<int>(banType),
     unknown, time*60, reason_san, // Convert time to seconds
     adminId3_san, adminName_san, adminId3_san, adminName_san); // Original Modifier is Admin
 
+  // Don't show message if ban target is the admin.
+  // This isn't actually an issue with sm_addban and sm_banip
   int printTarget = 0;
   if(source > 0 && source <= MaxClients && !StrEqual(steamId3, admin_steamId3, true))
   {
@@ -697,7 +742,7 @@ public void OnClientAuthorized(int client, const char[] auth)
   // Do not setup printTarget here. We shouldn't print during Callback_OnClientAuth
 
 #if defined _QUERYDEBUG
-  LogGeneric("OnClientAuth QUERY: %s", query);
+  LogGeneric("OnClientAuth QUERY: %s", query[JOINQUERY_LOG]);
 #endif
   SQL_TQuery(h_Database, Callback_OnClientAuth, query, GetClientUserId(client), DBPrio_High);
   return;
@@ -727,11 +772,8 @@ public void Callback_OnClientAuth(Handle db, Handle result, const char[] err, an
   int rowCount = SQL_GetRowCount(result);
   if(rowCount < 1)
     return;
-  else if(rowCount > 1)
-  {
-    LogGeneric("%t", "SM_ONJOIN_Duplicate", data, auth);
-    return;
-  }
+  // Duplicates may exist if a client is both IP and ID banned.
+  // In that event, the query will get kick for the one with the longest ban time
 
   // Process Result Set (utc_issued, duration_sec, reason)
   int issued;
@@ -854,7 +896,7 @@ public Action CMD_EditBan(int client, int args)
 
   // UPDATE bannedusers SET duration_sec=1234567890, reason='', admin_note='',
   // last_modified=CAST(strftime('%s', 'now') AS INTEGER), modifier_id='', modifier_name=''
-  // WHERE ip_address='';
+  // WHERE <10charid>='';
   char query[850] = "UPDATE bannedusers SET"; // query is Max ~850 (181+257+257+43+65+43)
 
   // If arg is not 'SKIP', concatenate new-value-setter to the query
@@ -1054,8 +1096,395 @@ public Action CMD_CleanLogs(int client, int args)
  */
 public Action CMD_BrowseBans(int client, int args)
 {
+  if(!IsClientPlaying(client, true)) // Allow Spectator and Dead
+  {
+    TagReply(client, "%t", "SFP_InGameOnly");
+    return Plugin_Handled;
+  }
+
+  BrowseBans_Main(client);
   return Plugin_Handled;
 }
+
+void BrowseBans_Main(int client)
+{
+  Menu menu = new Menu(BrowseHandler_Main,
+    MenuAction_End|MenuAction_Display|MenuAction_DisplayItem|MenuAction_Select);
+  SetMenuTitle(menu, "?"); // Translated in handler
+
+  AddMenuItem(menu, "1", "SteamID Bans");
+  AddMenuItem(menu, "2", "IP Bans");
+
+  DisplayMenu(menu, client, MENU_TIME_FOREVER);
+  return;
+}
+
+public int BrowseHandler_Main(Handle menu, MenuAction action, int param1, int param2)
+{
+  switch(action)
+  {
+    case MenuAction_End:
+      delete menu;
+
+    case MenuAction_Display:
+    {
+      // Client Translation: p1 = client, p2 = menu
+      char buffer[32];
+      Format(buffer, sizeof(buffer), "%T", "SM_BROWSEBANS_Main_Title", param1);
+
+      Handle panel = view_as<Handle>(param2);
+      SetPanelTitle(panel, buffer);
+    }
+
+    case MenuAction_DisplayItem:
+    {
+      // Handle Text Translation: p1 = client, p2 = menuitem
+      char info[2];
+      GetMenuItem(menu, param2, info, sizeof(info));
+
+      char display[32];
+
+      if(StrEqual(info, "1"))
+        Format(display, sizeof(display), "%T", "SM_BROWSEBANS_Main_ID", param1);
+      else
+        Format(display, sizeof(display), "%T", "SM_BROWSEBANS_Main_IP", param1);
+      return RedrawMenuItem(display);
+    }
+
+    case MenuAction_Select:
+    {
+      // Selection Events: p1 = client, p2 = menuitem
+      char info[2];
+      GetMenuItem(menu, param2, info, sizeof(info));
+
+      if(StrEqual(info, "1"))
+        BrowseBans_SteamId(param1);
+      else
+        BrowseBans_IpAddress(param1);
+    }
+  }
+  return 0;
+}
+
+/**
+ * Browse all SteamID bans in the database
+ */
+void BrowseBans_SteamId(int client)
+{
+  g_iBrowseMenuType[client] = Ban_SteamId;
+  // No Need for _QUERYDEBUG
+  SQL_TQuery(h_Database, Callback_BrowseBans,
+    "SELECT banid, steamid3, player_name, strftime('%Y-%m-%d', utc_issued, 'unixepoch', 'localtime') FROM bannedusers WHERE (utc_issued + duration_sec >= CAST(strftime('%s', 'now') AS INTEGER)) AND ban_type=0 ORDER BY utc_issued + duration_sec DESC;",
+    GetClientUserId(client),
+    DBPrio_Low);
+  return;
+}
+
+/**
+ * Browse all IP bans in the database
+ */
+void BrowseBans_IpAddress(int client)
+{
+  g_iBrowseMenuType[client] = Ban_IPAddress;
+  // No Need for _QUERYDEBUG
+  SQL_TQuery(h_Database, Callback_BrowseBans,
+    "SELECT banid, ip_address, player_name, strftime('%Y-%m-%d', utc_issued, 'unixepoch', 'localtime') FROM bannedusers WHERE (utc_issued + duration_sec >= CAST(strftime('%s', 'now') AS INTEGER)) AND ban_type=1 ORDER BY utc_issued + duration_sec DESC;",
+    GetClientUserId(client),
+    DBPrio_Low);
+  return;
+}
+
+/**
+ * Create menu for either SteamID or IP bans
+ * Both select: banid, <auth>, player_name, string:utc_issued
+ */
+public void Callback_BrowseBans(Handle db, Handle result, const char[] err, any data)
+{
+  // Check if client became invalid
+  int client = GetClientOfUserId(data); // Return 0 on fail
+  if(client == 0)
+    return;
+
+  // Get ID for any Logging
+  char clientId3[AUTH_MAX];
+  GetClientAuthId(client, AuthId_Steam3, clientId3, sizeof(clientId3), true);
+
+  // Validate Result Set
+  if(result == null)
+  {
+    LogGeneric("%t", "SM_BROWSEBANS_ID_Null", g_iBrowseMenuType[client], data, clientId3);
+    return;
+  }
+
+  int rowCount = SQL_GetRowCount(result);
+  if(rowCount < 1)
+  {
+    TagPrintToClient(client, "%t", "SM_BROWSEBANS_NoneFound");
+    return;
+  }
+
+
+  Menu menu = new Menu(BrowseHandler,
+    MenuAction_End|MenuAction_Cancel|MenuAction_Display|MenuAction_Select);
+  SetMenuTitle(menu, "?"); // Translated in handler (with g_iBrowseMenuType)
+  SetMenuExitBackButton(menu, true);
+
+  // Add each item from the result set to the menu.
+  // Note that both the results from BrowseBans_SteamId and BrowseBans_IpAddress must work here
+  int count = 0;
+  while(SQL_FetchRow(result) && count < rowCount)
+  {
+    char banIdStr[INT_LENGTH], name[NAME_SANITISE], authId[AUTH_SANITISE], time[16];
+    int banId;
+    if(!DB_LogFetchInt(banId, result, 0, "Callback_BrowseBans"))
+      continue;
+    if(!DB_LogFetchString(authId, sizeof(authId), result, 1, "Callback_BrowseBans"))
+      continue;
+    if(!DB_LogFetchString(name, sizeof(name), result, 2, "Callback_BrowseBans"))
+      continue;
+    if(!DB_LogFetchString(time, sizeof(time), result, 3, "Callback_BrowseBans"))
+      continue;
+
+    char buff[NAME_SANITISE + AUTH_SANITISE + 7]; // " () - " + \0
+    Format(buff, sizeof(buff), "%s (%s) - %s", authId, name, time);
+
+    IntToString(banId, banIdStr, sizeof(banIdStr));
+    AddMenuItem(menu, banIdStr, buff);
+    ++count;
+  }
+
+  DisplayMenu(menu, client, MENU_TIME_FOREVER);
+  return;
+}
+
+public int BrowseHandler(Handle menu, MenuAction action, int param1, int param2)
+{
+  switch(action)
+  {
+    case MenuAction_End:
+      delete menu;
+
+    case MenuAction_Cancel:
+    {
+      if(param2 == MenuCancel_ExitBack)
+        BrowseBans_Main(param1);
+    }
+
+    case MenuAction_Display:
+    {
+      // Client Translation: p1 = client, p2 = menu
+      char buffer[32];
+      if(g_iBrowseMenuType[param1] == Ban_SteamId)
+        Format(buffer, sizeof(buffer), "%T", "SM_BROWSEBANS_Main_ID", param1);
+      else
+        Format(buffer, sizeof(buffer), "%T", "SM_BROWSEBANS_Main_IP", param1);
+
+      Handle panel = view_as<Handle>(param2);
+      SetPanelTitle(panel, buffer);
+    }
+
+    case MenuAction_Select:
+    {
+      // Selection Events: p1 = client, p2 = menuitem
+      char info[INT_LENGTH];
+      GetMenuItem(menu, param2, info, sizeof(info));
+
+      int id = StringToInt(info);
+      if(id > 0 && id < INT_MAX_32)
+        ShowBanDetails(param1, id);
+      else
+        LogGeneric("%t", "SM_BROWSEBANS_InvalidBanId", info); // TODO More detail?
+    }
+  }
+  return 0;
+}
+
+
+/**
+ * Show a submenu displaying data for a given ban id in the format below.
+ * Query does not handle the prefix text as it needs to be translated.
+ *  Some Guy
+ *  Steam: [U:1:4691357]                <-- Null turns to "--"
+ *  IP: UNKNOWN                         <-- Null turns to "--"
+ *  Ban Type: <IP/SteamID>
+ *  Duration (mins): 1234567890
+ *  Reason: For a reason.               <-- Null turns to "--"
+ *  Issued: 2017-12-4 12:33:05
+ *  Banned By: Adman<[U:1:2345678]>
+ *  Note: --                            <-- Null turns to "--"
+ *  Last Modified: 2017-12-4 12:33:05
+ *  Modified By: Adman<[U:1:2345678]>
+ */
+void ShowBanDetails(int client, int banId)
+{
+  char query[420 + INT_LENGTH]; // Roughly Accurate
+  Format(query, sizeof(query),
+    "SELECT player_name, \
+    COALESCE(steamid3, '--'), \
+    COALESCE(ip_address, '--'), \
+    ban_type, \
+    duration_sec/60, \
+    COALESCE(reason, '--'), \
+    strftime('%%Y-%%m-%%d %%H:%%M:%%S', utc_issued, 'unixepoch', 'localtime'), \
+    admin_name || '<' || admin_id3 || '>', \
+    COALESCE(admin_note, '--'), \
+    strftime('%%Y-%%m-%%d %%H:%%M:%%S', last_modified, 'unixepoch', 'localtime'), \
+    modifier_name || '<' || modifier_id || '>' \
+    FROM bannedusers WHERE banid=%i;",
+    banId);
+  // No Need for _QUERYDEBUG
+  SQL_TQuery(h_Database, Callback_BrowseDetails, query, GetClientUserId(client), DBPrio_Low);
+  return;
+}
+
+public void Callback_BrowseDetails(Handle db, Handle result, const char[] err, any data)
+{
+  // Check if client became invalid
+  int client = GetClientOfUserId(data); // Return 0 on fail
+  if(client == 0)
+    return;
+
+  // Get ID for any Logging
+  char clientId3[AUTH_MAX];
+  GetClientAuthId(client, AuthId_Steam3, clientId3, sizeof(clientId3), true);
+
+  // Validate Result Set
+  if(result == null)
+  {
+    LogGeneric("%t", "SM_BROWSEDETAILS_ID_Null", data, clientId3);
+    return;
+  }
+
+  // This should only happen if the ban is removed between query and DisplayMenu
+  int rowCount = SQL_GetRowCount(result);
+  if(rowCount < 1)
+  {
+    LogGeneric("%t", "SM_BROWSEDETAILS_NullBanId", data, clientId3);
+    TagPrintToClient(client, "%t", "SM_BROWSEDETAILS_BanIdInvalid");
+    return;
+  }
+
+
+  // Add all fields to the menu
+  // This could use a repeated function but it actually takes up more code
+
+  Menu menu = new Menu(DetailsHandler, MenuAction_End|MenuAction_Cancel|MenuAction_Display);
+  SetMenuTitle(menu, "?"); // Translated in handler
+  SetMenuExitBackButton(menu, true);
+
+  bool error = false;
+  char strBuff[MSG_SANITISE], strFormat[MSG_SANITISE + 32]; // Largest buffer in database
+  int iBuff;
+
+
+  // Get Name
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 0, "Callback_BrowseBans"))
+    error = true;
+  AddMenuItem(menu, "0", strBuff, ITEMDRAW_DISABLED);
+
+  // Get SteamID
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 1, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_SteamId", client, strBuff);
+  AddMenuItem(menu, "1", strFormat, ITEMDRAW_DISABLED);
+
+  // Get IP
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 2, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_IP", client, strBuff);
+  AddMenuItem(menu, "2", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Ban Type
+  if(!DB_LogFetchInt(iBuff, result, 3, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %T",
+    "SM_BROWSEDETAILS_BanType",
+    client,
+    (view_as<BanType>(iBuff) == Ban_SteamId) ? "SM_BROWSEDETAILS_SteamId" : "SM_BROWSEDETAILS_IP",
+    client);
+  AddMenuItem(menu, "3", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Duration
+  if(!DB_LogFetchInt(iBuff, result, 4, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %i", "SM_BROWSEDETAILS_Duration", client, iBuff);
+  AddMenuItem(menu, "4", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Reason
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 5, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Reason", client, strBuff);
+  AddMenuItem(menu, "5", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Time Issued/When
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 6, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeIssued", client, strBuff);
+  AddMenuItem(menu, "6", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Banning Admin
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 7, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_BannedBy", client, strBuff);
+  AddMenuItem(menu, "7", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Admin Note
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 8, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Note", client, strBuff);
+  AddMenuItem(menu, "8", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Last Modified Date
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 9, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeModified", client, strBuff);
+  AddMenuItem(menu, "9", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Last Modified Date
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 10, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_ModifiedBy", client, strBuff);
+  AddMenuItem(menu, "10", strFormat, ITEMDRAW_DISABLED);
+
+
+  if(error)
+    delete menu;
+  else
+    DisplayMenu(menu, client, MENU_TIME_FOREVER);
+  return;
+}
+
+public int DetailsHandler(Handle menu, MenuAction action, int param1, int param2)
+{
+  switch(action)
+  {
+    case MenuAction_End:
+      delete menu;
+
+    case MenuAction_Cancel:
+    {
+      if(param2 == MenuCancel_ExitBack)
+      {
+        if(g_iBrowseMenuType[param1] == Ban_SteamId)
+          BrowseBans_SteamId(param1);
+        else
+          BrowseBans_IpAddress(param1);
+      }
+    }
+
+    case MenuAction_Display:
+    {
+      // Client Translation: p1 = client, p2 = menu
+      char buffer[32];
+      Format(buffer, sizeof(buffer), "%T", "SM_BROWSEBANS_Details_Title", param1);
+
+      Handle panel = view_as<Handle>(param2);
+      SetPanelTitle(panel, buffer);
+    }
+  }
+  return 0;
+}
+
 
 
 
@@ -1461,6 +1890,7 @@ stock void SteamID3ToID2(const char[] id3, char[] id2, const int maxLength)
 
 /**
  * SQL_Fetch* wrappers that log any DBResult errors
+ * None of the integer fields can be null so this doesn't check.
  */
 stock bool DB_LogFetchInt(int &val, Handle &query, int field, const char[] func)
 {
@@ -1478,7 +1908,9 @@ stock bool DB_LogFetchString(char[] str, int maxLength, Handle &query, int field
 {
   DBResult result;
   SQL_FetchString(query, field, str, maxLength, result);
-  if(result != DBVal_Data)
+  if(result == DBVal_Null)
+    strcopy(str, maxLength, ""); // For safety, zero out
+  else if(result != DBVal_Data)
   {
     LogGeneric("%t", "SM_BANS_FetchFail", func, field);
     return false;
