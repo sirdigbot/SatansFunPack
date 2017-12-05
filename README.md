@@ -385,6 +385,8 @@ Colour Config Structure:
 | **sm_tagcolor**       | *Alias for sm_namecolour*     | -- |
 | **sm_setnamecolour**  | Set Name Colour Directly      | `sm_setnamecolour <6-Digit Hex Colour>` |
 | **sm_setnamecolor**   | *Alias for sm_setnamecolour*  | -- |
+| **sm_setchatcolour**  | Set Chat Colour Directly      | `sm_setchatcolour <6-Digit Hex Colour>` |
+| **sm_setchatcolor**   | *Alias for sm_setnamecolour*  | -- |
 | **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
 | **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
 | **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
