@@ -39,7 +39,7 @@
   }
   "SM_BANS_InvalidId"
   {
-    "en" "Invalid SteamID or IP Address."
+    "en" "Invalid {olive}SteamID{default} or {olive}IP Address{default}."
   }
   "SM_BANS_FetchFail"
   {
@@ -86,16 +86,12 @@
 
   "SM_ISBANNED_Usage"
   {
-    "en" "sm_isbanned <SteamID/IP Address>"
-  }
-  "SM_ISBANNED_Invalid"
-  {
-    "en" "Invalid SteamID or IP Address"
+    "en" "sm_isbanned {darkorange}<SteamID/IP Address>"
   }
   "SM_ISBANNED_Querying"
   {
     "#format" "{1:s}"
-    "en" "Checking if {1} is banned."
+    "en" "Checking if {olive}{1}{default} is banned."
   }
   "SM_ISBANNED_NotFound"
   {
@@ -104,7 +100,7 @@
   "SM_ISBANNED_Found"
   {
     "#format" "{1:d}"
-    "en" "Player is banned for another {1} minutes." // TODO Add reason?
+    "en" "Player is banned for another {olive}{1}{default} minutes." // TODO Add reason?
   }
 
   "SM_CLEANLOGS_Done"
@@ -120,11 +116,11 @@
   "SM_FULLRESET_Repeat"
   {
     "#format" "{1:d}"
-    "en" "This command will COMPLETELY reset the ban database. Type 'sm_sfp_bans_full_reset {1}' to confirm."
+    "en" "{darkorange}This command will {firebrick}completely reset the ban database{darkorange}. Type 'sm_sfp_bans_full_reset {1}' to confirm."
   }
   "SM_FULLRESET_BadArgs"
   {
-    "en" "When prompted to confirm, you must type 'sm_sfp_bans_full_reset <Number>'. Database Reset was canceled."
+    "en" "When prompted to confirm, you must type '{olive}sm_sfp_bans_full_reset {darkorange}<Number>{default}'. Database Reset was canceled."
   }
   "SM_FULLRESET_Invalid"
   {
@@ -155,7 +151,7 @@
   "SM_ONBAN_Querying"
   {
     "#format" "{1:s}"
-    "en" "Adding {1} to Ban Database"
+    "en" "Adding {olive}{1}{default} to Ban Database"
   }
   "SM_ONBAN_Querying_Full"
   {
@@ -267,6 +263,10 @@
   "SM_BROWSEDETAILS_Duration"
   {
     "en" "Duration (mins)"
+  }
+  "SM_BROWSEDETAILS_Expires"
+  {
+    "en" "Expires"
   }
   "SM_BROWSEDETAILS_Reason"
   {

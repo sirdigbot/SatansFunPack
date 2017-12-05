@@ -99,7 +99,7 @@ public Plugin myinfo =
 {
   name =        "[TF2] Satan's Fun Pack - Bans",
   author =      "SirDigby",
-  description = "Passive Ban Database and Report System",
+  description = "Passive Ban Database",
   version =     PLUGIN_VERSION,
   url =         PLUGIN_URL
 };
@@ -842,13 +842,13 @@ public Action CMD_EditBan(int client, int args)
 {
   if(GetCmdReplySource() == SM_REPLY_TO_CHAT)
   {
-    TagReply(client, "%T", "SFP_CmdConsoleOnly", client);
+    TagReply(client, "%t", "SFP_CmdConsoleOnly");
     return Plugin_Handled;
   }
 
   if(args != 4) // Strictly 4 because console-only requires quotes
   {
-    TagReplyUsage(client, "%T", "SM_EDITBAN_Usage", client);
+    TagReplyUsage(client, "%t", "SM_EDITBAN_Usage");
     return Plugin_Handled;
   }
 
@@ -871,7 +871,7 @@ public Action CMD_EditBan(int client, int args)
   skipNote      = StrEqual(arg4, "SKIP", false);
   if(skipDuration && skipReason && skipNote)
   {
-    TagReply(client, "%T", "SM_EDITBAN_SkipAll", client);
+    TagReply(client, "%t", "SM_EDITBAN_SkipAll");
     return Plugin_Handled;
   }
 
@@ -879,7 +879,7 @@ public Action CMD_EditBan(int client, int args)
   IDType type = GetBanIdType(arg1);
   if(type == Invalid_Id)
   {
-    TagReply(client, "%T", "SM_BANS_InvalidId", client);
+    TagReply(client, "%t", "SM_BANS_InvalidId");
     return Plugin_Handled;
   }
 
@@ -887,7 +887,7 @@ public Action CMD_EditBan(int client, int args)
   int maxDuration = INT_MAX_32 - GetTime(); // Max Duration in minu
   if(duration < 0 || duration > maxDuration)
   {
-    TagReply(client, "%T", "SM_EDITBAN_InvalidDuration", client, (maxDuration/60)); // Command uses minutes
+    TagReply(client, "%t", "SM_EDITBAN_InvalidDuration", (maxDuration/60)); // Command uses mins
     return Plugin_Handled;
   }
 
@@ -967,7 +967,7 @@ public Action CMD_EditBan(int client, int args)
   if(client > 0 && client <= MaxClients)
     printTarget = GetClientUserId(client);
 
-  TagReply(client, "%T", "SM_EDITBAN_Querying", client, arg1);
+  TagReply(client, "%t", "SM_EDITBAN_Querying", arg1);
   LogGeneric("%t", "SM_EDITBAN_Changes",
     modName,
     modId,
@@ -1004,7 +1004,7 @@ public Action CMD_IsBanned(int client, int args)
 
   if(args < 1)
   {
-    TagReplyUsage(client, "%T", "SM_ISBANNED_Usage", client);
+    TagReplyUsage(client, "%t", "SM_ISBANNED_Usage");
     return Plugin_Handled;
   }
 
@@ -1027,7 +1027,7 @@ public Action CMD_IsBanned(int client, int args)
     }
     default:
     {
-      TagReplyUsage(client, "%T", "SM_ISBANNED_Invalid", client);
+      TagReply(client, "%t", "SM_BANS_InvalidId");
       return Plugin_Handled;
     }
   }
@@ -1044,7 +1044,7 @@ public Action CMD_IsBanned(int client, int args)
   if(client > 0 && client <= MaxClients)
   {
     printTarget = GetClientUserId(client);
-    TagReply(client, "%T", "SM_ISBANNED_Querying", client, argFull);
+    TagReply(client, "%t", "SM_ISBANNED_Querying", argFull);
   }
 
 #if defined _QUERYDEBUG
@@ -1082,7 +1082,7 @@ public void Callback_IsBanned(Handle db, Handle result, const char[] err, any da
 public Action CMD_CleanLogs(int client, int args)
 {
   ClearExpiredLogs();
-  TagReply(client, "%T", "SM_CLEANLOGS_Done", client, g_iMaxLogDays);
+  TagReply(client, "%t", "SM_CLEANLOGS_Done", g_iMaxLogDays);
   LogGeneric("%t", "SM_CLEANLOGS_Done", g_iMaxLogDays);
   return Plugin_Handled;
 }
@@ -1308,6 +1308,7 @@ public int BrowseHandler(Handle menu, MenuAction action, int param1, int param2)
  *  IP: UNKNOWN                         <-- Null turns to "--"
  *  Ban Type: <IP/SteamID>
  *  Duration (mins): 1234567890
+ *  Expires: 2017-12-4 12:33:05
  *  Reason: For a reason.               <-- Null turns to "--"
  *  Issued: 2017-12-4 12:33:05
  *  Banned By: Adman<[U:1:2345678]>
@@ -1317,13 +1318,14 @@ public int BrowseHandler(Handle menu, MenuAction action, int param1, int param2)
  */
 void ShowBanDetails(int client, int banId)
 {
-  char query[420 + INT_LENGTH]; // Roughly Accurate
+  char query[595 + INT_LENGTH]; // Roughly Accurate
   Format(query, sizeof(query),
     "SELECT player_name, \
     COALESCE(steamid3, '--'), \
     COALESCE(ip_address, '--'), \
     ban_type, \
     duration_sec/60, \
+    strftime('%%Y-%%m-%%d %%H:%%M:%%S', utc_issued + duration_sec, 'unixepoch', 'localtime'), \
     COALESCE(reason, '--'), \
     strftime('%%Y-%%m-%%d %%H:%%M:%%S', utc_issued, 'unixepoch', 'localtime'), \
     admin_name || '<' || admin_id3 || '>', \
@@ -1377,6 +1379,7 @@ public void Callback_BrowseDetails(Handle db, Handle result, const char[] err, a
   int iBuff;
 
 
+
   // Get Name
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 0, "Callback_BrowseBans"))
     error = true;
@@ -1410,41 +1413,49 @@ public void Callback_BrowseDetails(Handle db, Handle result, const char[] err, a
   Format(strFormat, sizeof(strFormat), "%T: %i", "SM_BROWSEDETAILS_Duration", client, iBuff);
   AddMenuItem(menu, "4", strFormat, ITEMDRAW_DISABLED);
 
-  // Get Reason
+  // Get Expiration Date
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 5, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Reason", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Expires", client, strBuff);
   AddMenuItem(menu, "5", strFormat, ITEMDRAW_DISABLED);
 
-  // Get Time Issued/When
+  // Get Reason
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 6, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeIssued", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Reason", client, strBuff);
   AddMenuItem(menu, "6", strFormat, ITEMDRAW_DISABLED);
 
-  // Get Banning Admin
+
+
+  // Get Time Issued/When
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 7, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_BannedBy", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeIssued", client, strBuff);
   AddMenuItem(menu, "7", strFormat, ITEMDRAW_DISABLED);
 
-  // Get Admin Note
+  // Get Banning Admin
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 8, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Note", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_BannedBy", client, strBuff);
   AddMenuItem(menu, "8", strFormat, ITEMDRAW_DISABLED);
 
-  // Get Last Modified Date
+  // Get Admin Note
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 9, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeModified", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_Note", client, strBuff);
   AddMenuItem(menu, "9", strFormat, ITEMDRAW_DISABLED);
 
   // Get Last Modified Date
   if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 10, "Callback_BrowseBans"))
     error = true;
-  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_ModifiedBy", client, strBuff);
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_TimeModified", client, strBuff);
   AddMenuItem(menu, "10", strFormat, ITEMDRAW_DISABLED);
+
+  // Get Last Modified Date
+  if(!DB_LogFetchString(strBuff, sizeof(strBuff), result, 11, "Callback_BrowseBans"))
+    error = true;
+  Format(strFormat, sizeof(strFormat), "%T: %s", "SM_BROWSEDETAILS_ModifiedBy", client, strBuff);
+  AddMenuItem(menu, "11", strFormat, ITEMDRAW_DISABLED);
 
 
   if(error)
@@ -1499,7 +1510,7 @@ public Action CMD_FullReset(int client, int args)
   // Prevent Multiple Users during repeat-prompt
   if(g_bFullResetInUse && g_iFullResetClient != -1 && client != g_iFullResetClient)
   {
-    TagReply(client, "%T", "SM_FULLRESET_InUse", client);
+    TagReply(client, "%t", "SM_FULLRESET_InUse");
     return Plugin_Handled;
   }
 
@@ -1525,7 +1536,7 @@ public Action CMD_FullReset(int client, int args)
     if(args != 1)
     {
       ClearFullReset();
-      TagReply(client, "%T", "SM_FULLRESET_BadArgs", client);
+      TagReply(client, "%t", "SM_FULLRESET_BadArgs");
       return Plugin_Handled;
     }
 
@@ -1534,14 +1545,14 @@ public Action CMD_FullReset(int client, int args)
 
     // Check that arg is the correct number
     if(StringToInt(arg1) != g_iFullResetPendingNum)
-      TagReply(client, "%T", "SM_FULLRESET_Invalid", client);
+      TagReply(client, "%t", "SM_FULLRESET_Invalid");
     else
     {
       SQL_LockDatabase(h_Database); // Non-threaded to prevent access during this
       SQL_FastQuery(h_Database, "DROP TABLE bannedusers;");
       CreateDatabaseTable();
       SQL_UnlockDatabase(h_Database);
-      TagReply(client, "%T", "SM_FULLRESET_Done", client);
+      TagReply(client, "%t", "SM_FULLRESET_Done");
       LogGeneric("%t", "SM_FULLRESET_Done");
     }
     ClearFullReset();
