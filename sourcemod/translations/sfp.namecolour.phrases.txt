@@ -48,11 +48,26 @@
   }
   "SM_SETNAMECOLOUR_Done"
   {
-    "en" "Set Name Colour."
+    "#format" "{1:s}"
+    "en" "Set Name Colour to {1}."  // {1} sets its own colour
   }
   "SM_SETNAMECOLOUR_Reset"
   {
     "en" "Reset Name Colour"
+  }
+
+  "SM_SETCHATCOLOUR_Usage"
+  {
+    "en" "sm_setchatcolour {darkorange}<6-Digit Hex Colour>"
+  }
+  "SM_SETCHATCOLOUR_Done"
+  {
+    "#format" "{1:s}"
+    "en" "Set Chat Colour to {1}."  // {1} sets its own colour
+  }
+  "SM_SETCHATCOLOUR_Reset"
+  {
+    "en" "Reset Chat Colour"
   }
 
   "SM_SETTAGCOLOUR_Usage"
@@ -61,7 +76,8 @@
   }
   "SM_SETTAGCOLOUR_Done"
   {
-    "en" "Set Tag Colour."
+    "#format" "{1:s}"
+    "en" "Set Tag Colour to {1}."   // {1} sets its own colour
   }
   "SM_SETTAGCOLOUR_Reset"
   {
@@ -76,5 +92,9 @@
   {
     "#format" "{1:s}"
     "en" "Set Tag Text to '{1}'."
+  }
+  "SM_SETTAG_Reset"
+  {
+    "en" "Reset Tag Text"
   }
 }
