@@ -45,19 +45,19 @@ enum IDType
   Ip_Addr
 };
 
-#define ADDBANQUERY       "REPLACE INTO bannedusers (steamid3, steamid2, ip_address, ban_type, player_name, utc_issued, duration_sec, reason, admin_id3, admin_name, last_modified, modifier_id, modifier_name) VALUES (%s, %s, %s, %i, '%s', CAST(strftime('%%s', 'now') AS INTEGER), %i, '%s', '%s', '%s', CAST(strftime('%%s', 'now') AS INTEGER), '%s', '%s');"
-#define ADDBANQUERY_SIZE  (5*AUTH_SANITISE) + (4*INT_LENGTH) + (3*NAME_SANITISE) + MSG_SANITISE + 334  // Max Size of Inputs + strlen(ADDBANQUERY) + \0
-#define ADDBANQUERY_LOG   181 // Start Index in ADDBANQUERY for Logging (Log Line Length is 318)
+#define ADDBANQUERY       "REPLACE INTO bannedusers (steamid3, steamid2, ip_address, ban_type, permanent, player_name, utc_issued, duration_sec, reason, admin_id3, admin_name, last_modified, modifier_id, modifier_name) VALUES (%s, %s, %s, %i, %i, '%s', CAST(strftime('%%s', 'now') AS INTEGER), %i, '%s', '%s', '%s', CAST(strftime('%%s', 'now') AS INTEGER), '%s', '%s');"
+#define ADDBANQUERY_SIZE  (5*AUTH_SANITISE) + (4*INT_LENGTH) + (3*NAME_SANITISE) + MSG_SANITISE + 343  // Max Size of Inputs + strlen(ADDBANQUERY) + \0
+#define ADDBANQUERY_LOG   192 // Start Index in ADDBANQUERY for Logging (Log Line Length is 318)
 
 // Delete expired bans, or IP bans older than g_iMaxIPBanDays
-#define CLEANQUERY        "DELETE FROM bannedusers WHERE (utc_issued + duration_sec < CAST(strftime('%%s', 'now') AS INTEGER)) OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued > (%i*86400));"
-#define CLEANQUERY_SIZE   INT_LENGTH + 187
+#define CLEANQUERY        "DELETE FROM bannedusers WHERE permanent!=1 AND ((utc_issued + duration_sec < CAST(strftime('%%s', 'now') AS INTEGER)) OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued > (%i*86400)));"
+#define CLEANQUERY_SIZE   INT_LENGTH + 206
 
 // Select bans that haven't expired by steamid, or ip (only if ban_type is Ban_IPAddress)
 // For ip bans, only select if ban was also issued < g_iMaxIPBanDays ago
 // In case of both IP and ID ban existing, order by latest expire date
-#define JOINQUERY         "SELECT utc_issued, duration_sec, reason FROM bannedusers WHERE ((ban_type=0 AND %s='%s') OR (ban_type=1 AND ip_address='%s')) AND ((utc_issued + duration_sec >= CAST(strftime('%%s', 'now') AS INTEGER)) AND (ban_type=0 OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued < (%i*86400)))) ORDER BY utc_issued + duration_sec DESC;"
-#define JOINQUERY_SIZE    10 + AUTH_SANITISE + AUTH_SANITISE + INT_LENGTH + 347 // 10="ip_address"
+#define JOINQUERY         "SELECT utc_issued, duration_sec, reason FROM bannedusers WHERE ((ban_type=0 AND %s='%s') OR (ban_type=1 AND ip_address='%s')) AND (permanent=1 OR (((utc_issued + duration_sec >= CAST(strftime('%%s', 'now') AS INTEGER)) AND (ban_type=0 OR (ban_type=1 AND CAST(strftime('%%s', 'now') AS INTEGER) - utc_issued < (%i*86400)))))) ORDER BY utc_issued + duration_sec DESC;"
+#define JOINQUERY_SIZE    10 + AUTH_SANITISE + AUTH_SANITISE + INT_LENGTH + 366 // 10="ip_address"
 #define JOINQUERY_LOG     80
 
 //=================================
@@ -259,7 +259,7 @@ void InitDatabase()
 
 /**
  * Used to create a 'bannedusers' table
- * Must lock the database before use.
+ * Must lock the database before calling.
  */
 void CreateDatabaseTable()
 {
@@ -270,6 +270,7 @@ void CreateDatabaseTable()
       `steamid2` TEXT UNIQUE, \
       `ip_address` TEXT UNIQUE, \
       `ban_type` INTEGER NOT NULL, \
+      `permanent` INTEGER NOT NULL, \
       `player_name` TEXT NOT NULL, \
       `utc_issued` INTEGER NOT NULL, \
       `duration_sec` INTEGER NOT NULL, \
@@ -286,7 +287,7 @@ void CreateDatabaseTable()
 
 /**
  * Clean the database of expired bans, or IP bans older than g_iMaxIPBanDays
- * Must lock the database before use.
+ * Must lock the database before calling.
  */
 void InitCleanDatabase()
 {
@@ -363,12 +364,16 @@ public Action OnBanClient(
   const char[] command,
   any source)
 {
-  // Ignore Permabans and invalid clients
-  if(time <= 0)
-    return Plugin_Continue;
-
+  // Ignore Invalid Clients
   if(client < 1 || client > MaxClients || !IsClientInGame(client))
     return Plugin_Continue;
+
+  int IsPermaBan = 0;
+  if(time <= 0)
+  {
+    IsPermaBan = 1;
+    time = GetPermabanMinutes(); // Get maximum possible minutes for bans
+  }
 
   BanType type = (flags & BANFLAG_IP) ? Ban_IPAddress : Ban_SteamId;
 
@@ -437,8 +442,8 @@ public Action OnBanClient(
   }
   else
   {
-    Format(admin_steamId3, sizeof(admin_steamId3), "SM_ONBAN_Unknown", LANG_SERVER);
-    Format(admin_name, sizeof(admin_name), "SM_ONBAN_Unknown", LANG_SERVER);
+    Format(admin_steamId3, sizeof(admin_steamId3), "%T", "SM_ONBAN_Unknown", LANG_SERVER);
+    Format(admin_name, sizeof(admin_name), "%T", "SM_ONBAN_Unknown", LANG_SERVER);
   }
 
   // Sanitise Inputs (Mind the variable names)
@@ -474,9 +479,9 @@ public Action OnBanClient(
   char query[ADDBANQUERY_SIZE];
   Format(query, sizeof(query),
     ADDBANQUERY,
-    id3_out, id2_out, ip_out, view_as<int>(type),
-    name_san, time*60, reason_san, // Convert time to seconds
-    adminId3_san, adminName_san, adminId3_san, adminName_san); // Original Modifier is Admin
+    id3_out, id2_out, ip_out, view_as<int>(type), IsPermaBan,
+    name_san, time*60, reason_san,                              // Convert time to seconds
+    adminId3_san, adminName_san, adminId3_san, adminName_san);  // Original Modifier is Admin
 
   int printTarget = 0;
   if(source > 0 && source <= MaxClients && source != client)
@@ -490,6 +495,7 @@ public Action OnBanClient(
     admin_name,
     admin_steamId3,
     type,
+    IsPermaBan,
     clientName,
     (type == Ban_SteamId) ? steamId3 : ipAddress);
 
@@ -512,11 +518,14 @@ public Action OnBanIdentity(
   const char[] command,
   any source)
 {
-  // Ignore Permabans
+  int IsPermaBan = 0;
   if(time <= 0)
-    return Plugin_Continue;
+  {
+    IsPermaBan = 1;
+    time = GetPermabanMinutes(); // Get maximum possible minutes for bans
+  }
 
-  BanType banType = (flags & BANFLAG_IP) ? Ban_IPAddress : Ban_SteamId; // flags can only be one
+  BanType banType = (flags & BANFLAG_IP) ? Ban_IPAddress : Ban_SteamId; // Cant have both flags
 
   // Get default text for unretrievable data
   char buff[MAX_NAME_LENGTH], unknown[NAME_SANITISE]; // 32 and 32*2 + 1
@@ -607,7 +616,7 @@ public Action OnBanIdentity(
   char query[ADDBANQUERY_SIZE];
   Format(query, sizeof(query),
     ADDBANQUERY,
-    id3_out, id2_out, ip_out, view_as<int>(banType),
+    id3_out, id2_out, ip_out, view_as<int>(banType), IsPermaBan,
     unknown, time*60, reason_san, // Convert time to seconds
     adminId3_san, adminName_san, adminId3_san, adminName_san); // Original Modifier is Admin
 
@@ -625,6 +634,7 @@ public Action OnBanIdentity(
     admin_name,
     admin_steamId3,
     view_as<int>(banType),
+    IsPermaBan,
     unknown,
     (banType == Ban_SteamId) ? steamId3 : ipAddress);
 
@@ -682,7 +692,7 @@ public Action OnRemoveBan(
   if(source > 0 && source <= MaxClients)
     printTarget = GetClientUserId(source);
 
-  char query[100];
+  char query[50 + AUTH_SANITISE]; // 39 + "ip_address" + \0
   Format(query, sizeof(query), "DELETE FROM bannedusers WHERE %s='%s';", typeStr, identity_san);
 
   LogGeneric("%t", "SM_ONREMOVE_Removing", typeStr, identity);
@@ -883,8 +893,8 @@ public Action CMD_EditBan(int client, int args)
     return Plugin_Handled;
   }
 
-  int duration = 60 * StringToInt(arg2);     // Handle duration as seconds
-  int maxDuration = INT_MAX_32 - GetTime(); // Max Duration in minu
+  int duration = 60 * StringToInt(arg2);      // Handle duration as seconds
+  int maxDuration = INT_MAX_32 - GetTime();   // Max Possible duration
   if(duration < 0 || duration > maxDuration)
   {
     TagReply(client, "%t", "SM_EDITBAN_InvalidDuration", (maxDuration/60)); // Command uses mins
@@ -894,16 +904,17 @@ public Action CMD_EditBan(int client, int args)
   // Preapre Query and Query Fragments
   char reason[MSG_SANITISE], note[MSG_SANITISE];
 
-  // UPDATE bannedusers SET duration_sec=1234567890, reason='', admin_note='',
-  // last_modified=CAST(strftime('%s', 'now') AS INTEGER), modifier_id='', modifier_name=''
+  // UPDATE bannedusers SET
+  // duration_sec=CASE WHEN permanent=0 THEN %i ELSE duration_sec END, reason='', admin_note='',
+  // last_modified=CAST(strftime('%%s', 'now') AS INTEGER), modifier_id='', modifier_name=''
   // WHERE <10charid>='';
-  char query[850] = "UPDATE bannedusers SET"; // query is Max ~850 (181+257+257+43+65+43)
+  char query[890] = "UPDATE bannedusers SET"; // query is Max ~887 (222+257+257+43+65+43)
 
   // If arg is not 'SKIP', concatenate new-value-setter to the query
   if(!skipDuration)
   {
-    char durAppend[27]; // " duration_sec=" + INT_LENGTH + ',' + \0
-    Format(durAppend, sizeof(durAppend), " duration_sec=%i,", duration); // Space at start
+    char durAppend[67 + INT_LENGTH];
+    Format(durAppend, sizeof(durAppend), " duration_sec=CASE WHEN permanent=0 THEN %i ELSE duration_sec END,", duration); // Space at start
     StrCat(query, sizeof(query), durAppend);
   }
 
@@ -956,7 +967,7 @@ public Action CMD_EditBan(int client, int args)
 
 
   // Finialize Query
-  char auth[AUTH_SANITISE], queryEnd[107 + (2*AUTH_SANITISE) + NAME_SANITISE];
+  char auth[AUTH_SANITISE], queryEnd[108 + (2*AUTH_SANITISE) + NAME_SANITISE];
   SQL_EscapeString(h_Database, arg1, auth, sizeof(auth));
   Format(queryEnd, sizeof(queryEnd), " last_modified=CAST(strftime('%%s', 'now') AS INTEGER), modifier_id='%s', modifier_name='%s' WHERE %s='%s';", modId_san, modName_san, idTypeStr, auth);
   StrCat(query, sizeof(query), queryEnd);
@@ -1033,10 +1044,10 @@ public Action CMD_IsBanned(int client, int args)
   }
 
   // Clean arg and Create query
-  char auth[AUTH_SANITISE], query[109 + INT_LENGTH + AUTH_SANITISE];
+  char auth[AUTH_SANITISE], query[120 + INT_LENGTH + AUTH_SANITISE];
   SQL_EscapeString(h_Database, argFull, auth, sizeof(auth));
   Format(query, sizeof(query),
-    "SELECT (utc_issued + duration_sec) - CAST(strftime('%%s', 'now') AS INTEGER) FROM bannedusers WHERE %s='%s';",
+    "SELECT (utc_issued + duration_sec) - CAST(strftime('%%s', 'now') AS INTEGER), permanent FROM bannedusers WHERE %s='%s';",
     idTypeStr,
     auth);
 
@@ -1063,12 +1074,21 @@ public void Callback_IsBanned(Handle db, Handle result, const char[] err, any da
     return;
   }
 
-  int timeRemaining = SQL_FetchInt(result, 0);                // Time is in seconds
-  int timeOut = (timeRemaining <= 60) ? 1 : timeRemaining/60; // Show 1m instead of 0m
-  if(timeRemaining < 1)
-    TagPrintToClient(client, "%t", "SM_ISBANNED_NotFound");   // Expired bans do nothing on join
+  int timeRemaining, permanent;
+  if(!DB_LogFetchInt(timeRemaining, result, 0, "Callback_IsBanned"))  // Time is in seconds
+    return;
+
+  if(!DB_LogFetchInt(permanent, result, 1, "Callback_IsBanned"))
+    return;
+
+  int timeMins = (timeRemaining <= 60) ? 1 : timeRemaining/60;   // Show 1m instead of 0m
+
+  if(permanent)
+    TagPrintToClient(client, "%t", "SM_ISBANNED_Found_Perm");
   else if(timeRemaining >= 1)
-    TagPrintToClient(client, "%t", "SM_ISBANNED_Found", timeOut);
+    TagPrintToClient(client, "%t", "SM_ISBANNED_Found", timeMins);
+  else if(timeRemaining < 1)
+    TagPrintToClient(client, "%t", "SM_ISBANNED_NotFound");     // Expired bans do nothing on join
   return;
 }
 
@@ -1303,6 +1323,7 @@ public int BrowseHandler(Handle menu, MenuAction action, int param1, int param2)
 /**
  * Show a submenu displaying data for a given ban id in the format below.
  * Query does not handle the prefix text as it needs to be translated.
+ * Permanent bans have the maximum possible ban time
  *  Some Guy
  *  Steam: [U:1:4691357]                <-- Null turns to "--"
  *  IP: UNKNOWN                         <-- Null turns to "--"
@@ -1588,6 +1609,7 @@ public Action Reset_Timeout(Handle timer, any data)
 }
 
 
+
 /**
  * Test each of the stock functions to verify their output
  *
@@ -1748,6 +1770,7 @@ public Action CMD_RunTests(int client, int args)
   return Plugin_Handled;
 }
 #endif
+
 
 
 //=================================
@@ -1927,6 +1950,15 @@ stock bool DB_LogFetchString(char[] str, int maxLength, Handle &query, int field
     return false;
   }
   return true;
+}
+
+/**
+ * Maximum Possible time (in mins) to fit inside 32-bit unix epoch
+ * Due to integer division/rounding this will never be consistent.
+ */
+stock int GetPermabanMinutes()
+{
+  return (INT_MAX_32 - GetTime() - 5) / 60; // -5 to prevent overflow from rounding errors
 }
 
 /**
