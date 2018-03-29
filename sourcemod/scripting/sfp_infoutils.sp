@@ -15,7 +15,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.0"
+#define PLUGIN_VERSION  "1.0.1"
 #define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/infoutils_update.txt"
 #define MAX_STEAMID_SIZE 64
@@ -104,7 +104,7 @@ public void OnPluginStart()
   LoadTranslations("common.phrases");
   LoadTranslations("core.phrases");
 
-  h_bUpdate = CreateConVar("sm_sfp_infoutils_update", "1", "Update Satan's Fun Pack - InfoUtils Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
+  h_bUpdate = CreateConVar("sm_sfp_infoutils_update", "1", "Update Satan's Fun Pack - Info Utils Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
