@@ -13,8 +13,8 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION    "1.0.0"
-#define PLUGIN_URL        "https://github.com/sirdigbot/satansfunpack"
+#define PLUGIN_VERSION    "1.0.1"
+#define PLUGIN_URL        "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL        "https://sirdigbot.github.io/SatansFunPack/sourcemod/help_update.txt"
 #define MAX_HELP_STR      64
 #define MAX_HELP_SECTIONS 64

@@ -15,8 +15,8 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
+#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 #define PITCH_DEFAULT   100
 #define MAX_TAUNTS      64

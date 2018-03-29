@@ -14,8 +14,8 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
+#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/godmode_update.txt"
 
 #define ENTPROP_MORTAL  2

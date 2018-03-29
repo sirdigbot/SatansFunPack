@@ -13,8 +13,8 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.0"
-#define PLUGIN_URL      "https://github.com/sirdigbot/satansfunpack"
+#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/bans_update.txt"
 
 //#define _TESTCOMMAND    // Enable sm_sfp_bans_runtests
