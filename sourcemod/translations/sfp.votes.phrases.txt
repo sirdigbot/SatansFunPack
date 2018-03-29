@@ -1,0 +1,55 @@
+"Phrases"
+{
+  "SFP_VotesLoaded"
+  {
+    "en" "Loaded Satan's Fun Pack - Votes"
+  }
+  
+  "SFP_VoteSupport_YesNo"
+  {
+    "en" "{olive}Custom Yes/No votes{default} are not supported by this game."
+  }
+  
+  "SFP_NativeVoteDelay"
+  {
+    "#format" "{1:d}"
+    "en" "A New Vote is not allowed for {olive}{1}{default} more seconds."
+  }
+  
+  // These 4 appear on NativeVotes menus
+  "SM_VOTEGRAPPLE_Enable"
+  {
+    "en" "Enable Grappling Hooks"
+  }
+  
+  "SM_VOTEGRAPPLE_EnablePass"
+  {
+    "en" "Grappling Hooks have been Enabled."
+  }
+  
+  "SM_VOTEGRAPPLE_Disable"
+  {
+    "en" "Disable Grappling Hooks"
+  }
+  
+  "SM_VOTEGRAPPLE_DisablePass"
+  {
+    "en" "Grappling Hooks have been Disabled."
+  }
+  
+  
+  "SM_TOGGLEGRAPPLE_Usage"
+  {
+    "en" "sm_togglegrapple {steelblue}[1/0]"
+  }
+  
+  "SM_TOGGLEGRAPPLE_Enabled"
+  {
+    "en" "Enabled {forestgreen}Grappling Hooks{default}."
+  }
+  
+  "SM_TOGGLEGRAPPLE_Disabled"
+  {
+    "en" "Disabled {forestgreen}Grappling Hooks{default}."
+  }
+}

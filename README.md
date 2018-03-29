@@ -15,6 +15,7 @@ A collection of useful commands and features for TF2 Servers.
 [Quick Conditions (sfp_quickconditions.smx)](#quickconds)  
 [Targeting Filters (sfp_targeting.smx)](#targeting)  
 [Toybox (sfp_toybox.smx)](#toybox) - ***(Requires [TF2Items](https://forums.alliedmods.net/showthread.php?t=115100))***  
+[Votes (sfp_votes.smx)](#votes) - ***(Requires [NativeVotes](https://forums.alliedmods.net/showthread.php?t=208008))***  
 
 <br/>
 
@@ -560,3 +561,24 @@ Toy Box Config Structure:
 | **sm_colour_target**          | Client can target others |
 | **sm_friendlysentry_target**  | Client can target others |
 | **sm_tauntid_target**         | Client can target others |
+
+<br/>
+
+<a name="votes"/>
+
+## Votes (sfp_votes.smx)
+
+Miscellaneous Votes for use with NativeVotes.  
+
+| ConVar                        | Description                            | Default |
+| ----------------------------- | -------------------------------------- | --- |
+| **sm_sfp_votes_update** | Should sfp_votes.smx Auto-Update  | `1` |
+| **sm_sfpvotes_disabledcmds** | List of commands to completely disable | `""` |
+
+<br/>
+
+| Command             | Description          | Syntax |
+| ------------------- | -------------------- | --- |
+| **sm_votegrapple**        | Vote to Toggle Grappling Hooks | `sm_votegrapple` |
+| **sm_votehooks**  | *Alias for sm_votegrapple*    | -- |
+| **sm_togglegrapple**        | Forcibly Toggle Grappling Hooks | `sm_togglegrapple [1/0]` |

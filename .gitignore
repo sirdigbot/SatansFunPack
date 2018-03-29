@@ -21,6 +21,7 @@
 !/sourcemod/scripting/sfp_quickconditions.sp
 !/sourcemod/scripting/sfp_targeting.sp
 !/sourcemod/scripting/sfp_toybox.sp
+!/sourcemod/scripting/sfp_votes.sp
 
 # Ignore Script Input/Outpt
 /scripts/**
