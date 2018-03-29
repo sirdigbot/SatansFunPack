@@ -7,9 +7,9 @@
       "CTFPlayer::StopTaunt"
       {
         "library" "server"
-        "windows" "\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x08\x53\x56\x8B\xF1\x57\x8B\x2A\x2A\x2A\x2A\x2A\x83\xFA\xFF\x74\x2A\x8B\xCA"
-        "linux"   "@_ZN9CTFPlayer9StopTauntEv"
-        "mac"     "@_ZN9CTFPlayer9StopTauntEv"
+        "windows" "\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x53\x56\x8B\xF1\x57\x8B\x2A\x2A\x2A\x2A\x2A\x83\xFA\xFF\x74\x2A\x8B\xCA"
+        "linux"   "@_ZN9CTFPlayer9StopTauntEb"
+        "mac"     "@_ZN9CTFPlayer9StopTauntEb"
       }
     }
   }

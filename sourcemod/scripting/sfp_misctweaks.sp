@@ -15,7 +15,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.0.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -143,6 +143,7 @@ public void OnPluginStart()
   }
   StartPrepSDKCall(SDKCall_Player);
   PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::StopTaunt");
+  PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
   h_SDKStopTaunt = EndPrepSDKCall();
   if(h_SDKStopTaunt == INVALID_HANDLE)
   {
@@ -646,7 +647,8 @@ public Action CMD_TauntCancel(int client, int args)
     // Apply
     if(TF2_IsPlayerInCondition(client, TFCond_Taunting))
     {
-      SDKCall(h_SDKStopTaunt, client);
+      // WARNING: It's unknown what the bool param does. Server.so usually calls CTFPlayer::StopTaunt with true though.
+      SDKCall(h_SDKStopTaunt, client, true); 
       g_iLastTauntCancel[client] = now;
       TagReply(client, "%T", "SM_TAUNTCANCEL_Done_Self", client);
     }
