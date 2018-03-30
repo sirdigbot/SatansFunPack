@@ -63,7 +63,8 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  RegAdminCmd("sm_sfpplugincheck", InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
+  RegAdminCmd("sm_sfpplugincheck", CMD_InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
+  RegAdminCmd("sm_sfpsource", CMD_PluginPackSource, ADMFLAG_ROOT, "Get the URL to Satan's Fun Pack's Source Code");
 
   /**
    * Check what modules are installed and cache list.
@@ -112,12 +113,19 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
 
 
 
-public Action InstallCheck(int client, int args)
+public Action CMD_InstallCheck(int client, int args)
 {
   PrintToConsole(client, g_szList);
   if(client != 0 && GetCmdReplySource() == SM_REPLY_TO_CHAT)
     TagReply(client, "%T", "SFP_ConsoleOutput", client);
 
+  return Plugin_Handled;
+}
+
+
+public Action CMD_PluginPackSource(int client, int args)
+{
+  TagReply(client, "%T", "SFP_PluginPackSource", client, PLUGIN_URL);
   return Plugin_Handled;
 }
 

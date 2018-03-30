@@ -47,7 +47,7 @@ Care must be taken to only use colours on text used for in-game chat text, or it
 
 ## Core File (satansfunpack.smx)
 
-The main file. Doesn't do a lot.  
+The main file. Contains Plugin Pack Version CVar and some info commands. That's about all.  
 
 | ConVar                      | Description                         | Default |
 | --------------------------- |------------------------------------ | --- |
@@ -59,6 +59,7 @@ The main file. Doesn't do a lot.
 | Command               | Description                                        | Syntax |
 | --------------------- | -------------------------------------------------- | --- |
 | **sm_sfpplugincheck** | Get install status of all Satan's Fun Pack plugins | `sm_sfpplugincheck` |
+| **sm_sfpsource** | Get the URL to the source code for Satan's Fun Pack | `sm_sfpsource` |
 
 <br/>
 

@@ -11,6 +11,11 @@
     "#format" "{1:d}"
     "en" "Loaded Satan's Fun Pack - Main File. Found {1} Modules."
   }
+  "SFP_PluginPackSource"
+  {
+    "#format" "{1:s}"
+    "en" "The Source code for Satan's Fun Pack can be found at {unique}{1}"
+  }
 
 
   //=================================
