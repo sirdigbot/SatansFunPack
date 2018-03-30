@@ -12,7 +12,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.0.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
 
@@ -21,7 +21,7 @@
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
-char    g_szList[236] = "MODULE - INSTALLED(Y/N)\n--------\n";
+char    g_szList[222] = "MODULE - INSTALLED(Y/N)\n--------\n";
 
 
 public Plugin myinfo =
@@ -83,6 +83,7 @@ public void OnPluginStart()
   count += CheckFileAndCache("QuickConditions", "plugins/sfp_quickconditions.smx");
   count += CheckFileAndCache("Targeting", "plugins/sfp_targeting.smx");
   count += CheckFileAndCache("ToyBox", "plugins/sfp_toybox.smx");
+  count += CheckFileAndCache("Votes", "plugins/sfp_votes.smx");
   PrintToServer("%T", "SFP_Loaded", LANG_SERVER, count);
 }
 
