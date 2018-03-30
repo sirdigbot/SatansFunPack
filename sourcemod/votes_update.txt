@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.0.1"
-      "Previous" "1.0.0"
+      "Latest" "1.0.2"
+      "Previous" "1.0.1"
     }
 
-    "Notes" "Updated Plugin URL"
+    "Notes" "Fixed Updater Support"
   }
 
   "Files"

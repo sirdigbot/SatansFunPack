@@ -13,7 +13,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.0.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/votes_update.txt"
 
@@ -276,3 +276,29 @@ void SetGrappleCvar(bool state)
   g_bGrappleEnabled = state;
 }
 #endif
+
+
+
+
+//=================================
+// Updater
+public void OnConfigsExecuted()
+{
+  if(LibraryExists("updater") && g_bUpdate)
+    Updater_AddPlugin(UPDATE_URL);
+  return;
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+  if(StrEqual(name, "updater") && g_bUpdate)
+    Updater_AddPlugin(UPDATE_URL);
+  return;
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+  if(StrEqual(name, "updater"))
+    Updater_RemovePlugin();
+  return;
+}
