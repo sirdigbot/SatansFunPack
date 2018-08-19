@@ -13,7 +13,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.0.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
 
@@ -1505,59 +1505,19 @@ public Action CMD_ForceClass(int client, int args)
     return Plugin_Handled;
   }
 
-  // Get Class
+  // Get Class type and translated name
   TFClassType classType;
   char className[16];
-  if(StrEqual(arg2, "scout", false) || StrEqual(arg2, "1", true))
+  classType = GetClassFromString(arg2, true);
+  
+  if(classType == TFClass_Unknown) // Don't put GetTranslatedClassName(..) in the if, it's less optimised.
   {
-    classType = TFClass_Scout;
-    Format(className, sizeof(className), "%T", "SFP_Scout", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "soldier", false) || StrEqual(arg2, "2", true))
-  {
-    classType = TFClass_Soldier;
-    Format(className, sizeof(className), "%T", "SFP_Soldier", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "pyro", false) || StrEqual(arg2, "3", true))
-  {
-    classType = TFClass_Pyro;
-    Format(className, sizeof(className), "%T", "SFP_Pyro", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "demoman", false) || StrEqual(arg2, "4", true))
-  {
-    classType = TFClass_DemoMan;
-    Format(className, sizeof(className), "%T", "SFP_Demoman", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "heavy", false) || StrEqual(arg2, "5", true))
-  {
-    classType = TFClass_Heavy;
-    Format(className, sizeof(className), "%T", "SFP_Heavy", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "engineer", false) || StrEqual(arg2, "6", true))
-  {
-    classType = TFClass_Engineer;
-    Format(className, sizeof(className), "%T", "SFP_Engineer", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "medic", false) || StrEqual(arg2, "7", true))
-  {
-    classType = TFClass_Medic;
-    Format(className, sizeof(className), "%T", "SFP_Medic", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "sniper", false) || StrEqual(arg2, "8", true))
-  {
-    classType = TFClass_Sniper;
-    Format(className, sizeof(className), "%T", "SFP_Sniper", LANG_SERVER);
-  }
-  else if(StrEqual(arg2, "spy", false) || StrEqual(arg2, "9", true))
-  {
-    classType = TFClass_Spy;
-    Format(className, sizeof(className), "%T", "SFP_Spy", LANG_SERVER);
-  }
-  else
-  {
-    TagReplyUsage(client, "%T", "SM_FORCECLASS_BadClass", client);
+    TagReply(client, "%T", "SM_FORCECLASS_BadClass", client);
     return Plugin_Handled;
   }
+  
+  GetTranslatedClassName(classType, className, sizeof(className));
+
 
   // Get Lock State
   int state = 0;

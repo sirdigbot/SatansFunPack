@@ -377,7 +377,85 @@ stock TF_Slot_Index GetWeaponSlotIndex(const char[] str)
 }
 
 /**
- * Flagbit Shorthands
+ * Get the class contained in a given string. Shorthand or nicknames not supported.
+ *
+ * @param str             String to check.
+ * @param acceptIndex     Check for 1-based class indexes.
+ * @return TFClassType    Returns the specified class type or TFClass_Unknown if invalid.
+ */
+stock TFClassType GetClassFromString(const char[] str, const bool acceptIndex=false, const bool caseSensitive=false)
+{
+  if(StrEqual(str, "Scout", caseSensitive) || (acceptIndex && StrEqual(str, "1", true)))
+    return TFClass_Scout;
+  else if(StrEqual(str, "Soldier", caseSensitive) || (acceptIndex && StrEqual(str, "2", true)))
+    return TFClass_Soldier;
+  else if(StrEqual(str, "Pyro", caseSensitive) || (acceptIndex && StrEqual(str, "3", true)))
+    return TFClass_Pyro;
+  else if(StrEqual(str, "Demoman", caseSensitive) || (acceptIndex && StrEqual(str, "4", true)))
+    return TFClass_DemoMan;
+  else if(StrEqual(str, "Heavy", caseSensitive) || (acceptIndex && StrEqual(str, "5", true)))
+    return TFClass_Heavy;
+  else if(StrEqual(str, "Engineer", caseSensitive) || (acceptIndex && StrEqual(str, "6", true)))
+    return TFClass_Engineer;
+  else if(StrEqual(str, "Medic", caseSensitive) || (acceptIndex && StrEqual(str, "7", true)))
+    return TFClass_Medic;
+  else if(StrEqual(str, "Sniper", caseSensitive) || (acceptIndex && StrEqual(str, "8", true)))
+    return TFClass_Sniper;
+  else if(StrEqual(str, "Spy", caseSensitive) || (acceptIndex && StrEqual(str, "9", true)))
+    return TFClass_Spy;
+  
+  return TFClass_Unknown;
+}
+
+/**
+ * Get a translated class name for a given client.
+ *
+ * @param class           The class type to translate.
+ * @param buffer          The output string buffer.
+ * @param maxlength       The size of the output string buffer.
+ * @param client          The client index to translate for (or LANG_SERVER).
+ * @return bool           True if class name was translated. False if otherwise.
+ */
+stock bool GetTranslatedClassName(const TFClassType class, char[] buffer, const int maxlength, const int client=LANG_SERVER)
+{
+  switch(class)
+  {
+    case TFClass_Scout:     Format(buffer, maxlength, "%T", "SFP_Scout", client);
+    case TFClass_Soldier:   Format(buffer, maxlength, "%T", "SFP_Soldier", client);
+    case TFClass_Pyro:      Format(buffer, maxlength, "%T", "SFP_Pyro", client);
+    case TFClass_DemoMan:   Format(buffer, maxlength, "%T", "SFP_Demoman", client);
+    case TFClass_Heavy:     Format(buffer, maxlength, "%T", "SFP_Heavy", client);
+    case TFClass_Engineer:  Format(buffer, maxlength, "%T", "SFP_Engineer", client);
+    case TFClass_Medic:     Format(buffer, maxlength, "%T", "SFP_Medic", client);
+    case TFClass_Sniper:    Format(buffer, maxlength, "%T", "SFP_Sniper", client);
+    case TFClass_Spy:       Format(buffer, maxlength, "%T", "SFP_Spy", client);
+    default: return false;
+  }
+  return true;
+}
+
+/**
+ * Get the base HP for a given class type
+ */
+stock int GetClassBaseHP(const TFClassType classType)
+{
+  switch(classType)
+  {
+    case TFClass_Scout:     return 125;
+    case TFClass_Soldier:   return 200;
+    case TFClass_Pyro:      return 175;
+    case TFClass_DemoMan:   return 175;
+    case TFClass_Heavy:     return 300;
+    case TFClass_Engineer:  return 125;
+    case TFClass_Medic:     return 150;
+    case TFClass_Sniper:    return 125;
+    case TFClass_Spy:       return 125;
+  }
+  return 125;
+}
+
+/**
+ * Flagbit 'Shorthands'
  */
 stock void AddFlag(int &val, int flag)
 {
