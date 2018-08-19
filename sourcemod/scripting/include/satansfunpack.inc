@@ -391,11 +391,11 @@ stock TFClassType GetClassFromString(const char[] str, const bool acceptIndex=fa
     return TFClass_Soldier;
   else if(StrEqual(str, "Pyro", caseSensitive) || (acceptIndex && StrEqual(str, "3", true)))
     return TFClass_Pyro;
-  else if(StrEqual(str, "Demoman", caseSensitive) || (acceptIndex && StrEqual(str, "4", true)))
+  else if(StrEqual(str, "Demoman", caseSensitive) || StrEqual(str, "Demo", caseSensitive) || (acceptIndex && StrEqual(str, "4", true)))
     return TFClass_DemoMan;
   else if(StrEqual(str, "Heavy", caseSensitive) || (acceptIndex && StrEqual(str, "5", true)))
     return TFClass_Heavy;
-  else if(StrEqual(str, "Engineer", caseSensitive) || (acceptIndex && StrEqual(str, "6", true)))
+  else if(StrEqual(str, "Engineer", caseSensitive) || StrEqual(str, "Engie", caseSensitive)  || (acceptIndex && StrEqual(str, "6", true)))
     return TFClass_Engineer;
   else if(StrEqual(str, "Medic", caseSensitive) || (acceptIndex && StrEqual(str, "7", true)))
     return TFClass_Medic;

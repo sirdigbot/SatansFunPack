@@ -14,6 +14,10 @@
   {
     "en" "You must be a {olive}Medic{default} to use this command."
   }
+  "SM_MISCTWEAKS_SpyOnly"
+  {
+    "en" "You must be a {olive}Spy{default} to use this command."
+  }
   "SM_MISCTWEAKS_MedigunOnly"
   {
     "en" "You must be wielding a {olive}Medigun{default} to use this command."
@@ -61,4 +65,26 @@
     "#format" "{1:d},{2:d}"
     "en" "Kill Effects Loaded {1}/{2} Effects."
   }
+  
+  "SM_DISGUISE_Usage"
+  {
+    "en" "sm_disguise {darkorange}<Blu/Red/Any> <Class>{default} OR sm_disguise {darkorange}<Target>"
+  }
+  "SM_DISGUISE_Disabled"
+  {
+    "en" "{olive}sm_disguise{default} is Disabled Server-wide."
+  }
+  "SM_DISGUISE_AdminOnly"
+  {
+    "en" "{olive}sm_disguise{default} is Disabled for Non-admins."
+  }
+  "SM_DISGUISE_InvalidTarget"
+  {
+    "en" "Invalid Disguise Target."
+  }
+  "SM_DISGUISE_InvalidClass"
+  {
+    "en" "Invalid Class."
+  }
+  
 }

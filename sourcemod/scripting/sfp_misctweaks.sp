@@ -15,7 +15,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.2"
+#define PLUGIN_VERSION  "1.0.3"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -27,6 +27,7 @@
 #define _INCLUDE_TAUNTCANCEL
 #define _INCLUDE_KILLEFFECT
 #define _INCLUDE_MAXVOICESPEAKFIX
+#define _INCLUDE_DISGUISE
 
 //=================================
 // Global
@@ -76,9 +77,14 @@ Handle  h_bKillEffectParticleMode = null;
 bool    g_bKillEffectParticleMode;
 
 char    g_szKillEffectSound[Effect_Max][PLATFORM_MAX_PATH];
-char    g_szKillEffectParticle[Effect_Max][50];           // Longest is 47 chars I think
+char    g_szKillEffectParticle[Effect_Max][64];           // Longest is 47 chars I think
 int     g_iKillEffectSndLevel[Effect_Max];
 SoundPlayMode g_iKillEffectPlayMode[Effect_Max];
+#endif
+
+#if defined _INCLUDE_DISGUISE
+Handle  h_iDisguiseEnabled = null;
+int     g_iDisguiseEnabled;
 #endif
 
 /**
@@ -176,6 +182,12 @@ public void OnPluginStart()
   HookConVarChange(h_flShieldDmg, UpdateCvars);
 #endif
 
+#if defined _INCLUDE_DISGUISE
+  h_iDisguiseEnabled = CreateConVar("sm_sfp_misctweaks_disguise", "1", "Allow players to specify exactly who to disguise as with sm_disguise (No effect on sm_forcedisgusie)\n-0 = Disabled\n1 = Enabled\n2 = Admins Only\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 2.0);
+  g_iDisguiseEnabled = GetConVarInt(h_iDisguiseEnabled);
+  HookConVarChange(h_iDisguiseEnabled, UpdateCvars);
+#endif
+
 #if defined _INCLUDE_KILLEFFECT
   h_bKillEffectSoundMode = CreateConVar("sm_sfp_misctweaks_killeffect_sound", "1", "Are Kill Effect sounds enabled\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bKillEffectSoundMode = GetConVarBool(h_bKillEffectSoundMode);
@@ -207,6 +219,9 @@ public void OnPluginStart()
 #endif
 #if defined _INCLUDE_KILLEFFECT
   RegAdminCmd("sm_misctweaks_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Miscellaneous Tweaks");
+#endif
+#if defined _INCLUDE_DISGUISE
+  RegConsoleCmd("sm_disguise", CMD_Disguise, "Disguise as a Specific Player");
 #endif
 
 
@@ -244,6 +259,7 @@ public void OnPluginStart()
    * Overrides
    * sm_filluber_target - Can target with sm_filluber
    * sm_stoptaunt_target - "  "  sm_stoptaunt
+   * sm_disguise_access - Client is considered an admin and will be able to use sm_disguise in admin-only.
    */
 
   PrintToServer("%T", "SFP_MiscTweaksLoaded", LANG_SERVER);
@@ -293,6 +309,10 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bKillEffectParticleMode = GetConVarBool(h_bKillEffectParticleMode);
   else if(cvar == h_bKillEffectSoundMode)
     g_bKillEffectSoundMode = GetConVarBool(h_bKillEffectSoundMode);
+#endif
+#if defined _INCLUDE_DISGUISE
+  else if(cvar == h_iDisguiseEnabled)
+    g_iDisguiseEnabled = StringToInt(newValue);
 #endif
   return;
 }
@@ -936,14 +956,120 @@ public Action DeleteParticle(Handle timer, any particle)
 #endif
 
 
+
+/**
+ * Choose a specific disguise.
+ *
+ * sm_disguise <Team/Any> <Class> OR sm_disguise <Target>
+ */
+#if defined _INCLUDE_DISGUISE
+public Action CMD_Disguise(int client, int args)
+{
+  if(!IsClientPlaying(client))
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
+
+  if(!g_iDisguiseEnabled)
+  {
+    TagReply(client, "%T", "SM_DISGUISE_Disabled", client);
+    return Plugin_Handled;
+  }
+  else if(g_iDisguiseEnabled == 2 && !CheckCommandAccess(client, "sm_disguise_access", ADMFLAG_KICK, true))
+  {
+    TagReply(client, "%T", "SM_DISGUISE_AdminOnly", client);
+    return Plugin_Handled;
+  }
+  
+  if(TF2_GetPlayerClass(client) != TFClass_Spy)
+  {
+    TagReply(client, "%T", "SM_MISCTWEAKS_SpyOnly", client);
+    return Plugin_Handled;
+  }
+  
+  
+  if(args < 1 || args > 2)
+  {
+    TagReplyUsage(client, "%T", "SM_DISGUISE_Usage", client);
+    return Plugin_Handled;
+  }
+  
+  char arg1[MAX_NAME_LENGTH];
+  GetCmdArg(1, arg1, sizeof(arg1));
+  
+  if(args == 1)
+  {
+    char targ_name[MAX_TARGET_LENGTH];
+    int targ_list[2], targ_count; // Only single targets allowed. Array still required.
+    bool tn_is_ml;
+
+    if ((targ_count = ProcessTargetString(
+      arg1,
+      client,
+      targ_list,
+      MAXPLAYERS,
+      COMMAND_FILTER_NO_MULTI | COMMAND_FILTER_NO_IMMUNITY,
+      targ_name,
+      sizeof(targ_name),
+      tn_is_ml)) <= 0)
+    {
+      ReplyToTargetError(client, targ_count);
+      return Plugin_Handled;
+    }
+    
+    if(!IsClientPlaying(targ_list[0]))
+    {
+      TagReply(client, "%T", "SM_DISGUISE_InvalidTarget", client);
+      return Plugin_Handled;
+    }
+    
+    TF2_DisguisePlayer(client, TF2_GetClientTeam(targ_list[0]), TF2_GetPlayerClass(targ_list[0]), targ_list[0]); // Spies only
+  }
+  else if(args == 2)
+  {
+    char arg2[16];
+    GetCmdArg(2, arg2, sizeof(arg2));
+    
+    TFTeam team = TFTeam_Unassigned;
+    
+    if(StrEqual(arg1, "red", false))
+      team = TFTeam_Red;
+    else if(StrEqual(arg1, "blu", false) || StrEqual(arg1, "blue", false))
+      team = TFTeam_Blue;
+    else if(StrEqual(arg1, "any", false) || StrEqual(arg1, "both", false))
+      team = (GetURandomInt() % 2) ? TFTeam_Red : TFTeam_Blue;
+    else
+    {
+      TagReplyUsage(client, "%T", "SM_DISGUISE_Usage", client);
+      return Plugin_Handled;
+    }
+    
+    TFClassType classType = GetClassFromString(arg2, true);
+    if(classType == TFClass_Unknown)
+    {
+      TagReply(client, "%T", "SM_DISGUISE_InvalidClass", client);
+      return Plugin_Handled;
+    }
+    
+    TF2_DisguisePlayer(client, team, classType, 0); // Only effects spies. 0 = Any Target
+  }
+  
+  // Return silently since the effect is self evident.
+  return Plugin_Handled;
+}
+#endif
+
+
+
 /**
  * Check if weapon is stock medigun or reskin by its entity index
  */
-stock bool IsStockMedigun(int entity)
+stock bool IsStockMedigun(const int entity)
 {
   switch(GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex"))
   {
-    // Every Stock Medigun Skin as of 23/11/2017
+    // Every Stock Medigun Skin as of 18/08/2018
     case 29, 211, 663, 796, 805, 885, 894, 903, 912, 961, 970, 15008, 15010, 15025, 15039, 15050, 15078, 15097, 15121, 15122, 15123, 15145, 15146:
       return true;
   }
@@ -953,7 +1079,7 @@ stock bool IsStockMedigun(int entity)
 /**
  * Create the Medigun Shield for a given client and medigun entity index
  */
-stock void StartMedigunShield(int client, int medigun, bool noDrain=false)
+stock void StartMedigunShield(const int client, const int medigun, const bool noDrain=false)
 {
   SetEntPropFloat(client,   Prop_Send, "m_flRageMeter",   100.0); // Allow Shield Creation
   SetEntProp(client,        Prop_Send, "m_bRageDraining", 1);     // This is redundant ingame
@@ -965,7 +1091,7 @@ stock void StartMedigunShield(int client, int medigun, bool noDrain=false)
 /**
  * Descriptive wrapper for shield meter reset.
  */
-stock void ResetShieldMeter(int client)
+stock void ResetShieldMeter(const int client)
 {
   SetEntPropFloat(client, Prop_Send, "m_flRageMeter", 0.0);
   return;

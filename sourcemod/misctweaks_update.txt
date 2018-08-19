@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.0.2"
-      "Previous" "1.0.1"
+      "Latest" "1.0.3"
+      "Previous" "1.0.2"
     }
 
-    "Notes" "Fixed signature for sm_stoptaunt"
+    "Notes" "Added sm_disguise"
   }
 
   "Files"

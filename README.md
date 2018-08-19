@@ -325,6 +325,7 @@ A set of fun or interesting game tweaks that don't belong in any other plugin.
 | **sm_sfp_misctweaks_tauntcancel_cooldown** | Cooldown for `sm_stoptaunt` | `5` |
 | **sm_sfp_misctweaks_killeffect_sound** | Are Kill Effect sounds enabled | `1` |
 | **sm_sfp_misctweaks_killeffect_particle** | Are Kill Effect particles enabled | `1` |
+| **sm_sfp_misctweaks_disguise** | Is sm_disguise enabled (0/1/2-Admin Only) | `1` |
 
 <br/>
 
@@ -334,6 +335,7 @@ A set of fun or interesting game tweaks that don't belong in any other plugin.
 | **sm_forceshield**  | Force Your Medigun Shield to Spawn  | `sm_forceshield`          |
 | **sm_filluber**     | Set a player's ubercharge to 100%   | `sm_filluber [Target]`    |
 | **sm_stoptaunt**    | Cancels any active taunt            | `sm_stoptaunt [Target]`   |
+| **sm_disguise**     | Disguise as a Specific Player       | `sm_disguise <Blu/Red/Any> <Class>` OR `sm_disguise <Target>`   |
 
 <br/>
 
@@ -341,6 +343,7 @@ A set of fun or interesting game tweaks that don't belong in any other plugin.
 | ------------------------- | ------------------------- |
 | **sm_filluber_target**    | Client can target others  |
 | **sm_stoptaunt_target**   | Client can target others  |
+| **sm_disguise_access**    | Client is considered an admin and will be able to use sm_disguise in admin-only.  |
 
 **Notes:**  
 Kill Effects apply either from any **Headshot Kill**, or a **Backstab with the 'Your Eternal Reward'**.  
