@@ -13,7 +13,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.0.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/targeting_update.txt"
 
@@ -87,7 +87,7 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  h_iRandomBias = CreateConVar("sm_random_target_bias", "127", "Chance bias of random target selection from 1 to 254\n(Default: 127)", FCVAR_NONE, true, 1.0, true, 254.0);
+  h_iRandomBias = CreateConVar("sm_random_target_bias", "169", "Chance bias of random target selection from 1 to 254\n(Default: 169)", FCVAR_NONE, true, 1.0, true, 254.0);
   g_iRandomBias = GetConVarInt(h_iRandomBias);
   HookConVarChange(h_iRandomBias, UpdateCvars);
 

@@ -142,7 +142,7 @@ Also contains a few commands to easily read and modify the database from within 
 | **sm_isbanned**             | Check if a player is banned         | `sm_isbanned <SteamID/IP Address>` |
 | **sm_browsebans**           | Browse active bans in the database  | `sm_browsebans` |
 | **sm_sfp_bans_full_reset**  | Delete the bannedusers table and create a new one | `sm_sfp_bans_full_reset <Unknown Integer>` |
-| **sm_sfp_bans_runtests**    | Run a series of tests *Disabled by default* | `sm_sfp_bans_runtests` |
+| **sm_sfp_bans_runtests**    | Run a series of tests *(Disabled by default)* | `sm_sfp_bans_runtests` |
 
 <br/>
 
@@ -444,7 +444,7 @@ A large group of player targeting filters for all commands.
 | ConVar                    | Description                                             | Default |
 | ------------------------- | ------------------------------------------------------- | --- |
 | **sm_sfp_targeting_update** | Should sfp_targeting.smx Auto-Update                  | `1` |
-| **sm_random_target_bias** | @random Selection Threshold (255 < x > bias = selected) | `127` |
+| **sm_random_target_bias** | @random Selection Threshold (255 < x > bias = selected) | `169` |
 | **sm_unicodefilter_enabled** | Is Unicode Name Filtering Enabled | `1` |
 | **sm_unicodefilter_notify** | Should the Unicode Name Filter notify the client about name changes | `1` |
 | **sm_unicodefilter_interval** | Interval (in seconds) to filter every client's name | `20.0` |
