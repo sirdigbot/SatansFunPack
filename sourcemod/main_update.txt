@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.0.2"
-      "Previous" "1.0.1"
+      "Latest" "1.1.0"
+      "Previous" "1.0.2"
     }
 
-    "Notes" "Added sm_sfpsource, Updated sm_sfpplugincheck."
+    "Notes" "Major Code Cleaning. Replaced Tag* functions with SFH Chat Library."
   }
 
   "Files"

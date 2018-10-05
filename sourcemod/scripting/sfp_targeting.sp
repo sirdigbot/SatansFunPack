@@ -1,3 +1,11 @@
+/***********************************************************************
+ * This Source Code Form is subject to the terms of the Mozilla Public *
+ * License, v. 2.0. If a copy of the MPL was not distributed with this *
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.            *
+ *                                                                     *
+ * Copyright (C) 2018 SirDigbot                                        *
+ ***********************************************************************/
+
 #pragma semicolon 1
 //=================================
 // Libraries/Modules
@@ -9,13 +17,14 @@
 #pragma newdecls required // After libraries or you get warnings
 
 #include <satansfunpack>
+#include <sfh_chatlib>
 
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.2"
+#define PLUGIN_VERSION  "1.1.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
-#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/targeting_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/targeting_update.txt"
 
 // Comment out to stop the excessive random1-31 filters from compiling.
 #define _TARGET_RANDOM_VARIATION
@@ -71,7 +80,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    Format(err, err_max, "Satan's Fun Pack is only compatible with Team Fortress 2.");
     return APLRes_Failure;
   }
   return APLRes_Success;
@@ -224,7 +233,7 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_flFilterInterval = StringToFloat(newValue);
     if(FloatCompare(g_flFilterInterval, FILTERLOOP_MINIMUM) > -1) // Precaution
     {
-      SafeCloseHandle(h_NameCheckTimer);
+      delete h_NameCheckTimer;
       h_NameCheckTimer = CreateTimer(
         g_flFilterInterval,
         Timer_NameFilter,
@@ -250,7 +259,7 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
-  SafeCloseHandle(h_NameCheckTimer);
+  delete h_NameCheckTimer;
   return;
 }
 

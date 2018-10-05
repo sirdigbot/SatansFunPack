@@ -1,3 +1,11 @@
+/***********************************************************************
+ * This Source Code Form is subject to the terms of the Mozilla Public *
+ * License, v. 2.0. If a copy of the MPL was not distributed with this *
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.            *
+ *                                                                     *
+ * Copyright (C) 2018 SirDigbot                                        *
+ ***********************************************************************/
+
 #pragma semicolon 1
 //=================================
 // Libraries/Modules
@@ -9,11 +17,12 @@
 #pragma newdecls required // After libraries or you get warnings
 
 #include <satansfunpack>
+#include <sfh_chatlib>
 
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.1.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/bans_update.txt"
 
@@ -114,7 +123,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    Format(err, err_max, "Satan's Fun Pack is only compatible with Team Fortress 2.");
     return APLRes_Failure;
   }
   return APLRes_Success;
@@ -156,11 +165,8 @@ public void OnPluginStart()
 
   if(h_RegexSteam2 == null || h_RegexSteam2US == null || h_RegexSteam3 == null)
   {
-    SafeCloseHandle(h_RegexSteam2);
-    SafeCloseHandle(h_RegexSteam2US);
-    SafeCloseHandle(h_RegexSteam3);
     LogGeneric("%t", "SM_BANS_RegexFail");
-    SetFailState("%t", "SM_BANS_RegexFail");
+    SetFailState("%T", "SM_BANS_RegexFail", LANG_SERVER);
     return;
   }
 
@@ -242,7 +248,7 @@ void InitDatabase()
   h_Database = SQLite_UseDatabase("SatansBanDB", err, sizeof(err)); // Create file automatically
   if(h_Database == null)
   {
-    CloseHandle(h_Database); // SafeCloseHandle would be redundant
+    delete h_Database;
     LogGeneric("%t", "SM_BANS_DBConnectFail", err);
     SetFailState("%T", "SM_BANS_DBConnectFail", LANG_SERVER, err);
     return;
@@ -316,7 +322,7 @@ void ClearExpiredLogs()
     Handle hDir = OpenDirectory(logsPath);
     if(hDir == null)
     {
-      SafeCloseHandle(hDir);
+      delete hDir;
       return;
     }
 
@@ -340,7 +346,7 @@ void ClearExpiredLogs()
         }
       }
     }
-    SafeCloseHandle(hDir);
+    delete hDir;
   }
   return;
 }
@@ -1589,7 +1595,7 @@ stock void ClearFullReset()
   g_iFullResetPendingNum  = -1;
   g_bFullResetInUse       = false;
   g_iFullResetClient      = -1;
-  SafeCloseHandle(h_iFullResetTimer);
+  delete h_iFullResetTimer;
   return;
 }
 
@@ -1988,6 +1994,7 @@ stock void PrintTestResultAsString(
   result);
   return;
 }
+
 
 
 //=================================

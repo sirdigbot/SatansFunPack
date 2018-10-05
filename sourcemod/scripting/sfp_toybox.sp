@@ -1,3 +1,11 @@
+/***********************************************************************
+ * This Source Code Form is subject to the terms of the Mozilla Public *
+ * License, v. 2.0. If a copy of the MPL was not distributed with this *
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.            *
+ *                                                                     *
+ * Copyright (C) 2018 SirDigbot                                        *
+ ***********************************************************************/
+
 #pragma semicolon 1
 //=================================
 // Libraries/Modules
@@ -11,11 +19,12 @@
 #pragma newdecls required // After libraries or you get warnings
 
 #include <satansfunpack>
+#include <sfh_chatlib>
 
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.1"
+#define PLUGIN_VERSION  "1.1.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 #define PITCH_DEFAULT   100
@@ -155,7 +164,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    Format(err, err_max, "Satan's Fun Pack is only compatible with Team Fortress 2.");
     return APLRes_Failure;
   }
   return APLRes_Success;
@@ -186,11 +195,11 @@ public void OnPluginStart()
   h_SDKPlayTauntScene = EndPrepSDKCall();
   if(h_SDKPlayTauntScene == INVALID_HANDLE)
   {
-    CloseHandle(gameData);
+    delete gameData;
     SetFailState("%T", "SM_TAUNTMENU_BadGameData", LANG_SERVER);
     return;
   }
-  CloseHandle(gameData);
+  delete gameData;
   #endif
 
 
@@ -703,7 +712,7 @@ public Action CMD_ColourWeapon(int client, int args)
   if(bSelfTarget)
     TagReply(client, "%T", "SM_COLWEAPON_Done", client, iRed, iGreen, iBlue);
   else
-    TagActivity(client, "%T", "SM_COLWEAPON_Done_Server", LANG_SERVER, targ_name, iRed, iGreen, iBlue);
+    TagActivity2(client, "%T", "SM_COLWEAPON_Done_Server", LANG_SERVER, targ_name, iRed, iGreen, iBlue);
   return Plugin_Handled;
 }
 #endif
@@ -852,7 +861,7 @@ public Action CMD_ResizeWeapon(int client, int args)
   if(bSelfTarget)
     TagReply(client, "%T", "SM_SIZEWEAPON_Done", client, flScale);
   else
-    TagActivity(client, "%T", "SM_SIZEWEAPON_Done_Server", LANG_SERVER, targ_name, flScale);
+    TagActivity2(client, "%T", "SM_SIZEWEAPON_Done_Server", LANG_SERVER, targ_name, flScale);
   return Plugin_Handled;
 }
 #endif
@@ -966,9 +975,9 @@ public Action CMD_FieldOfView(int client, int args)
   }
 
   if(isDefault)
-    TagActivity(client, "%T", "SM_FOV_Done_Server_Default", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_FOV_Done_Server_Default", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_FOV_Done_Server", LANG_SERVER, targ_name, val);
+    TagActivity2(client, "%T", "SM_FOV_Done_Server", LANG_SERVER, targ_name, val);
   return Plugin_Handled;
 }
 
@@ -1106,9 +1115,9 @@ public Action CMD_ScreamToggle(int client, int args)
   }
 
   if(g_bScreamEnabled)
-    TagActivity(client, "%T", "SM_SCREAMTOGGLE_Enable", LANG_SERVER);
+    TagActivity2(client, "%T", "SM_SCREAMTOGGLE_Enable", LANG_SERVER);
   else
-    TagActivity(client, "%T", "SM_SCREAMTOGGLE_Disable", LANG_SERVER);
+    TagActivity2(client, "%T", "SM_SCREAMTOGGLE_Disable", LANG_SERVER);
 
   return Plugin_Handled;
 }
@@ -1246,9 +1255,9 @@ public Action CMD_Pitch(int client, int args)
   }
 
   if(isDefault)
-    TagActivity(client, "%T", "SM_PITCH_Done_Server_Default", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_PITCH_Done_Server_Default", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_PITCH_Done_Server", LANG_SERVER, targ_name, val);
+    TagActivity2(client, "%T", "SM_PITCH_Done_Server", LANG_SERVER, targ_name, val);
 
 
   return Plugin_Handled;
@@ -1288,9 +1297,9 @@ public Action CMD_PitchToggle(int client, int args)
   }
 
   if(g_bPitchEnabled)
-    TagActivity(client, "%T", "SM_PITCHTOGGLE_Enable", LANG_SERVER);
+    TagActivity2(client, "%T", "SM_PITCHTOGGLE_Enable", LANG_SERVER);
   else
-    TagActivity(client, "%T", "SM_PITCHTOGGLE_Disable", LANG_SERVER);
+    TagActivity2(client, "%T", "SM_PITCHTOGGLE_Disable", LANG_SERVER);
 
   return Plugin_Handled;
 }
@@ -1428,7 +1437,7 @@ public Action CMD_TauntById(int client, int args)
   // This is added during LoadConfig so it's safe.
   int cleanNameIdx = StrContains(g_szTauntName[globalIndex], ") ", true);
   if(cleanNameIdx != -1)
-    TagActivity(
+    TagActivity2(
       client,
       "%T",
       "SM_TAUNTBYID_Done",
@@ -1815,7 +1824,7 @@ public Action CMD_ColourPlayer(int client, int args)
     TagReply(client, "%T", "SM_COLOURSELF_Done", client, iRed, iGreen, iBlue, iAlpha);
   else
   {
-    TagActivity(client, "%T", "SM_COLOURSELF_Done_Server", LANG_SERVER,
+    TagActivity2(client, "%T", "SM_COLOURSELF_Done_Server", LANG_SERVER,
       targ_name,
       iRed,
       iGreen,
@@ -1919,9 +1928,9 @@ public Action CMD_FriendlySentry(int client, int args)
     g_bFriendlySentry[targ_list[i]] = view_as<bool>(state);
 
   if(state)
-    TagActivity(client, "%T", "SM_FRIENDSENTRY_Enable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_FRIENDSENTRY_Enable", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_FRIENDSENTRY_Disable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_FRIENDSENTRY_Disable", LANG_SERVER, targ_name);
 
   return Plugin_Handled;
 }

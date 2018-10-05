@@ -1,3 +1,11 @@
+/***********************************************************************
+ * This Source Code Form is subject to the terms of the Mozilla Public *
+ * License, v. 2.0. If a copy of the MPL was not distributed with this *
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.            *
+ *                                                                     *
+ * Copyright (C) 2018 SirDigbot                                        *
+ ***********************************************************************/
+
 #pragma semicolon 1
 //=================================
 // Libraries/Modules
@@ -11,11 +19,12 @@
 #pragma newdecls required // After libraries or you get warnings
 
 #include <satansfunpack>
+#include <sfh_chatlib>
 
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.3"
+#define PLUGIN_VERSION  "1.1.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -121,7 +130,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    Format(err, err_max, "Satan's Fun Pack is only compatible with Team Fortress 2.");
     return APLRes_Failure;
   }
   return APLRes_Success;
@@ -153,11 +162,11 @@ public void OnPluginStart()
   h_SDKStopTaunt = EndPrepSDKCall();
   if(h_SDKStopTaunt == INVALID_HANDLE)
   {
-    CloseHandle(gameData);
+    delete gameData;
     SetFailState("%T", "SM_MISCTWEAKS_SDKToolsInitFail", LANG_SERVER, "CTFPlayer::StopTaunt");
     return;
   }
-  CloseHandle(gameData);
+  delete gameData;
 
   h_bTauntCancelEnabled = CreateConVar("sm_sfp_misctweaks_tauntcancel", "1", "Allow Taunt Cancelling\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bTauntCancelEnabled = GetConVarBool(h_bTauntCancelEnabled);
@@ -236,7 +245,7 @@ public void OnPluginStart()
   Handle maxVoiceSpeakCvar = FindConVar("tf_max_voice_speak_delay");
   if(maxVoiceSpeakCvar != null)
     SetConVarBounds(maxVoiceSpeakCvar, ConVarBound_Lower, true, -1.0);
-  SafeCloseHandle(maxVoiceSpeakCvar);
+  delete maxVoiceSpeakCvar;
 #endif
 
   /*** Handle Lateloads ***/
@@ -626,7 +635,7 @@ public Action CMD_FillUber(int client, int args)
     }
   }
 
-  TagActivity(client, "%T", "SM_FILLUBER_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_FILLUBER_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 #endif
@@ -714,7 +723,7 @@ public Action CMD_TauntCancel(int client, int args)
     }
   }
 
-  TagActivity(client, "%T", "SM_TAUNTCANCEL_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_TAUNTCANCEL_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 #endif

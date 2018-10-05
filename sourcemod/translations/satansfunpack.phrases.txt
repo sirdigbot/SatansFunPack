@@ -2,10 +2,6 @@
 {
   //=================================
   // Main
-  "SFP_Incompatible"
-  {
-    "en" "Satan's Fun Pack is only compatible with Team Fortress 2."
-  }
   "SFP_Loaded"
   {
     "#format" "{1:d}"

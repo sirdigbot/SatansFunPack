@@ -1,13 +1,9 @@
-# Ignore Note File
-/Prototype.txt
-
 # Ignore Compiler Stuff
 /sourcemod/scripting/**
 
 # Keep Only These
 !/sourcemod/scripting/include/
 !/sourcemod/scripting/include/satansfunpack.inc
-!/sourcemod/scripting/include/morecolors_new.inc
 !/sourcemod/scripting/satansfunpack.sp
 !/sourcemod/scripting/sfp_admintools.sp
 !/sourcemod/scripting/sfp_bans.sp

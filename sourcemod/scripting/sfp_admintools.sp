@@ -1,3 +1,11 @@
+/***********************************************************************
+ * This Source Code Form is subject to the terms of the Mozilla Public *
+ * License, v. 2.0. If a copy of the MPL was not distributed with this *
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.            *
+ *                                                                     *
+ * Copyright (C) 2018 SirDigbot                                        *
+ ***********************************************************************/
+
 #pragma semicolon 1
 //=================================
 // Libraries/Modules
@@ -9,13 +17,14 @@
 #pragma newdecls required // After libraries or you get warnings
 
 #include <satansfunpack>
+#include <sfh_chatlib>
 
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.0.2"
+#define PLUGIN_VERSION  "1.1.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
-#define UPDATE_URL  "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
+#define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/admintools_update.txt"
 
 // List of commands that can be disabled.
 // Set by CVar, updated in ProcessDisabledCmds, Checked in Command.
@@ -81,7 +90,7 @@ public APLRes AskPluginLoad2(Handle self, bool late, char[] err, int err_max)
   EngineVersion engine = GetEngineVersion();
   if(engine != Engine_TF2)
   {
-    Format(err, err_max, "%T", "SFP_Incompatible", LANG_SERVER);
+    Format(err, err_max, "Satan's Fun Pack is only compatible with Team Fortress 2.");
     return APLRes_Failure;
   }
   return APLRes_Success;
@@ -435,7 +444,7 @@ public Action CMD_TempBan(int client, int args)
   }
 
   // Output
-  TagActivity(client, "%T", "SM_TBAN_BanMessage",
+  TagActivity2(client, "%T", "SM_TBAN_BanMessage",
     LANG_SERVER,
     targ_name,
     duration,
@@ -541,7 +550,7 @@ public Action CMD_AddCond(int client, int args)
       TF2_AddCondition(targ_list[i], view_as<TFCond>(iArg2), StringToFloat(arg3), 0);
   }
 
-  TagActivity(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
+  TagActivity2(client, "%T", "SM_ADDCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
 }
 
@@ -630,7 +639,7 @@ public Action CMD_RemCond(int client, int args)
       TF2_RemoveCondition(targ_list[i], view_as<TFCond>(iArg2));
   }
 
-  TagActivity(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
+  TagActivity2(client, "%T", "SM_REMCOND_Done_Server", LANG_SERVER, iArg2, targ_name);
   return Plugin_Handled;
 }
 
@@ -690,7 +699,7 @@ public Action CMD_Disarm(int client, int args)
     }
   }
 
-  TagActivity(client, "%T", "SM_DISARM_Done_Server", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_DISARM_Done_Server", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -773,7 +782,7 @@ public Action CMD_SwitchTeam(int client, int args)
     }
   }
 
-  TagActivity(client, "%T", "SM_SWITCHTEAM_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_SWITCHTEAM_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -837,7 +846,7 @@ public Action CMD_ForceSpec(int client, int args)
       TF2_ChangeClientTeam(targ_list[i], TFTeam_Spectator);
   }
 
-  TagActivity(client, "%T", "SM_FORCESPEC_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_FORCESPEC_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1018,9 +1027,9 @@ public Action CMD_NameLock(int client, int args)
   }
 
   if(state)
-    TagActivity(client, "%T", "SM_NAMELOCK_Lock", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_NAMELOCK_Lock", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_NAMELOCK_Unlock", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_NAMELOCK_Unlock", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1124,9 +1133,9 @@ public Action CMD_NoTarget(int client, int args)
   }
 
   if(iState)
-    TagActivity(client, "%T", "SM_NOTARGET_Enable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_NOTARGET_Enable", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_NOTARGET_Disable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_NOTARGET_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1239,9 +1248,9 @@ public Action CMD_Outline(int client, int args)
   }
 
   if(iState)
-    TagActivity(client, "%T", "SM_OUTLINE_Enable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_OUTLINE_Enable", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_OUTLINE_Disable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_OUTLINE_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1350,9 +1359,9 @@ public Action CMD_TeleLock(int client, int args)
     g_bTeleLock[targ_list[i]] = view_as<bool>(iState);
 
   if(iState)
-    TagActivity(client, "%T", "SM_TELELOCK_Enable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_TELELOCK_Enable", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_TELELOCK_Disable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_TELELOCK_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1454,9 +1463,9 @@ public Action CMD_OpenTele(int client, int args)
     g_bOpenTele[targ_list[i]] = view_as<bool>(iState);
 
   if(iState)
-    TagActivity(client, "%T", "SM_OPENTELE_Enable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_OPENTELE_Enable", LANG_SERVER, targ_name);
   else
-    TagActivity(client, "%T", "SM_OPENTELE_Disable", LANG_SERVER, targ_name);
+    TagActivity2(client, "%T", "SM_OPENTELE_Disable", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1552,9 +1561,9 @@ public Action CMD_ForceClass(int client, int args)
   }
 
   if(!state)
-    TagActivity(client, "%T", "SM_FORCECLASS_Done_NoLock", LANG_SERVER, targ_name, className);
+    TagActivity2(client, "%T", "SM_FORCECLASS_Done_NoLock", LANG_SERVER, targ_name, className);
   else
-    TagActivity(client, "%T", "SM_FORCECLASS_Done_Lock", LANG_SERVER, targ_name, className);
+    TagActivity2(client, "%T", "SM_FORCECLASS_Done_Lock", LANG_SERVER, targ_name, className);
   return Plugin_Handled;
 }
 
@@ -1604,7 +1613,7 @@ public Action CMD_UnlockClass(int client, int args)
   for(int i = 0; i < targ_count; ++i)
     g_bForceClassLocked[targ_list[i]] = false;
 
-  TagActivity(client, "%T", "SM_UNLOCKCLASS_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_UNLOCKCLASS_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 
@@ -1694,7 +1703,7 @@ public Action CMD_SetHealth(int client, int args)
       TF2_SetHealth(targ_list[i], amount);
   }
 
-  TagActivity(client, "%T", "SM_SETHEALTH_Done", LANG_SERVER, targ_name, amount);
+  TagActivity2(client, "%T", "SM_SETHEALTH_Done", LANG_SERVER, targ_name, amount);
   return Plugin_Handled;
 }
 
@@ -1762,7 +1771,7 @@ public Action CMD_Respawn(int client, int args)
       TF2_RespawnPlayer(targ_list[i]);
   }
 
-  TagActivity(client, "%T", "SM_RESPAWN_Done", LANG_SERVER, targ_name);
+  TagActivity2(client, "%T", "SM_RESPAWN_Done", LANG_SERVER, targ_name);
   return Plugin_Handled;
 }
 

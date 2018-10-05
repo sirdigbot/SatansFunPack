@@ -1,5 +1,9 @@
 # Satan's Fun Pack
 A collection of useful commands and features for TF2 Servers.  
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)  
+
+***Requires [SFHChatLib](https://github.com/sirdigbot/SFHChatLib)***  
+
 ### Table of Contents
 [Plugin Conventions](#conventions)  
 [Core File (satansfunpack.smx)](#corefile)  

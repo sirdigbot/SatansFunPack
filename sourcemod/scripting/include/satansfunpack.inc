@@ -10,7 +10,6 @@
 #define CONFIG_SIZE PLATFORM_MAX_PATH+13  // 13 = "configs/" + ".cfg" + \0
 
 #include <tf2_stocks>
-#include <morecolors_new> // Updated to use newdecls. Otherwise it spams errors.
 
 enum TF_Slot_Index // Because tf2_stocks has no invalid option.
 {
@@ -24,128 +23,6 @@ enum TF_Slot_Index // Because tf2_stocks has no invalid option.
 	TF_Slot_Item1      = TFWeaponSlot_Item1,
 	TF_Slot_Item2      = TFWeaponSlot_Item2,
 	TF_Slot_AllWeapons // SPECIFICALLY MEANS Primary + Secondary + Melee
-}
-
-
-/**
- * Wraps ReplyToCommand with a coloured tag for command syntax.
- *
- * @param client	Client who issued command
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagReplyUsage(int client, const char[] msg, any ...)
-{
-  SetGlobalTransTarget(client);
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  CReplyToCommandEx(client, client, "\x04[SM]\x05 Usage\x01: %s", outStr);
-  return;
-}
-
-
-/**
- * Wraps ReplyToCommand with a coloured tag.
- *
- * @param client	Client who issued command
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagReply(int client, const char[] msg, any ...)
-{
-  SetGlobalTransTarget(client);
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  CReplyToCommandEx(client, client, "%s%s", STANDARD_TAG, outStr);
-  return;
-}
-
-
-/**
- * Wraps PrintToChat with a coloured tag.
- *
- * @param client	Client who issued command
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagPrintChat(int client, const char[] msg, any ...)
-{
-  SetGlobalTransTarget(client);
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  CPrintToChatEx(client, client, "%s%s", STANDARD_TAG, outStr);
-  return;
-}
-
-
-/**
- * Wraps ShowActivity2 with a coloured tag.
- *
- * @param client	Client who issued command
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagActivity(int client, const char[] msg, any ...)
-{
-  SetGlobalTransTarget(LANG_SERVER); // TODO Is this correct?
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  CShowActivity2(client, STANDARD_TAG, "%s", outStr);
-  return;
-}
-
-
-/**
- * Wraps PrintToServer with the standard tag.
- *
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagPrintServer(const char[] msg, any ...)
-{
-  SetGlobalTransTarget(LANG_SERVER);
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  PrintToServer("%s%s", CONSOLE_TAG, outStr);
-  return;
-}
-
-
-/**
- * Print a message to a client when you dont have a known ReplySource
- *
- * @param client	Client who issued command
- * @param msg	    String to print
- * @param ...   	Optional. Format-Class Function
- */
-stock void TagPrintToClient(int client, const char[] msg, any ...)
-{
-  SetGlobalTransTarget((client == 0) ? LANG_SERVER : client);
-
-  int len = strlen(msg) + 255;
-  char[] outStr = new char[len];
-  VFormat(outStr, len, msg, 3);
-
-  if(client == 0)
-    PrintToServer("%s%s", CONSOLE_TAG, outStr);                   // TagPrintServer
-  else if(client > 0 && client <= MaxClients)
-    CPrintToChatEx(client, client, "%s%s", STANDARD_TAG, outStr); // TagPrintChat
-  return;
 }
 
 
@@ -457,19 +334,19 @@ stock int GetClassBaseHP(const TFClassType classType)
 /**
  * Flagbit 'Shorthands'
  */
-stock void AddFlag(int &val, int flag)
+stock void AddFlag(int &val, const int flag)
 {
   val |= flag;
   return;
 }
 
-stock void RemFlag(int &val, int flag)
+stock void RemFlag(int &val, const int flag)
 {
   val &= ~flag;
   return;
 }
 
-stock bool HasFlag(int val, int flag)
+stock bool HasFlag(const int val, const int flag)
 {
   return view_as<bool>((val & flag != 0));
 }
@@ -483,24 +360,10 @@ stock bool HasFlag(int val, int flag)
  * @param client    Client index to set health on
  * @param health    Amount to set
  */
-stock void TF2_SetHealth(int client, int health)
+stock void TF2_SetHealth(const int client, const int health)
 {
   SetEntProp(client, Prop_Send, "m_iHealth", health);
   SetEntProp(client, Prop_Data, "m_iHealth", health);
-  return;
-}
-
-
-/**
- * Close a handle safely
- *
- * @param handle    Handle to close and null
- */
-stock void SafeCloseHandle(Handle &handle)
-{
-  if(handle != null)
-    CloseHandle(handle);
-  handle = null;
   return;
 }
 
@@ -511,7 +374,7 @@ stock void SafeCloseHandle(Handle &handle)
  * @param min       Lower bound of limit
  * @param max       Upper bound of limit
  */
-stock void ClampInt(int &val, int min, int max)
+stock void ClampInt(int &val, const int min, const int max)
 {
   if(val < min)
     val = min;
