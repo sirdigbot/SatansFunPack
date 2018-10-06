@@ -15,7 +15,7 @@ A collection of useful commands and features for TF2 Servers.
 [Info Utilities (sfp_infoutils.smx)](#infoutils)  
 [Mirror Damage (sfp_mirror.smx)](#mirror)  
 [Miscellaneous Tweaks (sfp_misctweaks.smx)](#misctweaks)  
-[Name Colour Manager (sfp_namecolour.smx)](#namecolour) - ***(Requires [Custom Chat Colors](https://forums.alliedmods.net/showthread.php?p=1721580))***  
+[Name Colour Manager (sfp_namecolour.smx)](#namecolour) - ***(Requires [Custom Chat Colors](https://forums.alliedmods.net/showthread.php?p=1721580) and [Simple Chat Processor (Redux)](https://forums.alliedmods.net/showthread.php?t=198501) - [Alt Link](https://bitbucket.org/minimoney1/simple-chat-processor))***  
 [Quick Conditions (sfp_quickconditions.smx)](#quickconds)  
 [Targeting Filters (sfp_targeting.smx)](#targeting)  
 [Toybox (sfp_toybox.smx)](#toybox) - ***(Requires [TF2Items](https://forums.alliedmods.net/showthread.php?t=115100))***  
