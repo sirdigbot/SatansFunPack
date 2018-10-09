@@ -22,7 +22,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION    "1.1.0"
+#define PLUGIN_VERSION    "1.1.1"
 #define PLUGIN_URL        "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL        "https://sirdigbot.github.io/SatansFunPack/sourcemod/help_update.txt"
 #define MAX_HELP_STR      64
@@ -208,6 +208,20 @@ public void OnPluginStart()
   }
 
   PrintToServer("%T", "SFP_HelpLoaded", LANG_SERVER);
+}
+
+
+public void OnPluginEnd()
+{
+  // Free data (might be unnecessary)
+  delete g_szMapSectName;
+  delete g_szMapSectTitle;
+  delete g_fbMapSectFlags;
+  delete g_szMapItemText;
+  delete g_fbMapItemFlags;
+  delete g_szMapItemCCom;
+  delete g_szMapItemRedirIdx;
+  delete g_szMapItemPrintMsg;
 }
 
 

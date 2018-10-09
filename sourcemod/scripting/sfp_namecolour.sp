@@ -23,7 +23,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/namecolour_update.txt"
 
@@ -171,6 +171,14 @@ public void OnPluginStart()
    * sm_resetcolour_access  - Can reset their own colours and tag
    */
   PrintToServer("%T", "SFP_NameColourLoaded", LANG_SERVER);
+}
+
+
+public void OnPluginEnd()
+{
+  // Free data (might be unnecessary)
+  delete g_iColours;
+  delete g_szColourNames;
 }
 
 
