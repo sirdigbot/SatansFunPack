@@ -4,11 +4,14 @@
   {
     "Version"
     {
-      "Latest" "1.1.1"
-      "Previous" "1.1.0"
+      "Latest" "1.2.0"
+      "Previous" "1.1.1"
     }
 
-    "Notes" "Fixed potential memory leak"
+    "Notes" "Added Admin/Mod Tag Borders, and sm_[re]settagborder."
+    "Notes" "Added Translation Support to main menu"
+    "Notes" "Optimised Config Structure"
+
   }
 
   "Files"

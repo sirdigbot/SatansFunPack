@@ -22,8 +22,43 @@
 
   "SM_MAINMENU_Title"
   {
-    "en" "Name and Tag Colour Menu"
+    "en" "Chat Colour Menu"
   }
+  "SM_MAINMENU_NameColour"
+  {
+    "en" "Name Colour"
+  }
+  "SM_MAINMENU_ChatColour"
+  {
+    "en" "Chat Colour"
+  }
+  "SM_MAINMENU_TagColour"
+  {
+    "en" "Tag Colour"
+  }
+  "SM_MAINMENU_TagText"
+  {
+    "en" "Set Tag Text"
+  }
+  "SM_MAINMENU_TagBorder_Admin"
+  {
+    "en" "Toggle Admin Border"
+  }
+  "SM_MAINMENU_TagBorder_Mod"
+  {
+    "en" "Toggle Mod Border"
+  }
+  "SM_MAINMENU_ResetTagText"
+  {
+    "en" "Reset Tag Text"
+  }
+  "SM_MAINMENU_ResetAll"
+  {
+    "en" "Reset All to Default"
+  }
+  
+  
+  
   "SM_COLOURMENU_Title"
   {
     "en" "Select Colour"
@@ -91,10 +126,55 @@
   "SM_SETTAG_Done"
   {
     "#format" "{1:s}"
-    "en" "Set Tag Text to '{1}'."
+    "en" "Set Tag Text to '{olive}{1}{default}'." // Does NOT set its own colour
   }
   "SM_SETTAG_Reset"
   {
     "en" "Reset Tag Text"
+  }
+  
+  "SM_SETTAGBORDER_Usage"
+  {
+    "en"  "sm_settagborder {steelblue}[Target] {darkorange}<Left Border> <Right Border>"
+  }
+  "SM_SETTAGBORDER_Toggled_Admin"
+  {
+    "en" "Toggled Admin Border"
+  }
+  "SM_SETTAGBORDER_Toggled_Mod"
+  {
+    "en" "Toggled Mod Border"
+  }
+  "SM_SETTAGBORDER_Done"
+  {
+    "#format" "{1:s},{2:s}"
+    "en" "Set Tag Border to {olive}{1}{default}<Text>{olive}{2}{default}."
+  }
+  "SM_SETTAGBORDER_Done_Target"
+  {
+    "#format" "{1:s},{2:s},{3:s}"
+    "en" "Set {1}'s Tag Border to {olive}{2}{default}<Text>{olive}{3}{default}."
+  }
+  "SM_SETTAGBORDER_Failed"
+  { 
+    "en" "Failed to set tag border"
+  }
+  "SM_SETTAGBORDER_Reset"
+  {
+    "en" "Reset Tag Border"
+  }
+  
+  "SM_RESETTAGBORDER_Done"
+  {
+    "en" "Reset Tag Border to Default"
+  }
+  "SM_RESETTAGBORDER_Done_Target"
+  {
+    "#format" "{1:s}"
+    "en" "Reset {1}'s Tag Border to Default"
+  }
+  "SM_RESETTAGBORDER_Failed"
+  { 
+    "en" "Failed to reset tag border"
   }
 }

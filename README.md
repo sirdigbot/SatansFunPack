@@ -374,16 +374,16 @@ A menu and set of commands that let players modify their Tag, Tag colour and Nam
 | ---------------------------- | -------------------------------------- | --- |
 | **sm_sfp_namecolour_update** | Should sfp_namecolour.smx Auto-Update  | `1` |
 | **sm_satansfunpack_colourconfig** | Colour List Config File | `satansfunpack_colours.cfg` |
+| **sm_sfp_namecolour_defaultborder** | Default Tag Border Characters | `[ ]` |
+| **sm_sfp_namecolour_adminborder** | Tag Border Characters for Admins | `< >` |
+| **sm_sfp_namecolour_modborder** | Tag Border Characters for Mods | `( )` |
+
 
 Colour Config Structure:
 ```
 "SatansFunColours"
 {
-  "1"
-  {
-    "name"  "Alice Blue"
-    "hex"   "F0F8FF"
-  }
+  "Some Colour Name" "<6-Digit-Hex-Code>"
   ...
 }
 ```
@@ -401,6 +401,8 @@ Colour Config Structure:
 | **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
 | **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
 | **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
+| **sm_settagborder**   | Set a Player's Tag Border     | `sm_settagborder [Target] <Left Border> <Right Border>` |
+| **sm_resettagborder** | Reset a Player's Tag Border   | `sm_resettagborder [Target]` |
 | **sm_namecolour_reloadcfg** | Reload Colour Config    | `sm_namecolour_reloadcfg` |
 
 <br/>
@@ -411,6 +413,8 @@ Colour Config Structure:
 | **sm_settagcolour**       | Access will automatically enable `Tag Colour` Menu Item   |
 | **sm_settag**             | Access will automatically enable `Set Tag Text` Menu Item |
 | **sm_resetcolour_access** | Client can use Reset All on `sm_namecolour` Menu          |
+| **sm_tagborder_admin**    | Client will have access to Toggle Admin Border (Overrides `sm_tagborder_mod`) |
+| **sm_tagborder_mod**      | Client will have access to Toggle Mod Border |
 
 <br/>
 

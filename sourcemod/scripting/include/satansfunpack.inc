@@ -208,7 +208,7 @@ stock bool IsColourRGBA(const int red, const int green, const int blue, const in
 
 
 /**
- * Check if a string is a valid hex code.
+ * Check if a string is a valid 6-digit hex code.
  *
  * @param str       String to check.
  * @return bool     If str is valid 6-digit hex

@@ -23,47 +23,72 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.1"
+#define PLUGIN_VERSION  "1.2.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/namecolour_update.txt"
 
-#define MAX_TAG_LENGTH  17    // 16 + \0
-#define MAX_COLOURS     1024  // Arbitrary safety cap on stringmap
-#define MAX_COLOUR_NAME 32
-#define IDX_SIZE        6
-#define NAME_PREFIX     'N'   // Arbitrary char for menu handling
-#define CHAT_PREFIX     'C'   // Arbitrary char for menu handling
-#define TAG_PREFIX      'T'   // Arbitrary char for menu handling
-#define RETRY_TIMER     30.0  // Arbitrary time to retry loading colours on connect
+#define MAX_TAG_TEXT_LENGTH  17                 // Maximum length of tag text. (16 + \0)
+#define MAX_TAG_LENGTH  MAX_TAG_TEXT_LENGTH + 3 // Maximum length of tag text + formatting (MAX_TAG_TEXT_LENGTH + '[' + ']' + ' ')
+#define MAX_COLOURS     1024                    // Arbitrary safety cap on stringmap
+#define MAX_COLOUR_NAME 32                      // Max Length of colour name
+#define IDX_SIZE        6                 
+#define RETRY_TIMER     30.0                    // Arbitrary time to retry loading colours on connect
+
+// Arbitrary unique chars/prefixes for sub-menu handling (Must be manually synced in Colour Menu)
+#define NAME_PREFIX       'N'   
+#define CHAT_PREFIX       'C'
+#define TAG_PREFIX        'T'
+#define BORDER_PREFIX     'B'
+#define NAME_RESET_STRING "RN"          // Length MUST be smaller than IDX_SIZE to buffer in Colour Handler.
+#define CHAT_RESET_STRING "RC"
+#define TAG_RESET_STRING  "RT"
+
+// Main Menu Item Numbers
+#define MAINMENUITEM_NAMECOLOUR         "0"
+#define MAINMENUITEM_CHATCOLOUR         "1"
+#define MAINMENUITEM_TAGCOLOUR          "2"
+#define MAINMENUITEM_SETTAGTEXT         "3"
+#define MAINMENUITEM_TOGGLEADMINBORDER  "4"
+#define MAINMENUITEM_RESETTAGTEXT       "5"
+#define MAINMENUITEM_RESETALL           "6"
+
+#define MAINMENUITEM_SIZE               2   // Max sizeof() MAINMENUITEM_* Strings
+
+#define TAGBORDER_CHARS 10    // 8 characters + space + \0.
+#define TAGBORDERSIDE_CHARS 5  // Half of non-space characters in TAGBORDER_CHARS + \0
+
 
 //=================================
 // Global
-Handle  h_bUpdate = null;
-bool    g_bUpdate;
+ConVar  h_bUpdate;
 bool    g_bLateLoad;
-Handle  h_szColourCfg = null;
+ConVar  h_szColourCfg;
 char    g_szColourCfg[PLATFORM_MAX_PATH];
+ConVar  h_szTagBorderDefault;
+char    g_szTagBorderDefault[TAGBORDER_CHARS];
+ConVar  h_szTagBorderAdmin;
+char    g_szTagBorderAdmin[TAGBORDER_CHARS];
+ConVar  h_szTagBorderMod;
+char    g_szTagBorderMod[TAGBORDER_CHARS];
 
-Handle h_ckNameColour = null;
-Handle h_ckChatColour = null;
-Handle h_ckTagColour  = null;
-Handle h_ckTagText    = null;
+Handle h_ckNameColour   = null; // Base-10 Integer of 6-digit Hex Colour
+Handle h_ckChatColour   = null;
+Handle h_ckTagColour    = null;
+Handle h_ckTagText      = null; // String of the inner text of the tag
+Handle h_ckTagBorder    = null; // Strings of the border characters (separated by space)
 
-StringMap g_iColours;
-StringMap g_szColourNames;
-int       g_iColourCount;
+
+ArrayList g_iColours;
+ArrayList g_szColourNames;
 
 bool      g_bWaitingForCustomTag[MAXPLAYERS + 1];
 Handle    h_ConnectTimers[MAXPLAYERS + 1] = {null, ...}; // Retry failed colour loading on connect
 
 /**
- * Known Bugs
+ * Known Bugs & Notes
  * TODO Team-tinted chat text option (cvar)
  * TODO Random colour option
- * TODO Admin-only tag border styles
- * TODO Add translation to main menu items
  * TODO CVar controlled tag size limit
- * TODO Add 'test colours' option to main menu
  */
 public Plugin myinfo =
 {
@@ -98,16 +123,28 @@ public void OnPluginStart()
   LoadTranslations("sfp.namecolour.phrases");
 
   h_bUpdate = CreateConVar("sm_sfp_namecolour_update", "1", "Update Satan's Fun Pack - Name Colour Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
-  g_bUpdate = GetConVarBool(h_bUpdate);
-  HookConVarChange(h_bUpdate, UpdateCvars);
+  h_bUpdate.AddChangeHook(OnCvarChanged);
 
   h_szColourCfg = CreateConVar("sm_satansfunpack_colourconfig", "satansfunpack_colours.cfg", "Config File used for List of Colours (Relative to Sourcemod/Configs)\n(Default: satansfunpack_colours.cfg)", FCVAR_SPONLY);
 
   char buff[PLATFORM_MAX_PATH], formatBuff[PLATFORM_MAX_PATH+13];
-  GetConVarString(h_szColourCfg, buff, sizeof(buff));
+  h_szColourCfg.GetString(buff, sizeof(buff));
   Format(formatBuff, sizeof(formatBuff), "configs/%s", buff);
   BuildPath(Path_SM, g_szColourCfg, sizeof(g_szColourCfg), formatBuff);
-  HookConVarChange(h_szColourCfg, UpdateCvars);
+  h_szColourCfg.AddChangeHook(OnCvarChanged);
+  
+  
+  h_szTagBorderDefault = CreateConVar("sm_sfp_namecolour_defaultborder", "[ ]", "Default Characters used on either side of a Player's Tag text\nString must be separated by space.\nMax Bytes/Characters 9 (Incl. Space)\n(Default: \"[ ]\")", FCVAR_SPONLY);
+  h_szTagBorderDefault.GetString(g_szTagBorderDefault, sizeof(g_szTagBorderDefault));
+  h_szTagBorderDefault.AddChangeHook(OnCvarChanged);
+  
+  h_szTagBorderAdmin = CreateConVar("sm_sfp_namecolour_adminborder", "< >", "Characters used on either side of an Admin's Tag text (sm_tagborder_admin)\nString must be separated by space.\nMax Bytes/Characters 9 (Incl. Space)\n(Default: \"< >\")", FCVAR_SPONLY);
+  h_szTagBorderAdmin.GetString(g_szTagBorderAdmin, sizeof(g_szTagBorderAdmin));
+  h_szTagBorderAdmin.AddChangeHook(OnCvarChanged);
+  
+  h_szTagBorderMod = CreateConVar("sm_sfp_namecolour_modborder", "( )", "Characters used on either side of a Moderators's Tag text (sm_tagborder_mod)\nString must be separated by space.\nMax Bytes/Characters 9 (Incl. Space)\n(Default: \"< >\")", FCVAR_SPONLY);
+  h_szTagBorderMod.GetString(g_szTagBorderMod, sizeof(g_szTagBorderMod));
+  h_szTagBorderMod.AddChangeHook(OnCvarChanged);
 
 
   RegAdminCmd("sm_namecolour",  CMD_ColourMenu, ADMFLAG_GENERIC, "Set Tag, Tag Colour, and Name Colour");
@@ -124,12 +161,13 @@ public void OnPluginStart()
   RegAdminCmd("sm_settagcolour",  CMD_SetTagColour,   ADMFLAG_GENERIC, "Set Tag Colour Directly");
   RegAdminCmd("sm_settagcolor",   CMD_SetTagColour,   ADMFLAG_GENERIC, "Set Tag Color Directly");
   RegAdminCmd("sm_settag",        CMD_SetTag,         ADMFLAG_GENERIC, "Set Tag Text Directly");
-
-
+  
+  RegAdminCmd("sm_settagborder",  CMD_SetTagBorder,     ADMFLAG_BAN, "Set a Player's Tag Border");
+  RegAdminCmd("sm_resettagborder",  CMD_ResetTagBorder, ADMFLAG_BAN, "Reset a Player's Tag Border");
   RegAdminCmd("sm_namecolour_reloadcfg", CMD_ReloadCfg, ADMFLAG_ROOT, "Reload Name Colour Config");
 
-  g_iColours      = new StringMap();
-  g_szColourNames = new StringMap();
+  g_iColours      = new ArrayList();
+  g_szColourNames = new ArrayList(ByteCountToCells(MAX_COLOUR_NAME));
   LoadConfig();
 
 
@@ -148,9 +186,14 @@ public void OnPluginStart()
     "Tag Colour (6-Digit Hex Code in Base 10)",
     CookieAccess_Protected);
 
+  h_ckTagBorder = RegClientCookie(
+    "satansfunpack_tagborder",
+    "Tag Side Border Strings (separated by space)",
+    CookieAccess_Protected);
+    
   h_ckTagText = RegClientCookie(
     "satansfunpack_tagtext",
-    "Tag Text",
+    "Tag Inner Text",
     CookieAccess_Protected);
 
   if(g_bLateLoad)
@@ -169,6 +212,8 @@ public void OnPluginStart()
    * Overrides
    * Commands determine their equivalent menu access.
    * sm_resetcolour_access  - Can reset their own colours and tag
+   * sm_tagborder_admin     - Client can use 'Admin' tag border (will prevent from using 'Mod' border)
+   * sm_tagborder_mod       - Client can use 'Moderator' tag border
    */
   PrintToServer("%T", "SFP_NameColourLoaded", LANG_SERVER);
 }
@@ -183,13 +228,10 @@ public void OnPluginEnd()
 
 
 
-public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValue)
+public void OnCvarChanged(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
   if(cvar == h_bUpdate)
-  {
-    g_bUpdate = GetConVarBool(h_bUpdate);
-    (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
-  }
+    (h_bUpdate.BoolValue) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   else if(cvar == h_szColourCfg)
   {
     char formatBuff[PLATFORM_MAX_PATH+13];
@@ -252,7 +294,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
   if(g_bWaitingForCustomTag[client])
   {
     g_bWaitingForCustomTag[client] = false;
-    char buff[MAX_TAG_LENGTH]; // Enforce max
+    char buff[MAX_TAG_TEXT_LENGTH]; // Enforce max
     strcopy(buff, sizeof(buff), sArgs);
     SetPlayerTag(client, buff);
     TagPrintChat(client, "%T", "SM_SETTAG_Done", client, buff);
@@ -283,19 +325,22 @@ public Action CMD_ColourMenu(int client, int args)
   return Plugin_Handled;
 }
 
-void OpenMainMenu(int client)
+void OpenMainMenu(const int client)
 {
   Menu menu = new Menu(MainMenuHandler,
-    MenuAction_End|MenuAction_Display|MenuAction_DrawItem|MenuAction_Select);
+    MenuAction_End|MenuAction_Display|MenuAction_DisplayItem|MenuAction_DrawItem|MenuAction_Select);
   SetMenuTitle(menu, "Menu"); // Translated in handler
 
-  // TODO Add translation
-  AddMenuItem(menu, "0", "Name Colour");
-  AddMenuItem(menu, "1", "Chat Colour");
-  AddMenuItem(menu, "2", "Tag Colour");
-  AddMenuItem(menu, "3", "Set Tag Text");
-  AddMenuItem(menu, "4", "Reset Tag Text");
-  AddMenuItem(menu, "5", "Reset All to Default");
+  AddMenuItem(menu, MAINMENUITEM_NAMECOLOUR, "Name Colour");
+  AddMenuItem(menu, MAINMENUITEM_CHATCOLOUR, "Chat Colour");
+  AddMenuItem(menu, MAINMENUITEM_TAGCOLOUR, "Tag Colour");
+  AddMenuItem(menu, MAINMENUITEM_SETTAGTEXT, "Set Tag Text");
+  
+  // To toggle between default and admin border
+  AddMenuItem(menu, MAINMENUITEM_TOGGLEADMINBORDER, "Toggle Admin Border");
+  
+  AddMenuItem(menu, MAINMENUITEM_RESETTAGTEXT, "Reset Tag Text");
+  AddMenuItem(menu, MAINMENUITEM_RESETALL, "Reset All to Default");
 
   DisplayMenu(menu, client, MENU_TIME_FOREVER);
   return;
@@ -312,52 +357,94 @@ public int MainMenuHandler(Handle menu, MenuAction action, int param1, int param
 
     case MenuAction_Display:
     {
-      // Client Translation: p1 = client, p2 = menu
+      // Client Translation: p1 = client, p2 = menu handle int
       char buffer[64];
       Format(buffer, sizeof(buffer), "%T", "SM_MAINMENU_Title", param1);
 
-      Handle panel = view_as<Handle>(param2);
-      SetPanelTitle(panel, buffer);
+      SetPanelTitle(view_as<Handle>(param2), buffer);
+    }
+    
+    case MenuAction_DisplayItem:
+    {
+      int style;
+      char info[MAINMENUITEM_SIZE];
+      GetMenuItem(menu, param2, info, sizeof(info), style);
+
+      char display[64];
+
+      if(StrEqual(info, MAINMENUITEM_NAMECOLOUR, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_NameColour", param1); 
+      else if(StrEqual(info, MAINMENUITEM_CHATCOLOUR, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_ChatColour", param1);
+      else if(StrEqual(info, MAINMENUITEM_TAGCOLOUR, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_TagColour", param1);
+      else if(StrEqual(info, MAINMENUITEM_TOGGLEADMINBORDER, true))
+      {
+        // Only mods should see the mod text
+        if(CheckCommandAccess(param1, "sm_tagborder_mod", ADMFLAG_GENERIC, false)
+         && !CheckCommandAccess(param1, "sm_tagborder_admin", ADMFLAG_GENERIC, false))
+        {
+          Format(display, sizeof(display), "%T", "SM_MAINMENU_TagBorder_Mod", param1);
+        }
+        else
+          Format(display, sizeof(display), "%T", "SM_MAINMENU_TagBorder_Admin", param1);
+      }
+      else if(StrEqual(info, MAINMENUITEM_SETTAGTEXT, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_TagText", param1);
+      else if(StrEqual(info, MAINMENUITEM_RESETTAGTEXT, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_ResetTagText", param1);
+      else if(StrEqual(info, MAINMENUITEM_RESETALL, true))
+        Format(display, sizeof(display), "%T", "SM_MAINMENU_ResetAll", param1);
+          
+      return RedrawMenuItem(display); // Only static items in menu, so this is fine to call every time
     }
 
     case MenuAction_DrawItem:
     {
       // Disable Inaccessible Options: p1 = client, p2 = menuitem
       int style;
-      char info[4];
+      char info[MAINMENUITEM_SIZE];
       GetMenuItem(menu, param2, info, sizeof(info), style);
 
       // Name Colour
-      if(StrEqual(info, "0", true) &&
-        !CheckCommandAccess(param1, "sm_setnamecolour", ADMFLAG_GENERIC, false))
+      if(StrEqual(info, MAINMENUITEM_NAMECOLOUR, true)
+        && !CheckCommandAccess(param1, "sm_setnamecolour", ADMFLAG_GENERIC, false))
       {
         return ITEMDRAW_DISABLED;
       }
 
       // Chat Colour
-      else if(StrEqual(info, "1", true) &&
-        !CheckCommandAccess(param1, "sm_setchatcolour", ADMFLAG_GENERIC, false))
+      else if(StrEqual(info, MAINMENUITEM_CHATCOLOUR, true)
+        && !CheckCommandAccess(param1, "sm_setchatcolour", ADMFLAG_GENERIC, false))
       {
         return ITEMDRAW_DISABLED;
       }
 
       // Tag Colour
-      else if(StrEqual(info, "2", true) &&
-        !CheckCommandAccess(param1, "sm_settagcolour", ADMFLAG_GENERIC, false))
+      else if(StrEqual(info, MAINMENUITEM_TAGCOLOUR, true)
+        && !CheckCommandAccess(param1, "sm_settagcolour", ADMFLAG_GENERIC, false))
+      {
+        return ITEMDRAW_DISABLED;
+      }
+      
+      // Admin/Mod Tag Border 
+      else if(StrEqual(info, MAINMENUITEM_TOGGLEADMINBORDER, true)
+        && (!CheckCommandAccess(param1, "sm_tagborder_admin", ADMFLAG_GENERIC, false)
+        && !CheckCommandAccess(param1, "sm_tagborder_mod", ADMFLAG_GENERIC, false)))
       {
         return ITEMDRAW_DISABLED;
       }
 
       // Set & Reset Tag Text
-      else if((StrEqual(info, "3", true) || StrEqual(info, "4", true)) &&
-        !CheckCommandAccess(param1, "sm_settag", ADMFLAG_GENERIC, false))
+      else if((StrEqual(info, MAINMENUITEM_SETTAGTEXT, true) || StrEqual(info, MAINMENUITEM_RESETTAGTEXT, true))
+        && !CheckCommandAccess(param1, "sm_settag", ADMFLAG_GENERIC, false))
       {
         return ITEMDRAW_DISABLED;
       }
 
       // Reset All
-      else if(StrEqual(info, "5", true) &&
-        !CheckCommandAccess(param1, "sm_resetcolour_access", ADMFLAG_GENERIC, true))
+      else if(StrEqual(info, MAINMENUITEM_RESETALL, true)
+        && !CheckCommandAccess(param1, "sm_resetcolour_access", ADMFLAG_GENERIC, true))
       {
         return ITEMDRAW_DISABLED;
       }
@@ -366,28 +453,37 @@ public int MainMenuHandler(Handle menu, MenuAction action, int param1, int param
     case MenuAction_Select:
     {
       // Selection Events: p1 = client, p2 = menuitem
-      char info[4];
+      char info[MAINMENUITEM_SIZE];
       GetMenuItem(menu, param2, info, sizeof(info));
 
-      if(StrEqual(info, "0", true))       // Name Colour
-        OpenColourMenu(param1, 0);
-      else if(StrEqual(info, "1", true))  // Chat Colour
-        OpenColourMenu(param1, 1);
-      else if(StrEqual(info, "2", true))  // Tag Colour
-        OpenColourMenu(param1, 2);
-      else if(StrEqual(info, "3", true))  // Set Tag Text
+      if(StrEqual(info, MAINMENUITEM_NAMECOLOUR, true))
+        OpenColourMenu(param1, CCC_NameColor);
+      else if(StrEqual(info, MAINMENUITEM_CHATCOLOUR, true))
+        OpenColourMenu(param1, CCC_ChatColor);
+      else if(StrEqual(info, MAINMENUITEM_TAGCOLOUR, true))
+        OpenColourMenu(param1, CCC_TagColor);
+      else if(StrEqual(info, MAINMENUITEM_SETTAGTEXT, true))
       {
         g_bWaitingForCustomTag[param1] = true;
         TagPrintChat(param1, "%T", "SM_NAMECOLOUR_TagRequest", param1);
         OpenMainMenu(param1);
       }
-      else if(StrEqual(info, "4", true))  // Reset Tag Text
+      else if(StrEqual(info, MAINMENUITEM_TOGGLEADMINBORDER, true))
+      {
+        ToggleAdminTagBorder(param1);
+        if(CheckCommandAccess(param1, "sm_tagborder_admin", ADMFLAG_GENERIC, false))
+          TagPrintChat(param1, "%T", "SM_SETTAGBORDER_Toggled_Admin", param1);
+        else if(CheckCommandAccess(param1, "sm_tagborder_mod", ADMFLAG_GENERIC, false))
+          TagPrintChat(param1, "%T", "SM_SETTAGBORDER_Toggled_Mod", param1);
+        OpenMainMenu(param1);
+      }
+      else if(StrEqual(info, MAINMENUITEM_RESETTAGTEXT, true))
       {
         SetPlayerTag(param1, "", true);   // true = reset;
         TagPrintChat(param1, "%T", "SM_SETTAG_Reset", param1);
         OpenMainMenu(param1);
       }
-      else if(StrEqual(info, "5", true))
+      else if(StrEqual(info, MAINMENUITEM_RESETALL, true))
       {
         SetPlayerNameColour(param1, -1); // -1 = reset
         SetPlayerChatColour(param1, -1);
@@ -524,11 +620,107 @@ public Action CMD_SetTag(int client, int args)
     return Plugin_Handled;
   }
 
-  char argString[MAX_TAG_LENGTH];
+  char argString[MAX_TAG_TEXT_LENGTH];
   GetCmdArgString(argString, sizeof(argString));
 
   SetPlayerTag(client, argString);
   TagReply(client, "%T", "SM_SETTAG_Done", client, argString);
+
+  return Plugin_Handled;
+}
+
+
+
+/**
+ * Set custom tag border
+ * As admins and mods have special borders, this should be restricted in its use to avoid impersonation
+ *
+ * sm_settagborder [Target] <Left Border> <Right Border>
+ */
+public Action CMD_SetTagBorder(int client, int args)
+{
+  if(args < 2 || args > 3)
+  {
+    TagReplyUsage(client, "%T", "SM_SETTAGBORDER_Usage", client);
+    return Plugin_Handled;
+  }
+  
+  char targName[MAX_NAME_LENGTH], leftSide[TAGBORDERSIDE_CHARS], rightSide[TAGBORDERSIDE_CHARS];
+  int target = client;
+  if(args == 2)
+  {
+    GetCmdArg(1, leftSide, sizeof(leftSide));
+    GetCmdArg(2, rightSide, sizeof(rightSide));
+  }
+  else if(args == 3)
+  {
+    GetCmdArg(1, targName, sizeof(targName));
+    GetCmdArg(2, leftSide, sizeof(leftSide));
+    GetCmdArg(3, rightSide, sizeof(rightSide));
+    
+    target = FindTarget(client, targName, true); // Single Targets only
+    if(target == -1)
+      return Plugin_Handled; // FindTarget prints error
+  }
+  
+  // Manually merge together. This method guarantees a single space between 2 valid sides.
+  char border[TAGBORDER_CHARS];
+  Format(border, sizeof(border), "%s %s", leftSide, rightSide);
+  
+  if(IsClientInGame(target) && AreClientCookiesCached(target))
+  {
+    // Update tag
+    char text[MAX_TAG_TEXT_LENGTH];
+    SetClientCookie(target, h_ckTagBorder, border);
+    GetClientCookie(target, h_ckTagText, text, sizeof(text));
+    SetPlayerTag(target, text);
+    if(target != client)
+    {
+      GetClientName(target, targName, sizeof(targName));
+      TagActivity2(client, "%T", "SM_SETTAGBORDER_Done_Target", LANG_SERVER, targName, leftSide, rightSide);
+    }
+    else
+      TagReply(client, "%T", "SM_SETTAGBORDER_Done", client, leftSide, rightSide);
+  }
+  else
+    TagReply(client, "%T", "SM_SETTAGBORDER_Failed", client);
+  return Plugin_Handled;
+}
+
+/**
+ * Reset a player's custom tag border to default
+ *
+ * sm_resettagborder [Target]
+ */
+public Action CMD_ResetTagBorder(int client, int args)
+{
+  char arg1[MAX_NAME_LENGTH];
+  int target = client;
+  if(args == 1)
+  {
+    GetCmdArg(1, arg1, sizeof(arg1));
+    target = FindTarget(client, arg1, true);
+    if(target == -1)
+      return Plugin_Handled; // FindTarget prints error
+  }
+  
+  if(IsClientInGame(target) && AreClientCookiesCached(target))
+  {
+    // Update tag and reset border
+    char text[MAX_TAG_TEXT_LENGTH];
+    SetClientCookie(target, h_ckTagBorder, g_szTagBorderDefault);
+    GetClientCookie(target, h_ckTagText, text, sizeof(text));
+    SetPlayerTag(target, text);
+    if(target != client)
+    {
+      GetClientName(target, arg1, sizeof(arg1));
+      TagActivity2(client, "%T", "SM_RESETTAGBORDER_Done_Target", LANG_SERVER, arg1);
+    }
+    else
+      TagReply(client, "%T", "SM_RESETTAGBORDER_Done", client);
+  }
+  else
+    TagReply(client, "%T", "SM_RESETTAGBORDER_Failed", client);
   return Plugin_Handled;
 }
 
@@ -537,7 +729,7 @@ public Action CMD_SetTag(int client, int args)
 /**
  * Colour Selection Submenu
  */
-void OpenColourMenu(int client, int colourType)
+void OpenColourMenu(const int client, const CCC_ColorType colourType)
 {
   Menu menu = new Menu(ColourHandler,
     MenuAction_End|MenuAction_Cancel|MenuAction_Display|MenuAction_Select);
@@ -549,30 +741,31 @@ void OpenColourMenu(int client, int colourType)
 
   // Add 'Reset Colour' item first, with index/key specifying the type for handler
   char prefix;
-  if(colourType == 0)
+  switch(colourType)
   {
-    AddMenuItem(menu, "RN", reset); // "RN"/Key must be shorter than IDX_SIZE
-    prefix = NAME_PREFIX;
-  }
-  else if(colourType == 1)
-  {
-    AddMenuItem(menu, "RC", reset);
-    prefix = CHAT_PREFIX;
-  }
-  else if(colourType == 2)
-  {
-    AddMenuItem(menu, "RT", reset);
-    prefix = TAG_PREFIX;
+    case CCC_NameColor:
+    {
+      prefix = NAME_PREFIX;
+      AddMenuItem(menu, NAME_RESET_STRING, reset);
+    }
+    case CCC_ChatColor:
+    {
+      prefix = CHAT_PREFIX;
+      AddMenuItem(menu, CHAT_RESET_STRING, reset);
+    }
+    case CCC_TagColor:
+    {
+      prefix = TAG_PREFIX;
+      AddMenuItem(menu, TAG_RESET_STRING, reset);
+    }
   }
 
   // Add all colours to menu
-  for(int i = 0; i < g_iColourCount; ++i)
+  for(int i = 0; i < g_szColourNames.Length; ++i)
   {
-    char idx[IDX_SIZE+1];                         // + 1 for prefix
-    IntToString(i, idx, sizeof(idx));
-
+    char idx[IDX_SIZE+1];                         // + 1 for selection prefix
     char buff[MAX_COLOUR_NAME];
-    g_szColourNames.GetString(idx, buff, sizeof(buff));
+    g_szColourNames.GetString(i, buff, sizeof(buff));
 
     Format(idx, sizeof(idx), "%s%i", prefix, i);  // Prefix determines which colour type changes
     AddMenuItem(menu, idx, buff);
@@ -614,21 +807,21 @@ public int ColourHandler(Handle menu, MenuAction action, int param1, int param2)
       GetMenuItem(menu, param2, info, sizeof(info));
 
       // Check if Reset
-      if(StrEqual(info, "RN", true))
+      if(StrEqual(info, NAME_RESET_STRING, true))
       {
         SetPlayerNameColour(param1, -1); // -1 = reset
         TagPrintChat(param1, "%T", "SM_SETNAMECOLOUR_Reset", param1);
         OpenMainMenu(param1);
         return 0;
       }
-      else if(StrEqual(info, "RC", true))
+      else if(StrEqual(info, CHAT_RESET_STRING, true))
       {
         SetPlayerChatColour(param1, -1);
         TagPrintChat(param1, "%T", "SM_SETCHATCOLOUR_Reset", param1);
         OpenMainMenu(param1);
         return 0;
       }
-      else if(StrEqual(info, "RT", true))
+      else if(StrEqual(info, TAG_RESET_STRING, true))
       {
         SetPlayerTagColour(param1, -1);
         TagPrintChat(param1, "%T", "SM_SETTAGCOLOUR_Reset", param1);
@@ -636,14 +829,11 @@ public int ColourHandler(Handle menu, MenuAction action, int param1, int param2)
         return 0;
       }
 
-      // Not resetting, get StringMap value by index
-      char mapIdx[IDX_SIZE];
-      strcopy(mapIdx, sizeof(mapIdx), info[1]); // Remove single char prefix
+      // Client not resetting, Get colour value by chosen index
+      int arrayIndex = StringToInt(info[1]); // Remove single char prefix
+      int hexColour  = g_iColours.Get(arrayIndex);
 
-      int hexColour;
-      g_iColours.GetValue(mapIdx, hexColour);
-
-      // Get Colour Hex String (Coloured with that same colour)
+      // Get Colour Hex String (Coloured with that same colour) for demo purposes
       char colourStr[16];
       Format(colourStr, sizeof(colourStr), "\x07%06X%06X\x01", hexColour, hexColour);
 
@@ -651,20 +841,18 @@ public int ColourHandler(Handle menu, MenuAction action, int param1, int param2)
       {
         SetPlayerNameColour(param1, hexColour);
         TagPrintChat(param1, "%T", "SM_SETNAMECOLOUR_Done", param1, colourStr);
-        OpenMainMenu(param1);
       }
       else if(info[0] == CHAT_PREFIX)
       {
         SetPlayerChatColour(param1, hexColour);
         TagPrintChat(param1, "%T", "SM_SETCHATCOLOUR_Done", param1, colourStr);
-        OpenMainMenu(param1);
       }
       else if(info[0] == TAG_PREFIX)
       {
         SetPlayerTagColour(param1, hexColour);
         TagPrintChat(param1, "%T", "SM_SETTAGCOLOUR_Done", param1, colourStr);
-        OpenMainMenu(param1);
       }
+      OpenMainMenu(param1);
     }
   }
   return 0;
@@ -684,6 +872,15 @@ public Action CMD_ReloadCfg(int client, int args)
   return Plugin_Handled;
 }
 
+/**
+ * Load the g_szColourCfg.
+ * Format:
+ * "SatansFunColours"
+ * {
+ *   "Some Colour Name" "<6-Digit-Hex-Code>"
+ *   ...
+ * }
+ */
 stock bool LoadConfig()
 {
   if(!FileExists(g_szColourCfg))
@@ -694,14 +891,14 @@ stock bool LoadConfig()
 
   // Create and Check KeyValues
   KeyValues hKeys = CreateKeyValues("SatansFunColours");
-  if(!FileToKeyValues(hKeys, g_szColourCfg))
+  if(!hKeys.ImportFromFile(g_szColourCfg))
   {
     delete hKeys;
     SetFailState("%T", "SFP_BadConfig", LANG_SERVER, g_szColourCfg);
     return false;
   }
 
-  if(!hKeys.GotoFirstSubKey())
+  if(!hKeys.GotoFirstSubKey(false)) // false = Traverse values AND sections
   {
     delete hKeys;
     SetFailState("%T", "SFP_BadConfigSubKey", LANG_SERVER, g_szColourCfg);
@@ -711,64 +908,112 @@ stock bool LoadConfig()
   // Zero Out
   g_iColours.Clear();
   g_szColourNames.Clear();
-  g_iColourCount = 0;
-
-  int skipCount = 0;
+  
+  int arrayCount  = 0; // Succesfully added colours (for indexing g_iColours)
+  int skipCount   = 0; // Failed colours (for logging purposes)
+  char colourName[MAX_COLOUR_NAME], hexString[7];
+ 
   do
   {
-    char nameBuff[MAX_COLOUR_NAME], hexBuff[7];
-    hKeys.GetString("name", nameBuff, sizeof(nameBuff));
-    if(StrEqual(nameBuff, "", true))
+    hKeys.GetSectionName(colourName, sizeof(colourName));
+    hKeys.GetString(NULL_STRING, hexString, sizeof(hexString), ""); // Default to ""
+
+    if(StrEqual(colourName, "", true) || !IsValid6DigitHex(hexString))
     {
       ++skipCount;
       continue;
     }
-
-    hKeys.GetString("hex", hexBuff, sizeof(hexBuff));
-    if(!IsValid6DigitHex(hexBuff))
-    {
-      ++skipCount;
-      continue;
-    }
-
-    char idx[IDX_SIZE];
-    IntToString(g_iColourCount, idx, sizeof(idx));
-    g_iColours.SetValue(idx, StringToInt(hexBuff, 16));
-    g_szColourNames.SetString(idx, nameBuff);
-    ++g_iColourCount;
+    
+    g_szColourNames.PushString(colourName);
+    g_iColours.Push(StringToInt(hexString, 16));
+    ++arrayCount;
   }
-  while(hKeys.GotoNextKey() && g_iColourCount < MAX_COLOURS);
+  while(hKeys.GotoNextKey(false) && arrayCount < MAX_COLOURS);
 
-  PrintToServer("%T", "SM_NAMECOLOUR_ConfigLoad", LANG_SERVER, g_iColourCount, skipCount);
+  PrintToServer("%T", "SM_NAMECOLOUR_ConfigLoad", LANG_SERVER, arrayCount, skipCount);
   delete hKeys;
   return true;
 }
 
 
 /**
- * Set a player's CCC Tag and cookie
+ * Set a player's CCC Tag and set cookie
  */
-stock void SetPlayerTag(int client, const char[] tag, bool reset=false)
+stock void SetPlayerTag(const int client, const char[] tagInnerText, const bool reset=false)
 {
-  char buff[MAX_TAG_LENGTH+3] = ""; // Adding "[", "]" and " "
-
+  char buff[MAX_TAG_LENGTH] = ""; // Adding "[", "]" and " " 
+  bool cookiesReady         = AreClientCookiesCached(client);
+  
   if(reset)
     CCC_ResetTag(client);
   else
   {
-    Format(buff, sizeof(buff), "[%s] ", tag);
+    char border[TAGBORDER_CHARS];
+    if(cookiesReady)
+      GetClientCookie(client, h_ckTagBorder, border, sizeof(border));
+    else
+      strcopy(border, sizeof(border), g_szTagBorderDefault);
+    
+    FormatPlayerTag(tagInnerText, border, buff, sizeof(buff));
     CCC_SetTag(client, buff);
   }
-
-  if(AreClientCookiesCached(client))
-    SetClientCookie(client, h_ckTagText, buff);
+  
+  if(cookiesReady)
+    SetClientCookie(client, h_ckTagText, (reset) ? "" : tagInnerText); // Empty wont be applied on-join
   return;
 }
 
 /**
+ * Format tag text with tag border and output the final result
+ * This result will be ready for use with CCC_SetTag. e.g. "[<Text>] "
+ *
+ * The border parameter needs to be 2 space-separated strings.
+ * If it does not contain a space, g_szTagBorderDefault will be used instead
+ */
+stock void FormatPlayerTag(const char[] text, const char[] border, char[] buffer, const int maxlength)
+{
+  char borderSides[2][TAGBORDERSIDE_CHARS];
+  if(FindCharInString(border, ' ') != -1)
+    ExplodeString(border, " ", borderSides, sizeof(borderSides), sizeof(borderSides[]));
+  else
+    ExplodeString(g_szTagBorderDefault, " ", borderSides, sizeof(borderSides), sizeof(borderSides[]));
+  
+  Format(buffer, maxlength, "%s%s%s ", borderSides[0], text, borderSides[1]);
+  return;
+}
+
+stock void ToggleAdminTagBorder(const int client)
+{
+  if(AreClientCookiesCached(client))
+  {
+    char innerText[MAX_TAG_TEXT_LENGTH], border[TAGBORDER_CHARS];
+    GetClientCookie(client, h_ckTagText, innerText, sizeof(innerText));
+    GetClientCookie(client, h_ckTagBorder, border, sizeof(border));
+    
+    // If tag is admin or mod, revert to default (can be custom, so must be explicit)
+    if(StrEqual(border, g_szTagBorderAdmin, true) || StrEqual(border, g_szTagBorderMod, true))
+      SetClientCookie(client, h_ckTagBorder, g_szTagBorderDefault);
+    else
+    {
+      if(CheckCommandAccess(client, "sm_tagborder_admin", ADMFLAG_GENERIC, false)) // Admin has priority
+        SetClientCookie(client, h_ckTagBorder, g_szTagBorderAdmin);
+      else if(CheckCommandAccess(client, "sm_tagborder_mod", ADMFLAG_GENERIC, false))
+        SetClientCookie(client, h_ckTagBorder, g_szTagBorderMod);
+      // Else player has no access, leave default
+    }
+    
+    // Force tag update
+    SetPlayerTag(client, innerText);
+  }
+  return;
+}
+
+
+
+/**
  * Set/Save a player's CCC Tag Colour
  */
-stock void SetPlayerTagColour(int client, int colour)
+stock void SetPlayerTagColour(const int client, const int colour)
 {
   SetPlayerColour(client, colour, CCC_TagColor, h_ckTagColour);
   return;
@@ -778,7 +1023,7 @@ stock void SetPlayerTagColour(int client, int colour)
 /**
  * Set/Save a player's CCC Name Colour
  */
-stock void SetPlayerNameColour(int client, int colour)
+stock void SetPlayerNameColour(const int client, const int colour)
 {
   SetPlayerColour(client, colour, CCC_NameColor, h_ckNameColour);
   return;
@@ -788,17 +1033,17 @@ stock void SetPlayerNameColour(int client, int colour)
 /**
  * Set/Save a player's CCC Chat Colour
  */
-stock void SetPlayerChatColour(int client, int colour)
+stock void SetPlayerChatColour(const int client, const int colour)
 {
   SetPlayerColour(client, colour, CCC_ChatColor, h_ckChatColour);
   return;
 }
 
 /**
- * Set a player's CCC Colours and cookie
+ * Set a player's CCC Colours and set cookie
  * Pass -1 as colour to reset.
  **/
-stock void SetPlayerColour(int client, int colour, CCC_ColorType type, Handle &cookie)
+stock void SetPlayerColour(const int client, const int colour, const CCC_ColorType type, Handle &cookie)
 {
   if(colour > 0)
     CCC_SetColor(client, type, colour, false); // False = no alpha, 6-digit
@@ -818,12 +1063,13 @@ stock void SetPlayerColour(int client, int colour, CCC_ColorType type, Handle &c
 /**
  * Read a client's cookies and set their CCC Values directly
  */
-stock void LoadClientCookies(int client)
+stock void LoadClientCookies(const int client)
 {
-  char buff[MAX_TAG_LENGTH+3]; // Account for "[", "]" and " " in "[<Tag>] "
+  char buff[MAX_TAG_LENGTH];    // Account for "[", "]" and " " in "[<Tag>] "
+  
   // Name
   GetClientCookie(client, h_ckNameColour, buff, sizeof(buff));
-  if(!StrEqual(buff, "", true))
+  if(!StrEqual(buff, "", true)) // Empty = disabled
     CCC_SetColor(client, CCC_NameColor, StringToInt(buff), false);
 
   // Chat
@@ -831,14 +1077,23 @@ stock void LoadClientCookies(int client)
   if(!StrEqual(buff, "", true))
     CCC_SetColor(client, CCC_ChatColor, StringToInt(buff), false);
 
-  // Tag
+  // Tag Colour
   GetClientCookie(client, h_ckTagColour, buff, sizeof(buff));
   if(!StrEqual(buff, "", true))
     CCC_SetColor(client, CCC_TagColor, StringToInt(buff), false);
-
-  GetClientCookie(client, h_ckTagText, buff, sizeof(buff));
-  if(!StrEqual(buff, "", true))
-    CCC_SetTag(client, buff); // Don't use SetPlayerTag, Cookies store "[<Tag>] "
+  
+  // Tag Text & Border
+  char text[MAX_TAG_TEXT_LENGTH];
+  GetClientCookie(client, h_ckTagText, text, sizeof(text));
+  if(!StrEqual(text, "", true))
+  {
+    char border[TAGBORDER_CHARS];
+    GetClientCookie(client, h_ckTagBorder, border, sizeof(border));
+    FormatPlayerTag(text, border, buff, sizeof(buff));
+    CCC_SetTag(client, buff); // Don't use SetPlayerTag
+                              // It's already formatted and we dont want to set cookies again
+  }
+    
   return;
 }
 
@@ -847,14 +1102,14 @@ stock void LoadClientCookies(int client)
 // Updater
 public void OnConfigsExecuted()
 {
-  if(LibraryExists("updater") && g_bUpdate)
+  if(LibraryExists("updater") && h_bUpdate.BoolValue)
     Updater_AddPlugin(UPDATE_URL);
   return;
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-  if(StrEqual(name, "updater") && g_bUpdate)
+  if(StrEqual(name, "updater") && h_bUpdate.BoolValue)
     Updater_AddPlugin(UPDATE_URL);
   return;
 }

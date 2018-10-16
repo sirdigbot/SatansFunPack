@@ -22,3 +22,4 @@
 # Ignore Script Input/Outpt
 /scripts/**
 !/scripts/ParseHelpCmdList.py
+!/scripts/colourcfg.py

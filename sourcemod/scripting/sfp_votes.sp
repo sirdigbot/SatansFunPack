@@ -124,9 +124,7 @@ public void OnPluginStart()
 public void OnCvarChanged(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
   if(cvar == h_bUpdate)
-  {
     (h_bUpdate.BoolValue) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
-  }
   else if(cvar == h_bDisabledCmds)
     ProcessDisabledCmds();
   return;
