@@ -22,7 +22,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.1"
+#define PLUGIN_VERSION  "1.1.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/votes_update.txt"
 
@@ -193,7 +193,10 @@ public Action CMD_VoteGrapple(int client, int args)
     return Plugin_Handled;
   }
 
-  Handle vote = NativeVotes_Create(VoteGrappleHandler, NativeVotesType_Custom_YesNo); // Closed in Handler
+  // Closed in Handler
+  Handle vote = NativeVotes_Create(VoteGrappleHandler,
+    NativeVotesType_Custom_YesNo,
+    MenuAction_VoteStart|MenuAction_Display|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
   char voteNameStr[2] = ""; // Translated in handler
 
   NativeVotes_SetInitiator(vote, client);
@@ -221,7 +224,8 @@ public int VoteGrappleHandler(Handle vote, MenuAction action, int param1, int pa
         Format(title, sizeof(title), "%T", "SM_VOTEGRAPPLE_Enable", param1);
       else
         Format(title, sizeof(title), "%T", "SM_VOTEGRAPPLE_Disable", param1);
-      NativeVotes_RedrawVoteTitle(title);
+      if(NativeVotes_RedrawVoteTitle(title) == Plugin_Changed)
+        return 1; // Title changed, NativeVotes says to return 1
     }
 
     case MenuAction_VoteCancel:
@@ -353,7 +357,10 @@ public Action CMD_VoteBhopLimit(int client, int args)
     return Plugin_Handled;
   }
   
-  Handle vote = NativeVotes_Create(VoteBhopHandler, NativeVotesType_Custom_YesNo); // Closed in handler
+  // Closed in handler
+  Handle vote = NativeVotes_Create(VoteBhopHandler,
+    NativeVotesType_Custom_YesNo,
+    MenuAction_VoteStart|MenuAction_Display|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
   char voteNameStr[2] = ""; // Translated in handler
 
   NativeVotes_SetInitiator(vote, client);
@@ -381,7 +388,8 @@ public int VoteBhopHandler(Handle vote, MenuAction action, int param1, int param
         Format(title, sizeof(title), "%T", "SM_VOTEBHOPLIMIT_Enable", param1);
       else
         Format(title, sizeof(title), "%T", "SM_VOTEBHOPLIMIT_Disable", param1);
-      NativeVotes_RedrawVoteTitle(title);
+      if(NativeVotes_RedrawVoteTitle(title) == Plugin_Changed)
+        return 1; // Title changed, NativeVotes says to return 1
     }
 
     case MenuAction_VoteCancel:
