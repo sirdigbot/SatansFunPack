@@ -121,6 +121,8 @@ public void OnPluginStart()
 {
   LoadTranslations("satansfunpack.phrases");
   LoadTranslations("sfp.namecolour.phrases");
+  LoadTranslations("common.phrases");
+  LoadTranslations("core.phrases.txt");
 
   h_bUpdate = CreateConVar("sm_sfp_namecolour_update", "1", "Update Satan's Fun Pack - Name Colour Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   h_bUpdate.AddChangeHook(OnCvarChanged);
