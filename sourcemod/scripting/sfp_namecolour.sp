@@ -23,7 +23,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.2.0"
+#define PLUGIN_VERSION  "1.2.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/namecolour_update.txt"
 
@@ -89,6 +89,10 @@ Handle    h_ConnectTimers[MAXPLAYERS + 1] = {null, ...}; // Retry failed colour 
  * TODO Team-tinted chat text option (cvar)
  * TODO Random colour option
  * TODO CVar controlled tag size limit
+ * Multibyte characters count as the wrong number of arguments for sm_settagborder.
+ *   e.g: "sm_settagborder [Degree Symbol]" will still work despite being the wrong number
+ *   of arguments. This doesnt result in an array as it simply uses an empty string for
+ *   the last one (I think?). But it's still not intended behaviour.
  */
 public Plugin myinfo =
 {
@@ -164,8 +168,11 @@ public void OnPluginStart()
   RegAdminCmd("sm_settagcolor",   CMD_SetTagColour,   ADMFLAG_GENERIC, "Set Tag Color Directly");
   RegAdminCmd("sm_settag",        CMD_SetTag,         ADMFLAG_GENERIC, "Set Tag Text Directly");
   
-  RegAdminCmd("sm_settagborder",  CMD_SetTagBorder,     ADMFLAG_BAN, "Set a Player's Tag Border");
-  RegAdminCmd("sm_resettagborder",  CMD_ResetTagBorder, ADMFLAG_BAN, "Reset a Player's Tag Border");
+  RegAdminCmd("sm_settagborder",    CMD_SetTagBorder,   ADMFLAG_BAN, "Set a Player's Tag Border");
+  RegAdminCmd("sm_resettagborder",  CMD_ResetTagBorder, ADMFLAG_BAN, "Reset a Player's Tag Borders");
+  RegAdminCmd("sm_settagborders",   CMD_SetTagBorder,   ADMFLAG_BAN, "Set a Player's Tag Border");
+  RegAdminCmd("sm_resettagborders", CMD_ResetTagBorder, ADMFLAG_BAN, "Reset a Player's Tag Borders");
+  
   RegAdminCmd("sm_namecolour_reloadcfg", CMD_ReloadCfg, ADMFLAG_ROOT, "Reload Name Colour Config");
 
   g_iColours      = new ArrayList();
@@ -637,37 +644,31 @@ public Action CMD_SetTag(int client, int args)
  * Set custom tag border
  * As admins and mods have special borders, this should be restricted in its use to avoid impersonation
  *
- * sm_settagborder [Target] <Left Border> <Right Border>
+ * sm_settagborder <Target> <Left Border> <Right Border>
  */
 public Action CMD_SetTagBorder(int client, int args)
 {
-  if(args < 2 || args > 3)
+  if(args < 3)
   {
     TagReplyUsage(client, "%T", "SM_SETTAGBORDER_Usage", client);
     return Plugin_Handled;
   }
   
-  char targName[MAX_NAME_LENGTH], leftSide[TAGBORDERSIDE_CHARS], rightSide[TAGBORDERSIDE_CHARS];
+  char argArray[3][MAX_NAME_LENGTH]; // Longest is target/MAX_NAME_LENGTH, Shortest is TAGBORDERSIDE_CHARS
+  char argString[128]; // MAX_NAME_LENGTH * 4 (extra for good measure)
   int target = client;
-  if(args == 2)
-  {
-    GetCmdArg(1, leftSide, sizeof(leftSide));
-    GetCmdArg(2, rightSide, sizeof(rightSide));
-  }
-  else if(args == 3)
-  {
-    GetCmdArg(1, targName, sizeof(targName));
-    GetCmdArg(2, leftSide, sizeof(leftSide));
-    GetCmdArg(3, rightSide, sizeof(rightSide));
-    
-    target = FindTarget(client, targName, true); // Single Targets only
-    if(target == -1)
-      return Plugin_Handled; // FindTarget prints error
-  }
+  
+  // Break args manually because multibyte characters dont play nicely
+  GetCmdArgString(argString, sizeof(argString));
+  ExplodeString(argString, " ", argArray, sizeof(argArray), sizeof(argArray[]));
+  
+  target = FindTarget(client, argArray[0], true); // Single Targets only
+  if(target == -1)
+    return Plugin_Handled; // FindTarget prints error
   
   // Manually merge together. This method guarantees a single space between 2 valid sides.
   char border[TAGBORDER_CHARS];
-  Format(border, sizeof(border), "%s %s", leftSide, rightSide);
+  Format(border, sizeof(border), "%s %s", argArray[1], argArray[2]);
   
   if(IsClientInGame(target) && AreClientCookiesCached(target))
   {
@@ -678,11 +679,11 @@ public Action CMD_SetTagBorder(int client, int args)
     SetPlayerTag(target, text);
     if(target != client)
     {
-      GetClientName(target, targName, sizeof(targName));
-      TagActivity2(client, "%T", "SM_SETTAGBORDER_Done_Target", LANG_SERVER, targName, leftSide, rightSide);
+      GetClientName(target, argArray[0], sizeof(argArray[]));
+      TagActivity2(client, "%T", "SM_SETTAGBORDER_Done_Target", LANG_SERVER, argArray[0], argArray[1], argArray[2]);
     }
     else
-      TagReply(client, "%T", "SM_SETTAGBORDER_Done", client, leftSide, rightSide);
+      TagReply(client, "%T", "SM_SETTAGBORDER_Done", client, argArray[1], argArray[2]);
   }
   else
     TagReply(client, "%T", "SM_SETTAGBORDER_Failed", client);

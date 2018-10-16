@@ -135,7 +135,7 @@
   
   "SM_SETTAGBORDER_Usage"
   {
-    "en"  "sm_settagborder {steelblue}[Target] {darkorange}<Left Border> <Right Border>"
+    "en"  "sm_settagborder {darkorange}<Target> <Left Border> <Right Border>"
   }
   "SM_SETTAGBORDER_Toggled_Admin"
   {

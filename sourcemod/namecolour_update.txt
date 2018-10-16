@@ -4,13 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.2.0"
-      "Previous" "1.1.1"
+      "Latest" "1.2.1"
+      "Previous" "1.2.0"
     }
 
-    "Notes" "Added Admin/Mod Tag Borders, and sm_[re]settagborder."
-    "Notes" "Added Translation Support to main menu"
-    "Notes" "Optimised Config Structure"
+    "Notes" "Add multibyte support to sm_settagborder"
 
   }
 

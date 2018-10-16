@@ -401,8 +401,10 @@ Colour Config Structure:
 | **sm_settagcolour**   | Set Tag Colour Directly       | `sm_settagcolour <6-Digit Hex Colour>` |
 | **sm_settagcolor**    | *Alias for sm_settagcolour*   | -- |
 | **sm_settag**         | Set Tag Text Directly         | `sm_settag <Text>` |
-| **sm_settagborder**   | Set a Player's Tag Border     | `sm_settagborder [Target] <Left Border> <Right Border>` |
+| **sm_settagborder**   | Set a Player's Tag Border     | `sm_settagborder <Target> <Left Border> <Right Border>` |
+| **sm_settagborders**  | *Alias for sm_settagborder*   | -- |
 | **sm_resettagborder** | Reset a Player's Tag Border   | `sm_resettagborder [Target]` |
+| **sm_resettagborders** | *Alias for sm_resettagborder* | -- |
 | **sm_namecolour_reloadcfg** | Reload Colour Config    | `sm_namecolour_reloadcfg` |
 
 <br/>
