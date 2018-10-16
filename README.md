@@ -19,7 +19,9 @@ A collection of useful commands and features for TF2 Servers.
 [Quick Conditions (sfp_quickconditions.smx)](#quickconds)  
 [Targeting Filters (sfp_targeting.smx)](#targeting)  
 [Toybox (sfp_toybox.smx)](#toybox) - ***(Requires [TF2Items](https://forums.alliedmods.net/showthread.php?t=115100))***  
-[Votes (sfp_votes.smx)](#votes) - ***(Requires [NativeVotes](https://forums.alliedmods.net/showthread.php?t=208008))***  
+[Votes (sfp_votes.smx)](#votes) - ***(Requires [NativeVotes](https://forums.alliedmods.net/showthread.php?t=208008) and [Fysics Control*](https://forums.alliedmods.net/showthread.php?p=1776179))***  
+
+\* -- *Fyiscs Control is only needed for the Bhop Toggle parts, which can be disabled by undefining `_INCLUDE_TOGGLEBHOPLIMIT`.*  
 
 <br/>
 
@@ -582,6 +584,7 @@ Miscellaneous Votes for use with NativeVotes.
 | ----------------------------- | -------------------------------------- | --- |
 | **sm_sfp_votes_update** | Should sfp_votes.smx Auto-Update  | `1` |
 | **sm_sfpvotes_disabledcmds** | List of commands to completely disable | `""` |
+| **sm_sfp_votes_bhopmax** | Max Speed Limit to set on Fysics Controls' 'fc_bhop_maxspeed' cvar | `400` |
 
 <br/>
 
@@ -590,3 +593,5 @@ Miscellaneous Votes for use with NativeVotes.
 | **sm_votegrapple**        | Vote to Toggle Grappling Hooks | `sm_votegrapple` |
 | **sm_votehooks**  | *Alias for sm_votegrapple*    | -- |
 | **sm_togglegrapple**        | Forcibly Toggle Grappling Hooks | `sm_togglegrapple [1/0]` |
+| **sm_votebhoplimit** | Vote to Toggle Bhop Speed Limit *(Requires [Fysics Control](https://forums.alliedmods.net/showthread.php?p=1776179))* | `sm_votebhoplimit` |
+| **sm_togglebhoplimit** | Forcibly Toggle Bhop Speed Limit *(Requires [Fysics Control](https://forums.alliedmods.net/showthread.php?p=1776179))* | `sm_togglebhoplimit [1/0]` |

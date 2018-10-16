@@ -52,4 +52,52 @@
   {
     "en" "Disabled {forestgreen}Grappling Hooks{default}."
   }
+  
+  
+  
+  "SFP_BhopFCNotReady"
+  {
+    "en" "Cannot change bhop settings. Fysics Control is not ready."
+  }
+  "SFP_BhopFCDisabled"
+  {
+    "en" "Fysics Control's Bhop is disabled."
+  }
+  
+  // These 4 appear on NativeVotes menus
+  "SM_VOTEBHOPLIMIT_Enable"
+  {
+    "en" "Enable Bhop Speed Limit"
+  }
+  
+  "SM_VOTEBHOPLIMIT_EnablePass"
+  {
+    "en" "Bhop Speed Limit has been Enabled."
+  }
+  
+  "SM_VOTEBHOPLIMIT_Disable"
+  {
+    "en" "Disable Bhop Speed Limit"
+  }
+  
+  "SM_VOTEBHOPLIMIT_DisablePass"
+  {
+    "en" "Bhop Speed Limit has been Disabled."
+  }
+  
+  
+  "SM_TOGGLEBHOPLIMIT_Usage"
+  {
+    "en" "sm_togglebhoplimit {steelblue}[1/0]"
+  }
+  
+  "SM_TOGGLEBHOPLIMIT_Enabled"
+  {
+    "en" "Enabled {forestgreen}Bhop Speed Limit{default}."
+  }
+  
+  "SM_TOGGLEBHOPLIMIT_Disabled"
+  {
+    "en" "Disabled {forestgreen}Bhop Speed Limit{default}."
+  }
 }

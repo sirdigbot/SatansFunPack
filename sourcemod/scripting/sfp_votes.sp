@@ -22,31 +22,39 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/votes_update.txt"
 
 #define _INCLUDE_TOGGLEGRAPPLE
+#define _INCLUDE_TOGGLEBHOPLIMIT
 
 // List of commands that can be disabled.
 // Set by CVar, updated in ProcessDisabledCmds, Checked in Command.
 enum CommandNames {
   ComVOTEGRAPPLE = 0,
   ComTOGGLEGRAPPLE,
+  ComVOTEBHOPLIMIT,
+  ComTOGGLEBHOPLIMIT,
   ComTOTAL
 };
 
 
 //=================================
 // Global
-Handle  h_bUpdate = null;
-bool    g_bUpdate;
-Handle  h_bDisabledCmds = null;
+ConVar  h_bUpdate = null;
+ConVar  h_bDisabledCmds = null;
 bool    g_bDisabledCmds[ComTOTAL];
 
 #if defined _INCLUDE_TOGGLEGRAPPLE
-Handle  h_bGrappleEnabled = null;
-bool    g_bGrappleEnabled;
+ConVar  h_bGrappleEnabled;
+#endif
+
+// REQUIRES Fysics Control -- https://forums.alliedmods.net/showthread.php?p=1776179
+#if defined _INCLUDE_TOGGLEBHOPLIMIT 
+ConVar  h_bFCBhopEnabled;     // Fysics Control: fc_bhop_enabled
+ConVar  h_iFCBhopMaxSpeed;    // Fysics Control: fc_bhop_maxspeed 
+ConVar  h_iBhopSpeedLimit;    // The limit value to use for fc_bhop_maxspeed
 #endif
 
 
@@ -84,37 +92,40 @@ public void OnPluginStart()
   LoadTranslations("core.phrases");
   
   h_bUpdate = CreateConVar("sm_sfp_votes_update", "1", "Update Satan's Fun Pack - Votes Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
-  g_bUpdate = GetConVarBool(h_bUpdate);
-  HookConVarChange(h_bUpdate, UpdateCvars);
-
-  h_bDisabledCmds = CreateConVar("sm_sfpvotes_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- VoteGrapple\n- ToggleGrapple", FCVAR_SPONLY|FCVAR_REPLICATED);
-  ProcessDisabledCmds();
-  HookConVarChange(h_bDisabledCmds, UpdateCvars);
+  h_bUpdate.AddChangeHook(OnCvarChanged);
   
+  h_bDisabledCmds = CreateConVar("sm_sfpvotes_disabledcmds", "", "List of Disabled Commands, separated by space.\nCommands (Case-sensitive):\n- VoteGrapple\n- ToggleGrapple\n- VoteBhopLimit\n- ToggleBhopLimit", FCVAR_SPONLY|FCVAR_REPLICATED);
+  ProcessDisabledCmds();
+  h_bDisabledCmds.AddChangeHook(OnCvarChanged);
   
   #if defined _INCLUDE_TOGGLEGRAPPLE
+  h_bGrappleEnabled = FindConVar("tf_grapplinghook_enable");
+
   RegAdminCmd("sm_votegrapple", CMD_VoteGrapple, ADMFLAG_BAN, "Start a vote to toggle grappling hooks");
   RegAdminCmd("sm_votehooks", CMD_VoteGrapple, ADMFLAG_BAN, "Start a vote to toggle grappling hooks");
   RegAdminCmd("sm_togglegrapple", CMD_ToggleGrapple, ADMFLAG_BAN, "Forcefully toggle grappling hooks");
   #endif
   
-  #if defined _INCLUDE_TOGGLEGRAPPLE
-  h_bGrappleEnabled = FindConVar("tf_grapplinghook_enable");
-  if(h_bGrappleEnabled != null)
-    g_bGrappleEnabled = GetConVarBool(h_bGrappleEnabled);
+  #if defined _INCLUDE_TOGGLEBHOPLIMIT
+  h_bFCBhopEnabled      = FindConVar("fc_bhop_enabled");
+  h_iFCBhopMaxSpeed     = FindConVar("fc_bhop_maxspeed");
+  h_iBhopSpeedLimit     = CreateConVar("sm_sfp_votes_bhopmax", "400", "Max Speed Limit to set on Fysics Controls' 'fc_bhop_maxspeed' cvar\nThis should be manually synced with custom configured values for fc_bhop_maxspeed\n(Default: 400)", FCVAR_NONE, true, 0.0, false);
+  
+  RegAdminCmd("sm_votebhoplimit", CMD_VoteBhopLimit, ADMFLAG_BAN, "Start a vote to toggle the bhop speed limiting");
+  RegAdminCmd("sm_togglebhoplimit", CMD_ToggleBhopLimit, ADMFLAG_BAN, "Forcefully toggle the bhop speed limiting");
   #endif
   
+
   PrintToServer("%T", "SFP_VotesLoaded", LANG_SERVER);
 }
 
 
 
-public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValue)
+public void OnCvarChanged(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
   if(cvar == h_bUpdate)
   {
-    g_bUpdate = GetConVarBool(h_bUpdate);
-    (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
+    (h_bUpdate.BoolValue) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
   else if(cvar == h_bDisabledCmds)
     ProcessDisabledCmds();
@@ -130,14 +141,19 @@ void ProcessDisabledCmds()
     g_bDisabledCmds[i] = false;
 
   char buffer[300];
-  GetConVarString(h_bDisabledCmds, buffer, sizeof(buffer));
+  h_bDisabledCmds.GetString(buffer, sizeof(buffer));
   
   if(StrContains(buffer, "VoteGrapple", true) != -1)
     g_bDisabledCmds[ComVOTEGRAPPLE] = true;
   
-  else if(StrContains(buffer, "ToggleGrapple", true) != -1)
+  if(StrContains(buffer, "ToggleGrapple", true) != -1)
     g_bDisabledCmds[ComTOGGLEGRAPPLE] = true;
+    
+  if(StrContains(buffer, "VoteBhopLimit", true) != -1)
+    g_bDisabledCmds[ComVOTEBHOPLIMIT] = true;
   
+  if(StrContains(buffer, "ToggleBhopLimit", true) != -1)
+    g_bDisabledCmds[ComTOGGLEBHOPLIMIT] = true;
   return;
 }
 
@@ -179,14 +195,8 @@ public Action CMD_VoteGrapple(int client, int args)
     return Plugin_Handled;
   }
 
-  char voteNameStr[64];
-  if(!g_bGrappleEnabled)
-    Format(voteNameStr, sizeof(voteNameStr), "%T", "SM_VOTEGRAPPLE_Enable", LANG_SERVER);
-  else
-    Format(voteNameStr, sizeof(voteNameStr), "%T", "SM_VOTEGRAPPLE_Disable", LANG_SERVER);
-  
-  // Closed in Vote Handler
-  Handle vote = NativeVotes_Create(VoteGrappleHandler, NativeVotesType_Custom_YesNo);
+  Handle vote = NativeVotes_Create(VoteGrappleHandler, NativeVotesType_Custom_YesNo); // Closed in Handler
+  char voteNameStr[2] = ""; // Translated in handler
 
   NativeVotes_SetInitiator(vote, client);
   NativeVotes_SetDetails(vote, voteNameStr);
@@ -203,6 +213,17 @@ public int VoteGrappleHandler(Handle vote, MenuAction action, int param1, int pa
     case MenuAction_End:
     {
       NativeVotes_Close(vote); // Must use NativeVotes_Close
+    }
+    
+    case MenuAction_Display:
+    {
+      // NativeVotes Only: Param1 = client, Param2 = none
+      char title[64];
+      if(!h_bGrappleEnabled.BoolValue)
+        Format(title, sizeof(title), "%T", "SM_VOTEGRAPPLE_Enable", param1);
+      else
+        Format(title, sizeof(title), "%T", "SM_VOTEGRAPPLE_Disable", param1);
+      NativeVotes_RedrawVoteTitle(title);
     }
 
     case MenuAction_VoteCancel:
@@ -221,13 +242,19 @@ public int VoteGrappleHandler(Handle vote, MenuAction action, int param1, int pa
       {
         // Vote Passed; Toggle Grapple Cvar
         char voteMsg[64];
-        if(!g_bGrappleEnabled)
+        if(!h_bGrappleEnabled.BoolValue)
+        {
           Format(voteMsg, sizeof(voteMsg), "%T", "SM_VOTEGRAPPLE_EnablePass", LANG_SERVER);
+          TagPrintChatAll("%T", "SM_TOGGLEGRAPPLE_Enabled", LANG_SERVER);
+        }
         else
+        {
           Format(voteMsg, sizeof(voteMsg), "%T", "SM_VOTEGRAPPLE_DisablePass", LANG_SERVER);
+          TagPrintChatAll("%T", "SM_TOGGLEGRAPPLE_Disabled", LANG_SERVER);
+        }
         
         NativeVotes_DisplayPass(vote, voteMsg);
-        SetGrappleCvar(!g_bGrappleEnabled);
+        h_bGrappleEnabled.SetBool(!h_bGrappleEnabled.BoolValue);
       }
     }
   }
@@ -252,7 +279,7 @@ public Action CMD_ToggleGrapple(int client, int args)
   }
 
   if(args < 1)
-    SetGrappleCvar(!g_bGrappleEnabled);
+    h_bGrappleEnabled.SetBool(!h_bGrappleEnabled.BoolValue);
   else
   {
     char arg1[MAX_BOOLSTRING_LENGTH];
@@ -264,25 +291,204 @@ public Action CMD_ToggleGrapple(int client, int args)
       TagReplyUsage(client, "%T", "SM_TOGGLEGRAPPLE_Usage", client);
       return Plugin_Handled;
     }
-    SetGrappleCvar(view_as<bool>(state));
+    h_bGrappleEnabled.SetBool(view_as<bool>(state));
   }
 
-  if(g_bGrappleEnabled)
+  if(h_bGrappleEnabled.BoolValue)
     TagActivity2(client, "%T", "SM_TOGGLEGRAPPLE_Enabled", LANG_SERVER);
   else
     TagActivity2(client, "%T", "SM_TOGGLEGRAPPLE_Disabled", LANG_SERVER);
 
   return Plugin_Handled;
 }
+#endif
 
 
-void SetGrappleCvar(bool state)
+
+
+
+#if defined _INCLUDE_TOGGLEBHOPLIMIT
+/**
+ * Start a Native Vote to toggle the Fysics Control Bhop Limit
+ *
+ * sm_votebhoplimit
+ */
+public Action CMD_VoteBhopLimit(int client, int args)
 {
-  if(h_bGrappleEnabled == null)
-    return;
+  if(g_bDisabledCmds[ComVOTEBHOPLIMIT])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+
+  if(!IsClientPlaying(client, true))
+  {
+    TagReply(client, "%T", "SFP_InGameOnly", client);
+    return Plugin_Handled;
+  }
   
-  SetConVarBool(h_bGrappleEnabled, state);
-  g_bGrappleEnabled = state;
+  if(!FysicsControlReady())
+  {
+    TagReply(client, "%T", "SFP_BhopFCNotReady", client);
+    return Plugin_Handled;
+  }
+  
+  if(!h_bFCBhopEnabled.BoolValue)
+  {
+    TagReply(client, "%T", "SFP_BhopFCDisabled", client);
+    return Plugin_Handled;
+  }
+  
+  // NativeVotes checks
+  if(!NativeVotes_IsVoteTypeSupported(NativeVotesType_Custom_YesNo))
+  {
+    TagReply(client, "%T", "SFP_VoteSupport_YesNo", client);
+    return Plugin_Handled;
+  }
+
+  if(!NativeVotes_IsNewVoteAllowed())
+  {
+    int seconds = NativeVotes_CheckVoteDelay();
+    TagReply(client, "%T", "SFP_NativeVoteDelay", client, seconds);
+    return Plugin_Handled;
+  }
+  
+  Handle vote = NativeVotes_Create(VoteBhopHandler, NativeVotesType_Custom_YesNo); // Closed in handler
+  char voteNameStr[2] = ""; // Translated in handler
+
+  NativeVotes_SetInitiator(vote, client);
+  NativeVotes_SetDetails(vote, voteNameStr);
+  NativeVotes_DisplayToAll(vote, 30);
+
+  return Plugin_Handled;
+}
+
+
+public int VoteBhopHandler(Handle vote, MenuAction action, int param1, int param2)
+{
+  switch (action)
+  {
+    case MenuAction_End:
+    {
+      NativeVotes_Close(vote); // Must use NativeVotes_Close
+    }
+    
+    case MenuAction_Display:
+    {
+      // NativeVotes Only: Param1 = client, Param2 = none
+      char title[64];
+      if(IsBhopUnlimited())
+        Format(title, sizeof(title), "%T", "SM_VOTEBHOPLIMIT_Enable", param1);
+      else
+        Format(title, sizeof(title), "%T", "SM_VOTEBHOPLIMIT_Disable", param1);
+      NativeVotes_RedrawVoteTitle(title);
+    }
+
+    case MenuAction_VoteCancel:
+    {
+      if (param1 == VoteCancel_NoVotes)
+        NativeVotes_DisplayFail(vote, NativeVotesFail_NotEnoughVotes);
+      else
+        NativeVotes_DisplayFail(vote, NativeVotesFail_Generic);
+    }
+    
+    case MenuAction_VoteEnd:
+    {
+      if (param1 == NATIVEVOTES_VOTE_NO)
+        NativeVotes_DisplayFail(vote, NativeVotesFail_Loses);
+      else
+      {
+        // Vote Passed; Toggle Bhop Limit
+        char voteMsg[64];
+        if(IsBhopUnlimited())
+        {
+          Format(voteMsg, sizeof(voteMsg), "%T", "SM_VOTEBHOPLIMIT_EnablePass", LANG_SERVER);
+          TagPrintChatAll("%T", "SM_TOGGLEBHOPLIMIT_Enabled", LANG_SERVER);
+        }
+        else
+        {
+          Format(voteMsg, sizeof(voteMsg), "%T", "SM_VOTEBHOPLIMIT_DisablePass", LANG_SERVER);
+          TagPrintChatAll("%T", "SM_TOGGLEBHOPLIMIT_Disabled", LANG_SERVER);
+        }
+        
+        NativeVotes_DisplayPass(vote, voteMsg);
+        SetBhopLimitEnabled(IsBhopUnlimited());
+      }
+    }
+  }
+  return 0;
+}
+
+
+
+/**
+ * Forcibly Toggle Bhop Limit
+ *
+ * sm_togglebhoplimit [1/0]
+ */
+public Action CMD_ToggleBhopLimit(int client, int args)
+{
+  if(g_bDisabledCmds[ComTOGGLEBHOPLIMIT])
+  {
+    char arg0[32];
+    GetCmdArg(0, arg0, sizeof(arg0));
+    TagReply(client, "%T", "SFP_CmdDisabled", client, arg0);
+    return Plugin_Handled;
+  }
+  
+  if(!FysicsControlReady())
+  {
+    TagReply(client, "%T", "SFP_BhopFCNotReady", client);
+    return Plugin_Handled;
+  }
+  
+  if(!h_bFCBhopEnabled.BoolValue)
+  {
+    TagReply(client, "%T", "SFP_BhopFCDisabled", client);
+    return Plugin_Handled;
+  }
+
+  if(args < 1)
+    SetBhopLimitEnabled(IsBhopUnlimited());
+  else
+  {
+    char arg1[MAX_BOOLSTRING_LENGTH];
+    GetCmdArg(1, arg1, sizeof(arg1));
+    
+    int state = GetStringBool(arg1, false, true, true, true);
+    if(state == -1)
+    {
+      TagReplyUsage(client, "%T", "SM_TOGGLEBHOPLIMIT_Usage", client);
+      return Plugin_Handled;
+    }
+    SetBhopLimitEnabled(view_as<bool>(state));
+  }
+
+  if(!IsBhopUnlimited())
+    TagActivity2(client, "%T", "SM_TOGGLEBHOPLIMIT_Enabled", LANG_SERVER);
+  else
+    TagActivity2(client, "%T", "SM_TOGGLEBHOPLIMIT_Disabled", LANG_SERVER);
+
+  return Plugin_Handled;
+}
+
+stock void SetBhopLimitEnabled(const bool enabled)
+{
+  if(FysicsControlReady())
+    h_iFCBhopMaxSpeed.SetInt((enabled) ? h_iBhopSpeedLimit.IntValue : -1); // -1 removes limit
+  return;
+}
+
+stock bool FysicsControlReady()
+{
+  return (h_bFCBhopEnabled != null && h_iFCBhopMaxSpeed != null);
+}
+
+stock bool IsBhopUnlimited()
+{
+  return (h_iFCBhopMaxSpeed.IntValue == -1);
 }
 #endif
 
@@ -293,14 +499,14 @@ void SetGrappleCvar(bool state)
 // Updater
 public void OnConfigsExecuted()
 {
-  if(LibraryExists("updater") && g_bUpdate)
+  if(LibraryExists("updater") && h_bUpdate.BoolValue)
     Updater_AddPlugin(UPDATE_URL);
   return;
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-  if(StrEqual(name, "updater") && g_bUpdate)
+  if(StrEqual(name, "updater") && h_bUpdate.BoolValue)
     Updater_AddPlugin(UPDATE_URL);
   return;
 }
