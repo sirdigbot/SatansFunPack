@@ -194,9 +194,7 @@ public Action CMD_VoteGrapple(int client, int args)
   }
 
   // Closed in Handler
-  Handle vote = NativeVotes_Create(VoteGrappleHandler,
-    NativeVotesType_Custom_YesNo,
-    MenuAction_VoteStart|MenuAction_Display|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
+  Handle vote = NativeVotes_Create(VoteGrappleHandler, NativeVotesType_Custom_YesNo, NATIVEVOTES_ACTIONS_DEFAULT|MenuAction_Display);
   char voteNameStr[2] = ""; // Translated in handler
 
   NativeVotes_SetInitiator(vote, client);
@@ -230,7 +228,7 @@ public int VoteGrappleHandler(Handle vote, MenuAction action, int param1, int pa
 
     case MenuAction_VoteCancel:
     {
-      if (param1 == VoteCancel_NoVotes)
+      if(param1 == VoteCancel_NoVotes)
         NativeVotes_DisplayFail(vote, NativeVotesFail_NotEnoughVotes);
       else
         NativeVotes_DisplayFail(vote, NativeVotesFail_Generic);
@@ -238,7 +236,7 @@ public int VoteGrappleHandler(Handle vote, MenuAction action, int param1, int pa
 
     case MenuAction_VoteEnd:
     {
-      if (param1 == NATIVEVOTES_VOTE_NO)
+      if(param1 == NATIVEVOTES_VOTE_NO)
         NativeVotes_DisplayFail(vote, NativeVotesFail_Loses);
       else
       {
@@ -358,9 +356,7 @@ public Action CMD_VoteBhopLimit(int client, int args)
   }
   
   // Closed in handler
-  Handle vote = NativeVotes_Create(VoteBhopHandler,
-    NativeVotesType_Custom_YesNo,
-    MenuAction_VoteStart|MenuAction_Display|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End);
+  Handle vote = NativeVotes_Create(VoteBhopHandler, NativeVotesType_Custom_YesNo, NATIVEVOTES_ACTIONS_DEFAULT|MenuAction_Display);
   char voteNameStr[2] = ""; // Translated in handler
 
   NativeVotes_SetInitiator(vote, client);
@@ -394,7 +390,7 @@ public int VoteBhopHandler(Handle vote, MenuAction action, int param1, int param
 
     case MenuAction_VoteCancel:
     {
-      if (param1 == VoteCancel_NoVotes)
+      if(param1 == VoteCancel_NoVotes)
         NativeVotes_DisplayFail(vote, NativeVotesFail_NotEnoughVotes);
       else
         NativeVotes_DisplayFail(vote, NativeVotesFail_Generic);
@@ -402,7 +398,7 @@ public int VoteBhopHandler(Handle vote, MenuAction action, int param1, int param
     
     case MenuAction_VoteEnd:
     {
-      if (param1 == NATIVEVOTES_VOTE_NO)
+      if(param1 == NATIVEVOTES_VOTE_NO)
         NativeVotes_DisplayFail(vote, NativeVotesFail_Loses);
       else
       {
