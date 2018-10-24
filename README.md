@@ -12,7 +12,7 @@ A collection of useful commands and features for TF2 Servers.
 [Admin Chat Vision (sfp_chatvision.smx)](#chatvision)  
 [God Mode (sfp_godmode.smx)](#godmode)  
 [Help Menu (sfp_helpmenu.smx)](#helpmenu)  
-[Info Utilities (sfp_infoutils.smx)](#infoutils)  
+[Info Utilities (sfp_infoutils.smx)](#infoutils) - ***(Requires [SteamTools](https://forums.alliedmods.net/showthread.php?t=170630))***  
 [Mirror Damage (sfp_mirror.smx)](#mirror)  
 [Miscellaneous Tweaks (sfp_misctweaks.smx)](#misctweaks)  
 [Name Colour Manager (sfp_namecolour.smx)](#namecolour) - ***(Requires [Custom Chat Colors](https://forums.alliedmods.net/showthread.php?p=1721580) and [Simple Chat Processor (Redux)](https://forums.alliedmods.net/showthread.php?t=198501) - [Alt Link](https://bitbucket.org/minimoney1/simple-chat-processor))***  

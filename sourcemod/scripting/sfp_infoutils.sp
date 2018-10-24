@@ -13,6 +13,7 @@
 #include <sdktools>
 #include <basecomm>
 #include <geoip>
+#include <steamtools>
 #undef REQUIRE_PLUGIN
 #tryinclude <updater>
 #define REQUIRE_PLUGIN
@@ -24,7 +25,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/infoutils_update.txt"
 #define MAX_STEAMID_SIZE 64
