@@ -24,7 +24,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/toybox_update.txt"
 #define PITCH_DEFAULT   100
@@ -132,10 +132,12 @@ bool    g_bFriendlySentry[MAXPLAYERS + 1];
 #endif
 
 #if defined _INCLUDE_CUSTOMSLAP
+Handle  h_szSlapSound = null;
+Handle  h_szSlapMsg   = null;
+char    g_szSlapSound[PLATFORM_MAX_PATH];
+char    g_szSlapMsg[PLATFORM_MAX_PATH];
 bool    g_bSlapUseSound;
 bool    g_bSlapUseMsg;
-char    g_szSlapSound[256]; // PLATFORM_MAX_PATH = 256, use fixed for easier config load.
-char    g_szSlapMsg[256];
 #endif
 
 
@@ -263,6 +265,17 @@ public void OnPluginStart()
   g_iPitchLower = GetConVarInt(h_iPitchLower);
   HookConVarChange(h_iPitchLower, UpdateCvars);
   #endif
+  
+  #if defined _INCLUDE_CUSTOMSLAP
+  h_szSlapMsg   = CreateConVar("sm_cslap_message", "", "Message to display with sm_cslap. Empty will disable.\n(Default: \"\")", FCVAR_NONE);
+  h_szSlapSound = CreateConVar("sm_cslap_sound", "", "Sound file to play with sm_cslap. Relative to 'tf2/sound/' (Same paths used for sm_play). Empty will disable.\n(Default: \"\")", FCVAR_NONE);
+  GetConVarString(h_szSlapMsg, g_szSlapMsg, sizeof(g_szSlapMsg));
+  GetConVarString(h_szSlapSound, g_szSlapSound, sizeof(g_szSlapSound));
+  g_bSlapUseMsg   = !StrEqual(g_szSlapMsg, "", true); // Disable if empty
+  g_bSlapUseSound = !StrEqual(g_szSlapSound, "", true);
+  HookConVarChange(h_szSlapMsg, UpdateCvars);
+  HookConVarChange(h_szSlapSound, UpdateCvars);
+  #endif
 
 
   RegAdminCmd("sm_toybox_reloadcfg", CMD_ConfigReload, ADMFLAG_ROOT, "Reload Config for Satan's Fun Pack - Toybox");
@@ -389,6 +402,19 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_iPitchUpper = StringToInt(newValue);
   else if(cvar == h_iPitchLower)
     g_iPitchLower = StringToInt(newValue);
+  #endif
+  
+  #if defined _INCLUDE_CUSTOMSLAP
+  else if(cvar == h_szSlapMsg)
+  {
+    GetConVarString(h_szSlapMsg, g_szSlapMsg, sizeof(g_szSlapMsg));
+    g_bSlapUseMsg = !StrEqual(g_szSlapMsg, "", true); // Disable if empty
+  }
+  else if(cvar == h_szSlapSound)
+  {
+    GetConVarString(h_szSlapSound, g_szSlapSound, sizeof(g_szSlapSound));
+    g_bSlapUseSound = !StrEqual(g_szSlapSound, "", true);
+  }
   #endif
   return;
 }
@@ -2133,42 +2159,6 @@ stock bool LoadConfig()
   }
   else
     PrintToServer("%T", "SFP_NoConfigKey", LANG_SERVER, "SFPTaunts");
-  #endif
-
-
-  hKeys.Rewind();
-
-  /**
-   * Load Custom Slap
-   */
-  #if defined _INCLUDE_CUSTOMSLAP
-  if(hKeys.JumpToKey("SFPCustomSlap", false))
-  {
-    char buff[256];
-
-    // Get Message
-    hKeys.GetString("msg", buff, sizeof(buff));
-    if(strlen(buff) > 0)
-    {
-      g_szSlapMsg = buff;
-      g_bSlapUseMsg = true;
-    }
-    else // Explicitly Disable if empty string
-      g_bSlapUseMsg = false;
-
-
-    // Get Sound
-    hKeys.GetString("sound", buff, sizeof(buff));
-    if(strlen(buff) > 0)
-    {
-      g_szSlapSound = buff;
-      g_bSlapUseSound = true;
-    }
-    else // Explicitly Disable if empty string
-      g_bSlapUseSound = false;
-  }
-  else
-    PrintToServer("%T", "SFP_NoConfigKey", LANG_SERVER, "SFPCustomSlap");
   #endif
 
   delete hKeys;
