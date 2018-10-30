@@ -22,7 +22,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/bans_update.txt"
 
@@ -93,8 +93,6 @@ BanType g_iBrowseMenuType[MAXPLAYERS + 1]; // To display the correct text in sm_
 
 /**
  * Known Bugs
- * - TagReply cant be used with console/rcon due to GetClientUserId and PrintToChat
- *   Fix is to replace use the printTarget snippet and TagPrintToClient
  * - OnBanClient and OnBanIdentity reasons do not limit at MSG_MAX
  * - sm_editban will reply that the ban has been successfully edited, even if it doesn't exist
  * - MSG_MAX is likely excessively higher than what sm_ban, sm_addban and sm_banip can type ingame
@@ -657,7 +655,12 @@ public Action OnBanIdentity(
 public void Callback_OnBanClient(Handle db, Handle result, const char[] err, any data)
 {
   int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
-  TagPrintToClient(client, "%t", "SM_ONBAN_Done");
+  
+  // Cant GetCmdReplySource
+  if(client)
+    TagPrintChat(client, "%t", "SM_ONBAN_Done");
+  else
+    TagPrintServer("%t", "SM_ONBAN_Done");
   return;
 }
 
@@ -712,7 +715,12 @@ public Action OnRemoveBan(
 public void Callback_OnRemoveBan(Handle db, Handle result, const char[] err, any data)
 {
   int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
-  TagPrintToClient(client, "%t", "SM_ONREMOVE_Done");
+
+  // Cant GetCmdReplySource
+  if(client)
+    TagPrintChat(client, "%t", "SM_ONREMOVE_Done");
+  else
+    TagPrintServer("%t", "SM_ONREMOVE_Done");
   return;
 }
 
@@ -841,7 +849,12 @@ public Action CMD_CleanBans(int client, int args)
 public void Callback_Clean(Handle db, Handle result, const char[] err, any data)
 {
   int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
-  TagPrintToClient(client, "%t", "SM_CLEANBANS_Cleaned");
+
+  // Cant GetCmdReplySource
+  if(client)
+    TagPrintChat(client, "%t", "SM_CLEANBANS_Cleaned");
+  else
+    TagPrintServer("%t", "SM_CLEANBANS_Cleaned");
   return;
 }
 
@@ -1003,7 +1016,12 @@ public Action CMD_EditBan(int client, int args)
 public void Callback_Editban(Handle db, Handle result, const char[] err, any data)
 {
   int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
-  TagPrintToClient(client, "%t", "SM_EDITBAN_Done");
+
+  // Cant GetCmdReplySource
+  if(client)
+    TagPrintChat(client, "%t", "SM_EDITBAN_Done");
+  else
+    TagPrintServer("%t", "SM_EDITBAN_Done");
   return;
 }
 
@@ -1076,7 +1094,11 @@ public void Callback_IsBanned(Handle db, Handle result, const char[] err, any da
   int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
   if(SQL_GetRowCount(result) < 1)
   {
-    TagPrintToClient(client, "%t", "SM_ISBANNED_NotFound");
+    // Cant GetCmdReplySource
+    if(client)
+      TagPrintChat(client, "%t", "SM_ISBANNED_NotFound");
+    else
+      TagPrintServer("%t", "SM_ISBANNED_NotFound");
     return;
   }
 
@@ -1090,11 +1112,27 @@ public void Callback_IsBanned(Handle db, Handle result, const char[] err, any da
   int timeMins = (timeRemaining <= 60) ? 1 : timeRemaining/60;   // Show 1m instead of 0m
 
   if(permanent)
-    TagPrintToClient(client, "%t", "SM_ISBANNED_Found_Perm");
+  {
+    if(client)
+      TagPrintChat(client, "%t", "SM_ISBANNED_Found_Perm");
+    else
+      TagPrintServer("%t", "SM_ISBANNED_Found_Perm");
+  }
   else if(timeRemaining >= 1)
-    TagPrintToClient(client, "%t", "SM_ISBANNED_Found", timeMins);
+  {
+    if(client)
+      TagPrintChat(client, "%t", "SM_ISBANNED_Found", timeMins);
+    else
+      TagPrintServer("%t", "SM_ISBANNED_Found", timeMins);
+    
+  }
   else if(timeRemaining < 1)
-    TagPrintToClient(client, "%t", "SM_ISBANNED_NotFound");     // Expired bans do nothing on join
+  {    
+    if(client)
+      TagPrintChat(client, "%t", "SM_ISBANNED_NotFound"); // Expired bans do nothing on join
+    else
+      TagPrintServer("%t", "SM_ISBANNED_NotFound");
+  }
   return;
 }
 
@@ -1245,7 +1283,11 @@ public void Callback_BrowseBans(Handle db, Handle result, const char[] err, any 
   int rowCount = SQL_GetRowCount(result);
   if(rowCount < 1)
   {
-    TagPrintToClient(client, "%t", "SM_BROWSEBANS_NoneFound");
+    // Cant GetCmdReplySource
+    if(client)
+      TagPrintChat(client, "%t", "SM_BROWSEBANS_NoneFound");
+    else
+      TagPrintServer("%t", "SM_BROWSEBANS_NoneFound");
     return;
   }
 
@@ -1389,7 +1431,11 @@ public void Callback_BrowseDetails(Handle db, Handle result, const char[] err, a
   if(rowCount < 1)
   {
     LogGeneric("%t", "SM_BROWSEDETAILS_NullBanId", data, clientId3);
-    TagPrintToClient(client, "%t", "SM_BROWSEDETAILS_BanIdInvalid");
+    // Cant GetCmdReplySource
+    if(client)
+      TagPrintChat(client, "%t", "SM_BROWSEDETAILS_BanIdInvalid");
+    else
+      TagPrintServer("%t", "SM_BROWSEDETAILS_BanIdInvalid");
     return;
   }
 
@@ -1554,7 +1600,7 @@ public Action CMD_FullReset(int client, int args)
     if(client > 0 && client <= MaxClients)
       printTarget = GetClientUserId(client);
 
-    TagPrintToClient(client, "%t", "SM_FULLRESET_Repeat", g_iFullResetPendingNum);
+    TagReply(client, "%t", "SM_FULLRESET_Repeat", g_iFullResetPendingNum);
     h_iFullResetTimer = CreateTimer(FULLRESET_TIMEOUT, Reset_Timeout, printTarget);
   }
   else
@@ -1604,7 +1650,11 @@ public Action Reset_Timeout(Handle timer, any data)
   if(g_iFullResetPendingNum >= 0)
   {
     int client = (data == 0) ? 0 : GetClientOfUserId(data); // Defaults to server
-    TagPrintToClient(client, "%t", "SM_FULLRESET_Canceled");
+    // Cant GetCmdReplySource
+    if(client)
+      TagPrintChat(client, "%t", "SM_FULLRESET_Canceled");
+    else
+      TagPrintServer("%t", "SM_FULLRESET_Canceled");
   }
 
   g_iFullResetPendingNum  = -1;
