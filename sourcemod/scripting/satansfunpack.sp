@@ -21,7 +21,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.1.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
 
@@ -96,6 +96,12 @@ public void OnPluginStart()
   PrintToServer("%T", "SFP_Loaded", LANG_SERVER, count);
 }
 
+void OnConfigsExecuted_Main()
+{
+  CreateTimer(600.0, Timer_ServerRunningSFP, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+  return;
+}
+
 
 int CheckFileAndCache(const char[] pluginName, const char[] filepath)
 {
@@ -139,6 +145,12 @@ public Action CMD_PluginPackSource(int client, int args)
   return Plugin_Handled;
 }
 
+public Action Timer_ServerRunningSFP(Handle timer)
+{
+  CPrintToChatAll("%T", "SFP_Advert", LANG_SERVER, PLUGIN_VERSION);
+  return Plugin_Continue;
+}
+
 
 
 //=================================
@@ -147,6 +159,7 @@ public void OnConfigsExecuted()
 {
   if(LibraryExists("updater") && g_bUpdate)
     Updater_AddPlugin(UPDATE_URL);
+  OnConfigsExecuted_Main();
   return;
 }
 

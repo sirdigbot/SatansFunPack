@@ -12,6 +12,11 @@
     "#format" "{1:s}"
     "en" "The Source code for Satan's Fun Pack can be found at {unique}{1}"
   }
+  "SFP_Advert"
+  {
+    "#format" "{1:s}"
+    "en" "{#AA0000}[SFP] {default}This server is running Satan's Fun Pack {1}"
+  }
 
 
   //=================================
