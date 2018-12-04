@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.1.1"
-      "Previous" "1.1.0"
+      "Latest" "1.1.2"
+      "Previous" "1.1.1"
     }
 
-    "Notes" "Added Advert"
+    "Notes" "Immortalised Digby :D"
   }
 
   "Files"

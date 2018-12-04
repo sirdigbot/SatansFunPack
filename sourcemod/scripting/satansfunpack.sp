@@ -21,7 +21,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.1"
+#define PLUGIN_VERSION  "1.1.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
 
@@ -72,8 +72,10 @@ public void OnPluginStart()
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
 
-  RegAdminCmd("sm_sfpplugincheck", CMD_InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
-  RegAdminCmd("sm_sfpsource", CMD_PluginPackSource, ADMFLAG_ROOT, "Get the URL to Satan's Fun Pack's Source Code");
+  RegAdminCmd("sm_sfpplugincheck",      CMD_InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
+  RegConsoleCmd("sm_sfpsource",         CMD_PluginPackSource, "Get the URL to Satan's Fun Pack's Source Code");
+  RegConsoleCmd("sm_sfpinfo",           CMD_PluginPackInfo, "Display info on Satan's Fun Pack");
+  RegConsoleCmd("sm_satansfunpackinfo", CMD_PluginPackInfo, "Display info on Satan's Fun Pack");
 
   /**
    * Check what modules are installed and cache list.
@@ -141,7 +143,13 @@ public Action CMD_InstallCheck(int client, int args)
 
 public Action CMD_PluginPackSource(int client, int args)
 {
-  TagReply(client, "%T", "SFP_PluginPackSource", client, PLUGIN_URL);
+  CReplyToCommand(client, "%T", "SFP_PluginPackSource", client, PLUGIN_URL);
+  return Plugin_Handled;
+}
+
+public Action CMD_PluginPackInfo(int client, int args)
+{
+  CReplyToCommand(client, "%T", "SFP_PluginPackInfo", client);
   return Plugin_Handled;
 }
 

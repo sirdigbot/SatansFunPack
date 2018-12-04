@@ -10,7 +10,11 @@
   "SFP_PluginPackSource"
   {
     "#format" "{1:s}"
-    "en" "The Source code for Satan's Fun Pack can be found at {unique}{1}"
+    "en" "{#AA0000}[SFP] {default}The Source code for Satan's Fun Pack can be found at {unique}{1}"
+  }
+  "SFP_PluginPackInfo"
+  {
+    "en" "{#AA0000}[SFP] {default}Satan's Fun Pack is made for {#AA0000}Satan's {#E7411A}F{#E78E1A}u{#F8ED37}n {#46D215}H{#69B6DE}o{#6988DE}u{#7F69DE}s{#C769DE}e {default}by Digby ([U:1:53790829])"
   }
   "SFP_Advert"
   {
