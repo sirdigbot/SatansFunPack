@@ -16,10 +16,17 @@
   {
     "en" "{#AA0000}[SFP] {default}Satan's Fun Pack is made for {#AA0000}Satan's {#E7411A}F{#E78E1A}u{#F8ED37}n {#46D215}H{#69B6DE}o{#6988DE}u{#7F69DE}s{#C769DE}e {default}by Digby ([U:1:53790829])"
   }
-  "SFP_Advert"
+  "SFP_Advert1"
   {
-    "#format" "{1:s}"
-    "en" "{#AA0000}[SFP] {default}This server is running Satan's Fun Pack {1}"
+    "en" "{#FFD700}Welcome to {#AA0000}Satan's {#E7411A}F{#E78E1A}u{#F8ED37}n {#46D215}H{#69B6DE}o{#6988DE}u{#7F69DE}s{#C769DE}e{#FFD700}!"
+  }
+  "SFP_Advert2"
+  {
+    "en" "{#FFD700}We have multiple gamemodes: {darkorange}KOTH{#FFD700}, {darkorange}Control Points{#FFD700}, {darkorange}Payload{#FFD700}, {darkorange}Dodgeball{#FFD700}, {darkorange}Deathrun{#FFD700} and {darkorange}Surf{#FFD700}."
+  }
+  "SFP_Advert3"
+  {
+    "en" "{#FFD700}Use {arcana}Nominate{#FFD700} and {arcana}RTV{#FFD700} to change maps."
   }
 
 

@@ -21,15 +21,16 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.2"
+#define PLUGIN_VERSION  "1.1.3"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/main_update.txt"
-
 
 //=================================
 // Global
 Handle  h_bUpdate = null;
 bool    g_bUpdate;
+Handle  h_bAdvert = null;
+bool    g_bAdvert;
 char    g_szList[222] = "MODULE - INSTALLED(Y/N)\n--------\n";
 
 
@@ -71,11 +72,17 @@ public void OnPluginStart()
   h_bUpdate = CreateConVar("sm_satansfunpack_update", "1", "Update this Plugin Automatically (Requires Updater)\n(Default: 1)", FCVAR_NONE, true, 0.0, true, 1.0);
   g_bUpdate = GetConVarBool(h_bUpdate);
   HookConVarChange(h_bUpdate, UpdateCvars);
+  
+  h_bAdvert = CreateConVar("sm_satansfunpack_showad", "1", "Show the Satan's Fun House Server Advert", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+  g_bAdvert = GetConVarBool(h_bAdvert);
+  HookConVarChange(h_bAdvert, UpdateCvars);
 
   RegAdminCmd("sm_sfpplugincheck",      CMD_InstallCheck, ADMFLAG_ROOT, "Check which Satan's Fun Pack Modules are Installed");
+  RegAdminCmd("sm_sfp_testadvert",      CMD_TestAdvert,   ADMFLAG_BAN, "Force the Satans Fun House Server Advert");
   RegConsoleCmd("sm_sfpsource",         CMD_PluginPackSource, "Get the URL to Satan's Fun Pack's Source Code");
   RegConsoleCmd("sm_sfpinfo",           CMD_PluginPackInfo, "Display info on Satan's Fun Pack");
   RegConsoleCmd("sm_satansfunpackinfo", CMD_PluginPackInfo, "Display info on Satan's Fun Pack");
+  
 
   /**
    * Check what modules are installed and cache list.
@@ -100,7 +107,7 @@ public void OnPluginStart()
 
 void OnConfigsExecuted_Main()
 {
-  CreateTimer(600.0, Timer_ServerRunningSFP, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+  CreateTimer(600.0, Timer_ServerAdvert, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
   return;
 }
 
@@ -126,6 +133,8 @@ public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValu
     g_bUpdate = view_as<bool>(StringToInt(newValue));
     (g_bUpdate) ? Updater_AddPlugin(UPDATE_URL) : Updater_RemovePlugin();
   }
+  else if(cvar == h_bAdvert)
+    g_bAdvert = view_as<bool>(StringToInt(newValue));
   return;
 }
 
@@ -137,6 +146,12 @@ public Action CMD_InstallCheck(int client, int args)
   if(client != 0 && GetCmdReplySource() == SM_REPLY_TO_CHAT)
     TagReply(client, "%T", "SFP_ConsoleOutput", client);
 
+  return Plugin_Handled;
+}
+
+public Action CMD_TestAdvert(int client, int args)
+{
+  PrintServerAdvert();
   return Plugin_Handled;
 }
 
@@ -153,10 +168,22 @@ public Action CMD_PluginPackInfo(int client, int args)
   return Plugin_Handled;
 }
 
-public Action Timer_ServerRunningSFP(Handle timer)
+public Action Timer_ServerAdvert(Handle timer)
 {
-  CPrintToChatAll("%T", "SFP_Advert", LANG_SERVER, PLUGIN_VERSION);
+  PrintServerAdvert();
   return Plugin_Continue;
+}
+
+
+stock void PrintServerAdvert()
+{
+  if(g_bAdvert)
+  {
+    CPrintToChatAll("%t", "SFP_Advert1"); // Translate per-client
+    CPrintToChatAll("%t", "SFP_Advert2");
+    CPrintToChatAll("%t", "SFP_Advert3");
+  }
+  return;
 }
 
 
