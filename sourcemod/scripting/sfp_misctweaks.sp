@@ -24,7 +24,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.2.1"
+#define PLUGIN_VERSION  "1.2.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -279,14 +279,22 @@ public void OnPluginStart()
   return;
 }
 
-
+#if defined _INCLUDE_KILLEFFECT
 public void OnMapStart() // Also called on lateload
 {
-#if defined _INCLUDE_KILLEFFECT
   PrecacheKillSounds();
+  return;
+}
 #endif
+
   
-#if defined _INCLUDE_AUTOMATICSURF
+
+public void OnConfigsExecuted()
+{
+  Updater_OnConfigsExecuted();
+  
+  
+  #if defined _INCLUDE_AUTOMATICSURF
   char mapname[64];
   ConVar airaccel = FindConVar("sv_airaccelerate");
   GetCurrentMap(mapname, sizeof(mapname));
@@ -300,8 +308,7 @@ public void OnMapStart() // Also called on lateload
     airaccel.SetInt(AIRACCEL_TF2DEFAULT);
     TagPrintServer("%T", "SM_AUTOSURF_Default", LANG_SERVER, AIRACCEL_TF2DEFAULT);
   }
-#endif
-    
+  #endif
   return;
 }
 
@@ -1133,7 +1140,7 @@ stock void ResetShieldMeter(const int client)
 
 //=================================
 // Updater
-public void OnConfigsExecuted()
+public void Updater_OnConfigsExecuted()
 {
   if(LibraryExists("updater") && g_bUpdate)
     Updater_AddPlugin(UPDATE_URL);

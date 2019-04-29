@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.2.1"
-      "Previous" "1.2.0"
+      "Latest" "1.2.2"
+      "Previous" "1.2.1"
     }
 
-    "Notes" "Fixed text error"
+    "Notes" "Fixed execution order (now runs after server.cfg)"
   }
 
   "Files"
