@@ -24,7 +24,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.2.0"
+#define PLUGIN_VERSION  "1.2.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -291,10 +291,15 @@ public void OnMapStart() // Also called on lateload
   ConVar airaccel = FindConVar("sv_airaccelerate");
   GetCurrentMap(mapname, sizeof(mapname));
   if(airaccel != null && StrContains(mapname, "surf_", false) == 0)
+  {
     airaccel.SetInt(AIRACCEL_COMPETITIVE_SURF);
+    TagPrintServer("%T", "SM_AUTOSURF_Set", LANG_SERVER, AIRACCEL_COMPETITIVE_SURF);
+  }
   else
+  {
     airaccel.SetInt(AIRACCEL_TF2DEFAULT);
-  TagPrintServer("%T", "SM_AUTOSURF_Set", LANG_SERVER, airaccel.IntValue);
+    TagPrintServer("%T", "SM_AUTOSURF_Default", LANG_SERVER, AIRACCEL_TF2DEFAULT);
+  }
 #endif
     
   return;

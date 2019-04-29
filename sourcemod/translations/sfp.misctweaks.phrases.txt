@@ -92,4 +92,9 @@
     "#format" "{1:d}"
     "en" "Surf map now running. Set sv_airaccelerate to {1}."
   }
+  "SM_AUTOSURF_Default"
+  {
+    "#format" "{1:d}"
+    "en" "Current map is not surf. Set sv_airaccelerate to {1}."
+  }
 }
