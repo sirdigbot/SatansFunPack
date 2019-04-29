@@ -24,7 +24,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.1.0"
+#define PLUGIN_VERSION  "1.2.0"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/misctweaks_update.txt"
 
@@ -32,11 +32,15 @@
 #define TEMP_PARTICLE_TIME  5.0
 #define KNIFE_YER_ID        225
 
+#define AIRACCEL_COMPETITIVE_SURF 100
+#define AIRACCEL_TF2DEFAULT       10
+
 #define _INCLUDE_MEDIGUNSHIELD
 #define _INCLUDE_TAUNTCANCEL
 #define _INCLUDE_KILLEFFECT
 #define _INCLUDE_MAXVOICESPEAKFIX
 #define _INCLUDE_DISGUISE
+#define _INCLUDE_AUTOMATICSURF
 
 //=================================
 // Global
@@ -275,13 +279,27 @@ public void OnPluginStart()
   return;
 }
 
-#if defined _INCLUDE_KILLEFFECT
+
 public void OnMapStart() // Also called on lateload
 {
+#if defined _INCLUDE_KILLEFFECT
   PrecacheKillSounds();
+#endif
+  
+#if defined _INCLUDE_AUTOMATICSURF
+  char mapname[64];
+  ConVar airaccel = FindConVar("sv_airaccelerate");
+  GetCurrentMap(mapname, sizeof(mapname));
+  if(airaccel != null && StrContains(mapname, "surf_", false) == 0)
+    airaccel.SetInt(AIRACCEL_COMPETITIVE_SURF);
+  else
+    airaccel.SetInt(AIRACCEL_TF2DEFAULT);
+  TagPrintServer("%T", "SM_AUTOSURF_Set", LANG_SERVER, airaccel.IntValue);
+#endif
+    
   return;
 }
-#endif
+
 
 
 public void UpdateCvars(Handle cvar, const char[] oldValue, const char[] newValue)

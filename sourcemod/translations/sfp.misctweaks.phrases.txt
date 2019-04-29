@@ -87,4 +87,9 @@
     "en" "Invalid Class."
   }
   
+  "SM_AUTOSURF_Set"
+  {
+    "#format" "{1:d}"
+    "en" "Surf map now running. Set sv_airaccelerate to {1}."
+  }
 }
