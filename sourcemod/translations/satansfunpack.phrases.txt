@@ -22,7 +22,7 @@
   }
   "SFP_Advert2"
   {
-    "en" "{#FFD700}We have multiple gamemodes: {darkorange}KOTH{#FFD700}, {darkorange}Control Points{#FFD700}, {darkorange}Payload{#FFD700}, {darkorange}Dodgeball{#FFD700}, {darkorange}Deathrun{#FFD700} and {darkorange}Surf{#FFD700}."
+    "en" "{#FFD700}We have multiple gamemodes: {darkorange}KOTH{#FFD700}, {darkorange}CP{#FFD700}, {darkorange}Payload{#FFD700}, {darkorange}Dodgeball{#FFD700}, {darkorange}Deathrun{#FFD700}, {darkorange}Surf{#FFD700} and {darkorange}TF2x10{#FFD700}."
   }
   "SFP_Advert3"
   {
