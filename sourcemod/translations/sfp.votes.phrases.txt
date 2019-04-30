@@ -16,7 +16,7 @@
     "en" "A New Vote is not allowed for {olive}{1}{default} more seconds."
   }
   
-  // These 4 appear on NativeVotes menus
+  // These 4 appear on NativeVotes menus, so don't use colours
   "SM_VOTEGRAPPLE_Enable"
   {
     "en" "Enable Grappling Hooks"
@@ -64,7 +64,7 @@
     "en" "Fysics Control's Bhop is disabled."
   }
   
-  // These 4 appear on NativeVotes menus
+  // These 4 appear on NativeVotes menus, so don't use colours
   "SM_VOTEBHOPLIMIT_Enable"
   {
     "en" "Enable Bhop Speed Limit"
@@ -99,5 +99,59 @@
   "SM_TOGGLEBHOPLIMIT_Disabled"
   {
     "en" "Disabled {forestgreen}Bhop Speed Limit{default}."
+  }
+  
+  
+  
+  "SFP_TF2x10NotReady"
+  {
+    "en" "TF2x10 is not ready. Cannot enable/disable."
+  }
+  
+  // These 4 appear on NativeVotes menus, so don't use colours
+  "SM_VOTETF2X10_Enable"
+  {
+    "en" "Enable TF2x10 (Will Restart Round)"
+  }
+  
+  "SM_VOTETF2X10_EnablePass"
+  {
+    "en" "TF2x10 will be enabled. Restarting Round."
+  }
+  
+  "SM_VOTETF2X10_Disable"
+  {
+    "en" "Disable TF2x10 (Will Restart Round)"
+  }
+  
+  "SM_VOTETF2X10_DisablePass"
+  {
+    "en" "TF2x10 will be disabled. Restarting Round."
+  }
+  
+  
+  "SM_TOGGLETF2X10_Usage"
+  {
+    "en" "sm_toggletf2x10 {darkorange}<1/0>"
+  }
+  
+  "SM_TOGGLETF2X10_Enabled"
+  {
+    "en" "Enabled {forestgreen}TF2x10{default}. Restarting Round."
+  }
+  
+  "SM_TOGGLETF2X10_AlreadyEnabled"
+  {
+    "en" "TF2x10 is already enabled."
+  }
+  
+  "SM_TOGGLETF2X10_Disabled"
+  {
+    "en" "Disabled {forestgreen}TF2x10{default}. Restarting Round."
+  }
+  
+  "SM_TOGGLETF2X10_AlreadyDisabled"
+  {
+    "en" "TF2x10 is already disabled."
   }
 }
