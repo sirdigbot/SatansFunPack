@@ -23,7 +23,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.2.0"
+#define PLUGIN_VERSION  "1.2.1"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/votes_update.txt"
 
@@ -125,6 +125,8 @@ public void OnPluginStart()
   #if defined _INCLUDE_TOGGLETF2X10
   RegAdminCmd("sm_votetf2x10", CMD_VoteTF2x10, ADMFLAG_BAN, "Start a vote to toggle TF2x10");
   RegAdminCmd("sm_toggletf2x10", CMD_ToggleTF2x10, ADMFLAG_BAN, "Forcefully toggle TF2x10");
+  
+  HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Post);
   #endif
   
   PrintToServer("%T", "SFP_VotesLoaded", LANG_SERVER);
@@ -147,6 +149,20 @@ public void OnAllPluginsLoaded()
   #endif
   return;
 }
+
+
+#if defined _INCLUDE_TOGGLETF2X10
+public Action OnPlayerSpawn(Handle event, char[] eventName, bool dontBroadcast)
+{
+  if(h_bTF2x10Enabled.BoolValue)
+  {
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
+    if(IsClientInGame(client))
+      PrintHintText(client, "%T", "SM_TOGGLETF2X10_SpawnMsg", client);
+  }
+  return Plugin_Continue;
+}
+#endif
 
 
 

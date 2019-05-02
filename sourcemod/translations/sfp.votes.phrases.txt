@@ -134,6 +134,11 @@
   {
     "en" "sm_toggletf2x10 {darkorange}<1/0>"
   }
+
+  "SM_TOGGLETF2X10_SpawnMsg"
+  {
+    "en" "TF2x10 is Enabled!"
+  }
   
   "SM_TOGGLETF2X10_Enabled"
   {
