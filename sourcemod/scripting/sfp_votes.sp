@@ -167,7 +167,7 @@ public Action Timer_SpawnMsg(Handle timer, any userid)
   int client = GetClientOfUserId(userid);
   if(client >= 1 && client <= MaxClients && IsClientInGame(client))
   {
-    SetHudTextParams(-1.0, 0.75, 4.0, 0, 255, 0, 255);
+    SetHudTextParams(-1.0, 0.75, 3.0, 0, 255, 0, 255);
     ShowHudText(client, -1, "%T", "SM_TOGGLETF2X10_SpawnMsg", client);
   }
 }
