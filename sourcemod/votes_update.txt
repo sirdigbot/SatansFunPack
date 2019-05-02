@@ -4,11 +4,11 @@
   {
     "Version"
     {
-      "Latest" "1.2.1"
-      "Previous" "1.2.0"
+      "Latest" "1.2.2"
+      "Previous" "1.2.1"
     }
 
-    "Notes" "Added hint message for when TF2x10 is enabled"
+    "Notes" "Fixed and improved TF2x10 hint message"
   }
 
   "Files"

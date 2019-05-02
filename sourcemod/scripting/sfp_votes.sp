@@ -23,7 +23,7 @@
 
 //=================================
 // Constants
-#define PLUGIN_VERSION  "1.2.1"
+#define PLUGIN_VERSION  "1.2.2"
 #define PLUGIN_URL      "https://sirdigbot.github.io/SatansFunPack/"
 #define UPDATE_URL      "https://sirdigbot.github.io/SatansFunPack/sourcemod/votes_update.txt"
 
@@ -156,11 +156,20 @@ public Action OnPlayerSpawn(Handle event, char[] eventName, bool dontBroadcast)
 {
   if(h_bTF2x10Enabled.BoolValue)
   {
-    int client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if(IsClientInGame(client))
-      PrintHintText(client, "%T", "SM_TOGGLETF2X10_SpawnMsg", client);
+    int userid = GetEventInt(event, "userid");
+    CreateTimer(0.5, Timer_SpawnMsg, userid, TIMER_FLAG_NO_MAPCHANGE);
   }
   return Plugin_Continue;
+}
+
+public Action Timer_SpawnMsg(Handle timer, any userid)
+{
+  int client = GetClientOfUserId(userid);
+  if(client >= 1 && client <= MaxClients && IsClientInGame(client))
+  {
+    SetHudTextParams(-1.0, 0.75, 4.0, 0, 255, 0, 255);
+    ShowHudText(client, -1, "%T", "SM_TOGGLETF2X10_SpawnMsg", client);
+  }
 }
 #endif
 
