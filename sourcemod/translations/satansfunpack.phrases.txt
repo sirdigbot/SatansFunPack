@@ -26,7 +26,7 @@
   }
   "SFP_Advert3"
   {
-    "en" "{#FFD700}Use {arcana}/Nominate{#FFD700} and {arcana}/RTV{#FFD700} to change maps, and {arcana}/VoteTF2x10{#FFD700} to toggle TF2x10."
+    "en" "{#FFD700}Use {arcana}/nominate{#FFD700} and {arcana}/rtv{#FFD700} to change maps, and {arcana}/votetf2x10{#FFD700} to toggle TF2x10."
   }
 
 
