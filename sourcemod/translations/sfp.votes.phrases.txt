@@ -137,7 +137,7 @@
 
   "SM_TOGGLETF2X10_SpawnMsg"
   {
-    "en" "TF2x10 is Enabled!"
+    "en" "TF2x10 is Enabled! Vote to disable with /votetf2x10"
   }
   
   "SM_TOGGLETF2X10_Enabled"
